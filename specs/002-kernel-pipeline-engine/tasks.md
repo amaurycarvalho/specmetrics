@@ -35,15 +35,15 @@ implementation and testing of each story.
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create `specmetrics/kernel/` and `specmetrics/application/` package
+- [X] T001 Create `specmetrics/kernel/` and `specmetrics/application/` package
   directories with `__init__.py`
-- [ ] T002 [P] Create `specmetrics/kernel/events.py` — EventType enum with all
+- [X] T002 [P] Create `specmetrics/kernel/events.py` — EventType enum with all
   11 canonical event types
-- [ ] T003 [P] Create `specmetrics/kernel/exceptions.py` — StageError,
+- [X] T003 [P] Create `specmetrics/kernel/exceptions.py` — StageError,
   PipelineError, HandlerNotFoundError exception classes
-- [ ] T004 [P] Create `tests/unit/` and `tests/integration/` package directories
+- [X] T004 [P] Create `tests/unit/` and `tests/integration/` package directories
   with `__init__.py`
-- [ ] T005 [P] Add `structlog` to project dependencies in `pyproject.toml`
+- [X] T005 [P] Add `structlog` to project dependencies in `pyproject.toml`
 
 **Checkpoint**: Basic project structure is in place.
 
@@ -56,17 +56,17 @@ be implemented.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 [P] [US1] Create `specmetrics/kernel/pipeline_context.py` —
+- [X] T006 [P] [US1] Create `specmetrics/kernel/pipeline_context.py` —
   PipelineContext dataclass (frozen) with execution_id, all stage output fields
   as Optional, published_events tuple, diagnostics, and metadata
-- [ ] T007 [P] [US1] Create `specmetrics/kernel/events.py` — PipelineEvent base
+- [X] T007 [P] [US1] Create `specmetrics/kernel/events.py` — PipelineEvent base
   dataclass (frozen) with event_type, publisher, payload, context, timestamp
-- [ ] T008 [P] [US1] Create `specmetrics/kernel/handler_registry.py` —
+- [X] T008 [P] [US1] Create `specmetrics/kernel/handler_registry.py` —
   HandlerRegistry class with register() and resolve() methods, mapping
   EventType → EventHandler
-- [ ] T009 [P] [US1] Create `specmetrics/kernel/diagnostics.py` — Diagnostics,
+- [X] T009 [P] [US1] Create `specmetrics/kernel/diagnostics.py` — Diagnostics,
   StageTiming, StageError, ExecutionMetadata dataclasses per data-model.md
-- [ ] T010 Create `specmetrics/kernel/__init__.py` — Re-export all public types
+- [X] T010 Create `specmetrics/kernel/__init__.py` — Re-export all public types
   (PipelineContext, PipelineEvent, EventType, EventHandler, StageError)
 
 **Checkpoint**: Foundation ready — user story implementation can now begin in
@@ -87,37 +87,37 @@ payloads.
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T011 [P] [US1] Test: PipelineEngine publishes RepositoryLoaded as first
+- [X] T011 [P] [US1] Test: PipelineEngine publishes RepositoryLoaded as first
   event in `tests/unit/test_pipeline_engine.py`
-- [ ] T012 [P] [US1] Test: PipelineEngine invokes handlers in canonical event
+- [X] T012 [P] [US1] Test: PipelineEngine invokes handlers in canonical event
   order in `tests/unit/test_pipeline_engine.py`
-- [ ] T013 [P] [US1] Test: PipelineEngine returns PipelineCompleted event on
+- [X] T013 [P] [US1] Test: PipelineEngine returns PipelineCompleted event on
   success in `tests/unit/test_pipeline_engine.py`
-- [ ] T014 [P] [US1] Test: EventBus delivers events synchronously and in-order
+- [X] T014 [P] [US1] Test: EventBus delivers events synchronously and in-order
   in `tests/unit/test_event_bus.py`
-- [ ] T015 [P] [US1] Test: EventBus raises error for unregistered event type in
+- [X] T015 [P] [US1] Test: EventBus raises error for unregistered event type in
   `tests/unit/test_event_bus.py`
-- [ ] T016 [P] [US1] Test: PipelineContext is immutable — with_stage_output
+- [X] T016 [P] [US1] Test: PipelineContext is immutable — with_stage_output
   returns new instance in `tests/unit/test_pipeline_context.py`
-- [ ] T017 [US1] Integration test: Pipeline with 2 mock stages executes in
+- [X] T017 [US1] Integration test: Pipeline with 2 mock stages executes in
   correct order in `tests/integration/test_pipeline_execution.py`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Create `specmetrics/kernel/event_bus.py` — EventBus class
+- [X] T018 [P] [US1] Create `specmetrics/kernel/event_bus.py` — EventBus class
   with publish(event) method, synchronous in-order delivery to registered
   handler
-- [ ] T019 [US1] Create `specmetrics/kernel/pipeline_engine.py` —
+- [X] T019 [US1] Create `specmetrics/kernel/pipeline_engine.py` —
   PipelineEngine class with run(context) method, orchestrating the canonical
   event sequence: RepositoryLoaded → DocumentsDiscovered →
   SemanticExtractionCompleted → EvidenceGraphBuilt → CanonicalModelBuilt →
   RulePackApplied → MeasurementCompleted → ExportCompleted →
   TelemetryPublished → PipelineCompleted
-- [ ] T020 [US1] Add `with_stage_output()` builder method to PipelineContext
+- [X] T020 [US1] Add `with_stage_output()` builder method to PipelineContext
   in `specmetrics/kernel/pipeline_context.py`
-- [ ] T021 [US1] Add logging (structlog) for each stage transition in
+- [X] T021 [US1] Add logging (structlog) for each stage transition in
   `specmetrics/kernel/pipeline_engine.py`
-- [ ] T022 [US1] Add PipelineEngine.run() to kernel `__init__.py` public API
+- [X] T022 [US1] Add PipelineEngine.run() to kernel `__init__.py` public API
 
 **Checkpoint**: User Story 1 is complete — pipeline executes end-to-end with
 mock handlers.
@@ -137,27 +137,27 @@ name and error message. No downstream handlers execute.
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T023 [P] [US2] Test: StageError in any handler halts pipeline immediately
+- [X] T023 [P] [US2] Test: StageError in any handler halts pipeline immediately
   in `tests/unit/test_pipeline_engine.py`
-- [ ] T024 [P] [US2] Test: PIPELINE_FAILED event contains failed_stage and
+- [X] T024 [P] [US2] Test: PIPELINE_FAILED event contains failed_stage and
   error_message in `tests/unit/test_pipeline_engine.py`
-- [ ] T025 [P] [US2] Test: Unregistered handler raises HandlerNotFoundError at
+- [X] T025 [P] [US2] Test: Unregistered handler raises HandlerNotFoundError at
   resolution time in `tests/unit/test_handler_registry.py`
-- [ ] T026 [US2] Integration test: Pipeline with failing stage halts before
+- [X] T026 [US2] Integration test: Pipeline with failing stage halts before
   downstream stages in `tests/integration/test_pipeline_execution.py`
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Add fail-fast error handling to PipelineEngine.run() — catch
+- [X] T027 [US2] Add fail-fast error handling to PipelineEngine.run() — catch
   StageError, publish PIPELINE_FAILED, halt execution in
   `specmetrics/kernel/pipeline_engine.py`
-- [ ] T028 [US2] Add validation in HandlerRegistry.resolve() — raise
+- [X] T028 [US2] Add validation in HandlerRegistry.resolve() — raise
   HandlerNotFoundError if no handler registered for event_type in
   `specmetrics/kernel/handler_registry.py`
-- [ ] T029 [US2] Add edge case: no plugins installed → PipelineEngine.run()
+- [X] T029 [US2] Add edge case: no plugins installed → PipelineEngine.run()
   fails with descriptive error about missing handlers in
   `specmetrics/kernel/pipeline_engine.py`
-- [ ] T030 [US2] Add edge case: concurrent pipeline executions produce
+- [X] T030 [US2] Add edge case: concurrent pipeline executions produce
   independent PipelineContext instances in
   `specmetrics/kernel/pipeline_engine.py`
 
@@ -180,25 +180,25 @@ timing entries, and each execution has a unique execution_id.
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T031 [P] [US3] Test: PipelineContext.published_events contains all events
+- [X] T031 [P] [US3] Test: PipelineContext.published_events contains all events
   in publication order in `tests/unit/test_pipeline_context.py`
-- [ ] T032 [P] [US3] Test: Diagnostics records started_at, completed_at, and
+- [X] T032 [P] [US3] Test: Diagnostics records started_at, completed_at, and
   status for each stage in `tests/unit/test_pipeline_engine.py`
-- [ ] T033 [P] [US3] Test: Each execution produces unique execution_id (UUID v4)
+- [X] T033 [P] [US3] Test: Each execution produces unique execution_id (UUID v4)
   in `tests/unit/test_pipeline_engine.py`
-- [ ] T034 [US3] Integration test: Full pipeline context inspection after
+- [X] T034 [US3] Integration test: Full pipeline context inspection after
   execution in `tests/integration/test_pipeline_execution.py`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [P] [US3] Add execution_id generation (UUID v4) to PipelineEngine
+- [X] T035 [P] [US3] Add execution_id generation (UUID v4) to PipelineEngine
   startup in `specmetrics/kernel/pipeline_engine.py`
-- [ ] T036 [US3] Add diagnostics collection — capture started_at, completed_at,
+- [X] T036 [US3] Add diagnostics collection — capture started_at, completed_at,
   duration_ms, status per stage in PipelineEngine in
   `specmetrics/kernel/pipeline_engine.py`
-- [ ] T037 [US3] Append each published event to PipelineContext.published_events
+- [X] T037 [US3] Append each published event to PipelineContext.published_events
   tuple in `specmetrics/kernel/pipeline_engine.py`
-- [ ] T038 [US3] Add StageError capture to diagnostics.errors list on failure
+- [X] T038 [US3] Add StageError capture to diagnostics.errors list on failure
   in `specmetrics/kernel/pipeline_engine.py`
 
 **Checkpoint**: All user stories are now independently functional.
@@ -209,8 +209,8 @@ timing entries, and each execution has a unique execution_id.
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T039 [P] Add docstrings to all public kernel classes and methods
-- [ ] T040 Run quickstart.md validation scenarios end-to-end
+- [X] T039 [P] Add docstrings to all public kernel classes and methods
+- [X] T040 Run quickstart.md validation scenarios end-to-end
 
 ---
 
@@ -251,24 +251,6 @@ timing entries, and each execution has a unique execution_id.
 - All tests within a story marked [P] can run in parallel
 - Core data models (PipelineContext, PipelineEvent, HandlerRegistry,
   Diagnostics) can be built in parallel
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch all tests for User Story 1 together:
-Task: "T011 [P] [US1] Test: PipelineEngine publishes RepositoryLoaded"
-Task: "T012 [P] [US1] Test: PipelineEngine invokes handlers in canonical order"
-Task: "T013 [P] [US1] Test: PipelineEngine returns PipelineCompleted"
-Task: "T014 [P] [US1] Test: EventBus delivers events synchronously in-order"
-Task: "T015 [P] [US1] Test: EventBus raises error for unregistered type"
-Task: "T016 [P] [US1] Test: PipelineContext immutability"
-
-# Launch implementation tasks in parallel:
-Task: "T018 [P] [US1] Create EventBus"
-Task: "T019 [US1] Create PipelineEngine"
-```
 
 ---
 

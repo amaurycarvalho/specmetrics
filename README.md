@@ -35,6 +35,14 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ---
 
+## How to install
+
+---
+
+## How to use
+
+---
+
 ## Know more
 
 You can find more information [here](docs/PRD.md) and [here](docs/system%20designs/Foundation.md).
