@@ -2,7 +2,7 @@
 
 A Functional Measurement Engine for Specification Driven Development
 
-[![Spec-Driven Development](https://img.shields.io/badge/SDD-OpenSpec-yellow)](.specify/memory/constitution.md)
+[![Spec-Driven Development](https://img.shields.io/badge/SDD-SpecKit-yellow)](.specify/memory/constitution.md)
 
 ---
 
