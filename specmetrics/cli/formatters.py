@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 
+from specmetrics import __version__
 from specmetrics.application.enums import StageExecutionStatus
 from specmetrics.application.models import PipelineResult, StageResult
 
 
 def format_text_result(result: PipelineResult, verbose: bool = False) -> str:
     lines: list[str] = []
-    lines.append("SpecMetrics v0.1.0 \u2014 Measurement Complete")
+    lines.append(f"SpecMetrics v{__version__} \u2014 Measurement Complete")
     lines.append("\u2500" * 48)
     if result.project_path:
         lines.append(f"Project: {result.project_path}")

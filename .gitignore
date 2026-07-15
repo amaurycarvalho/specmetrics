@@ -250,3 +250,6 @@ __pycache__/
 .vscode/mcp.json
 # CocoIndex Code (ccc)
 /.cocoindex_code/
+
+# Specmetrics
+.evidence_graphs/

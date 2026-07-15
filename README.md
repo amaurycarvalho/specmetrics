@@ -42,25 +42,39 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ## How to Install
 
-```
-uv ...
+```bash
+uv tool install specmetrics-<version>-py3-none-any.whl
 ```
 
 or
 
-```
-pipx ...
+```bash
+pipx install --force specmetrics-<version>-py3-none-any.whl
 ```
 
 ---
 
 ## How to Use
 
-```
+```bash
 specmetrics --help
 specmetrics measure --help
 specmetrics plugins --help
 specmetrics plugins list --help
+```
+
+---
+
+## How to Build
+
+```bash
+make build
+```
+
+## How to Test
+
+```bash
+make test
 ```
 
 ---
