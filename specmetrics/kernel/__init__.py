@@ -1,3 +1,21 @@
+from .cfm.model import (
+    Actor,
+    ActorType,
+    BusinessRule,
+    CanonicalFunctionalModel,
+    DataGroup,
+    DataType,
+    EvidenceRef,
+    FunctionalProcess,
+    Operation,
+    Relationship,
+    RelationshipType,
+    RuleType,
+    UnclassifiedElement,
+)
+from .cfm.builder import CfmBuilderStage, build
+from .cfm.classifier import classify_node, strip_framework_labels
+from .cfm.metadata import BuildMetadata, ClassificationConflict
 from .adapter_interface import Document, DocumentSection, SpecificationAdapter
 from .adapter_registry import AdapterRegistry
 from .diagnostics import Diagnostics, StageError as StageErrorRecord, StageStatus, StageTiming
@@ -38,7 +56,26 @@ from .plugin_registry import PluginDescriptor, PluginRegistry
 from .plugin_validation import PluginValidator, ValidationResult
 
 __all__ = [
+    "Actor",
+    "ActorType",
     "AdapterRegistry",
+    "BuildMetadata",
+    "BusinessRule",
+    "CanonicalFunctionalModel",
+    "CfmBuilderStage",
+    "ClassificationConflict",
+    "DataGroup",
+    "DataType",
+    "EvidenceRef",
+    "FunctionalProcess",
+    "Operation",
+    "Relationship",
+    "RelationshipType",
+    "RuleType",
+    "UnclassifiedElement",
+    "build",
+    "classify_node",
+    "strip_framework_labels",
     "EdgeAlreadyExistsError",
     "EvidenceGraph",
     "EvidenceGraphError",
