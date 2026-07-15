@@ -2,7 +2,7 @@
 name = "specmetrics"
 version = "0.1.0"
 description = "A Functional Measurement Engine for Specification Driven Development"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "structlog>=24.0.0",
 ]
@@ -11,6 +11,9 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["specmetrics*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
