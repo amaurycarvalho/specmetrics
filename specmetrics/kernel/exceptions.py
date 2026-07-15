@@ -2,6 +2,13 @@ class PipelineError(Exception):
     pass
 
 
+class PluginError(PipelineError):
+    def __init__(self, plugin_id: str, message: str):
+        self.plugin_id = plugin_id
+        self.message = message
+        super().__init__(f"[{plugin_id}] {message}")
+
+
 class StageError(PipelineError):
     def __init__(self, stage_name: str, message: str):
         self.stage_name = stage_name

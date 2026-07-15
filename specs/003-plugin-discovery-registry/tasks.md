@@ -36,11 +36,11 @@ implementation and testing of each story.
 
 **Purpose**: Project initialization for plugin infrastructure
 
-- [ ] T001 [P] Create `specmetrics/kernel/plugin_metadata.py` — PluginMetadata
+- [X] T001 [P] Create `specmetrics/kernel/plugin_metadata.py` — PluginMetadata
   frozen dataclass, PluginType enum, PluginStatus enum per data-model.md
-- [ ] T002 [P] Add `PluginError` exception to `specmetrics/kernel/exceptions.py`
+- [X] T002 [P] Add `PluginError` exception to `specmetrics/kernel/exceptions.py`
   for plugin-related failures
-- [ ] T003 Update `specmetrics/kernel/__init__.py` — Export PluginMetadata,
+- [X] T003 Update `specmetrics/kernel/__init__.py` — Export PluginMetadata,
   PluginType, PluginStatus, PluginError, PluginRegistry, PluginDiscovery
 
 **Checkpoint**: Plugin infrastructure namespaces are in place.
@@ -54,14 +54,14 @@ be implemented.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` —
+- [X] T004 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` —
   PluginMetadata frozen dataclass with id, api_version, plugin_type,
   handled_event_types, handler_factory, name, description, author, version
-- [ ] T005 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` — PluginType
+- [X] T005 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` — PluginType
   enum (ADAPTER, SEMANTIC, MEASUREMENT, EXPORTER, PUBLISHER, UNSPECIFIED)
-- [ ] T006 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` —
+- [X] T006 [P] [US1] Create `specmetrics/kernel/plugin_metadata.py` —
   PluginStatus enum (PENDING, REGISTERED, REJECTED, SKIPPED)
-- [ ] T007 [P] [US1] Create `specmetrics/kernel/plugin_registry.py` —
+- [X] T007 [P] [US1] Create `specmetrics/kernel/plugin_registry.py` —
   PluginDescriptor dataclass with metadata, entry_point_name, status,
   validation_errors
 
@@ -83,23 +83,23 @@ plugin appears in the registry.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T008 [P] [US1] Test: PluginDiscovery scans `specmetrics.plugins` entry
+- [X] T008 [P] [US1] Test: PluginDiscovery scans `specmetrics.plugins` entry
   points and returns discovered metadata in `tests/unit/test_plugin_discovery.py`
-- [ ] T009 [P] [US1] Test: PluginDiscovery handles empty discovery (no plugins
+- [X] T009 [P] [US1] Test: PluginDiscovery handles empty discovery (no plugins
   installed) without errors in `tests/unit/test_plugin_discovery.py`
-- [ ] T010 [P] [US1] Test: PluginDiscovery loads factory function and retrieves
+- [X] T010 [P] [US1] Test: PluginDiscovery loads factory function and retrieves
   PluginMetadata in `tests/unit/test_plugin_discovery.py`
-- [ ] T011 [P] [US1] Test: PluginDiscovery discovers multiple plugins and returns
+- [X] T011 [P] [US1] Test: PluginDiscovery discovers multiple plugins and returns
   all of them in `tests/unit/test_plugin_discovery.py`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create `specmetrics/kernel/plugin_discovery.py` —
+- [X] T012 [P] [US1] Create `specmetrics/kernel/plugin_discovery.py` —
   PluginDiscovery class with scan() method using importlib.metadata.entry_points
   for the `specmetrics.plugins` group
-- [ ] T013 [US1] Add factory function loading — PluginDiscovery.load() imports
+- [X] T013 [US1] Add factory function loading — PluginDiscovery.load() imports
   the entry point target and calls it to obtain PluginMetadata
-- [ ] T014 [US1] Add `__init__.py` re-export for PluginDiscovery and its
+- [X] T014 [US1] Add `__init__.py` re-export for PluginDiscovery and its
   public methods
 
 **Checkpoint**: User Story 1 is complete — plugins are discovered automatically.
@@ -118,29 +118,29 @@ incompatible API version and verifying the system reports the incompatibility.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T015 [P] [US2] Test: PluginValidator rejects plugin with incompatible
+- [X] T015 [P] [US2] Test: PluginValidator rejects plugin with incompatible
   major API version in `tests/unit/test_plugin_validation.py`
-- [ ] T016 [P] [US2] Test: PluginValidator accepts plugin with compatible
+- [X] T016 [P] [US2] Test: PluginValidator accepts plugin with compatible
   API version (same major, different minor/patch) in
   `tests/unit/test_plugin_validation.py`
-- [ ] T017 [P] [US2] Test: PluginValidator rejects plugin with unparseable
+- [X] T017 [P] [US2] Test: PluginValidator rejects plugin with unparseable
   version string in `tests/unit/test_plugin_validation.py`
-- [ ] T018 [P] [US2] Test: PluginValidator rejects plugin missing required
+- [X] T018 [P] [US2] Test: PluginValidator rejects plugin missing required
   metadata fields in `tests/unit/test_plugin_validation.py`
-- [ ] T019 [P] [US2] Test: PluginValidator checks handler_factory presence
+- [X] T019 [P] [US2] Test: PluginValidator checks handler_factory presence
   when handled_event_types is non-empty in
   `tests/unit/test_plugin_validation.py`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create `specmetrics/kernel/plugin_validation.py` —
+- [X] T020 [P] [US2] Create `specmetrics/kernel/plugin_validation.py` —
   PluginValidator class with validate(metadata) method performing:
   API version SemVer check, required field presence, handler_factory check
-- [ ] T021 [US2] Add platform API version resolution via
+- [X] T021 [US2] Add platform API version resolution via
   `importlib.metadata.version("specmetrics")` in PluginValidator
-- [ ] T022 [US2] Add SemVer comparison logic — major must match; minor/patch
+- [X] T022 [US2] Add SemVer comparison logic — major must match; minor/patch
   within same major accepted; pre-release tags ignored; unparseable rejected
-- [ ] T023 [US2] Add validation result reporting — return structured
+- [X] T023 [US2] Add validation result reporting — return structured
   ValidationResult with is_valid, errors list
 
 **Checkpoint**: User Story 2 is complete — incompatible plugins are rejected.
@@ -159,37 +159,37 @@ the registry by event type and verifying the correct handlers are returned.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T024 [P] [US3] Test: PluginRegistry.register() stores a validated
+- [X] T024 [P] [US3] Test: PluginRegistry.register() stores a validated
   PluginDescriptor in `tests/unit/test_plugin_registry.py`
-- [ ] T025 [P] [US3] Test: PluginRegistry.get_handler() returns handler for
+- [X] T025 [P] [US3] Test: PluginRegistry.get_handler() returns handler for
   registered event type in `tests/unit/test_plugin_registry.py`
-- [ ] T026 [P] [US3] Test: PluginRegistry.get_handler() returns None for
+- [X] T026 [P] [US3] Test: PluginRegistry.get_handler() returns None for
   unregistered event type in `tests/unit/test_plugin_registry.py`
-- [ ] T027 [P] [US3] Test: PluginRegistry.get_handlers() returns all handlers
+- [X] T027 [P] [US3] Test: PluginRegistry.get_handlers() returns all handlers
   for an event type in registration order in
   `tests/unit/test_plugin_registry.py`
-- [ ] T028 [P] [US3] Test: PluginRegistry.install_handlers() populates F01
+- [X] T028 [P] [US3] Test: PluginRegistry.install_handlers() populates F01
   HandlerRegistry correctly in `tests/unit/test_plugin_registry.py`
-- [ ] T029 [P] [US3] Test: PluginRegistry handles duplicate plugin IDs by
+- [X] T029 [P] [US3] Test: PluginRegistry handles duplicate plugin IDs by
   logging warning and using last registration in
   `tests/unit/test_plugin_registry.py`
-- [ ] T030 [US3] Integration test: End-to-end plugin lifecycle — discover →
+- [X] T030 [US3] Integration test: End-to-end plugin lifecycle — discover →
   validate → register → install handlers → pipeline uses handlers in
   `tests/integration/test_plugin_lifecycle.py`
 
 ### Implementation for User Story 3
 
-- [ ] T031 [P] [US3] Create `specmetrics/kernel/plugin_registry.py` —
+- [X] T031 [P] [US3] Create `specmetrics/kernel/plugin_registry.py` —
   PluginRegistry class with: register(), get_handler(), get_handlers(),
   list_plugins(), get_by_type()
-- [ ] T032 [US3] Add `install_handlers(handler_registry)` method to
+- [X] T032 [US3] Add `install_handlers(handler_registry)` method to
   PluginRegistry — iterates all REGISTERED plugins and calls
   handler_registry.register() for each handler_factory-produced handler
-- [ ] T033 [US3] Add duplicate plugin ID detection — log warning, overwrite
+- [X] T033 [US3] Add duplicate plugin ID detection — log warning, overwrite
   with last registration
-- [ ] T034 [US3] Wire discovery → validation → registry into a unified
+- [X] T034 [US3] Wire discovery → validation → registry into a unified
   load_plugins() entry point that performs the full lifecycle
-- [ ] T035 [US3] Update `specmetrics/kernel/__init__.py` — export PluginRegistry
+- [X] T035 [US3] Update `specmetrics/kernel/__init__.py` — export PluginRegistry
   and load_plugins
 
 **Checkpoint**: User Story 3 is complete — registry integrates with F01.
@@ -209,24 +209,24 @@ discovery path and verifying the system starts with remaining plugins intact.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T036 [P] [US4] Test: PluginDiscovery skips a plugin when its factory
+- [X] T036 [P] [US4] Test: PluginDiscovery skips a plugin when its factory
   function raises an exception in `tests/unit/test_plugin_discovery.py`
-- [ ] T037 [P] [US4] Test: PluginDiscovery skips a plugin when its module
+- [X] T037 [P] [US4] Test: PluginDiscovery skips a plugin when its module
   cannot be imported in `tests/unit/test_plugin_discovery.py`
-- [ ] T038 [P] [US4] Test: load_plugins() isolates errors — one faulty plugin
+- [X] T038 [P] [US4] Test: load_plugins() isolates errors — one faulty plugin
   does not prevent healthy plugins from registering in
   `tests/unit/test_plugin_registry.py`
-- [ ] T039 [US4] Integration test: Healthy plugin registers despite presence
+- [X] T039 [US4] Integration test: Healthy plugin registers despite presence
   of faulty plugin in `tests/integration/test_plugin_lifecycle.py`
 
 ### Implementation for User Story 4
 
-- [ ] T040 [P] [US4] Add per-plugin try/except in PluginDiscovery.scan() —
+- [X] T040 [P] [US4] Add per-plugin try/except in PluginDiscovery.scan() —
   catch import errors and factory errors, log warning with plugin ID, continue
   to next plugin
-- [ ] T041 [US4] Add per-plugin try/except in PluginRegistry.register() —
+- [X] T041 [US4] Add per-plugin try/except in PluginRegistry.register() —
   catch validation errors, set descriptor status to REJECTED, log error
-- [ ] T042 [US4] Ensure load_plugins() atomicity — each plugin discovery +
+- [X] T042 [US4] Ensure load_plugins() atomicity — each plugin discovery +
   validation + registration is isolated; one failure never blocks another
 
 **Checkpoint**: User Story 4 is complete — faulty plugins never block the system.
@@ -237,8 +237,8 @@ discovery path and verifying the system starts with remaining plugins intact.
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T043 [P] Add docstrings to all public plugin classes and methods
-- [ ] T044 Run quickstart.md validation scenarios end-to-end
+- [X] T043 [P] Add docstrings to all public plugin classes and methods
+- [X] T044 Run quickstart.md validation scenarios end-to-end
 
 ---
 
