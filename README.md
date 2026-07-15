@@ -42,6 +42,10 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ### How to Install
 
+Download the wheel from [Releases](https://github.com/amaurycarvalho/specmetrics/releases).
+
+After, use the command below to install it.
+
 ```bash
 uv tool install specmetrics-<version>-py3-none-any.whl
 ```

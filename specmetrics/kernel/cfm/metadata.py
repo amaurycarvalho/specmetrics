@@ -19,4 +19,6 @@ class BuildMetadata(BaseModel):
     total_input_nodes: int = 0
     unclassified_count: int = 0
     conflicts: list[ClassificationConflict] = []
+    applied_rules: list[dict[str, object]] = []
+    vaf: float | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -25,6 +25,9 @@ specmetrics-mcp = "specmetrics.mcp.server:main"
 [project.entry-points."specmetrics.plugins.measurement"]
 apf = "specmetrics.plugins.measurement.apf.plugin:APFMeasurementPlugin"
 
+[project.entry-points."specmetrics.plugins.rule_pack"]
+rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:RulePackEnginePlugin"
+
 [tool.setuptools.packages.find]
 include = ["specmetrics*"]
 
