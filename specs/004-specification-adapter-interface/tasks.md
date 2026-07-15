@@ -36,11 +36,11 @@ implementation and testing of each story.
 
 **Purpose**: Project initialization for adapter interface infrastructure
 
-- [ ] T001 [P] Create `specmetrics/kernel/adapter_interface.py` —
+- [X] T001 [P] Create `specmetrics/kernel/adapter_interface.py` —
   SpecificationAdapter Protocol, Document dataclass, DocumentSection dataclass
-- [ ] T002 [P] Create `specmetrics/kernel/adapter_registry.py` — AdapterRegistry
+- [X] T002 [P] Create `specmetrics/kernel/adapter_registry.py` — AdapterRegistry
   class wrapping F02 PluginRegistry
-- [ ] T003 Update `specmetrics/kernel/__init__.py` — Export SpecificationAdapter,
+- [X] T003 Update `specmetrics/kernel/__init__.py` — Export SpecificationAdapter,
   Document, DocumentSection, AdapterRegistry
 
 **Checkpoint**: Adapter interface namespaces are in place.
@@ -54,13 +54,13 @@ be implemented.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] [US1] Create `Document` frozen dataclass in
+- [X] T004 [P] [US1] Create `Document` frozen dataclass in
   `specmetrics/kernel/adapter_interface.py` — id, path, document_type, content,
   metadata, sections per data-model.md
-- [ ] T005 [P] [US1] Create `DocumentSection` frozen dataclass in
+- [X] T005 [P] [US1] Create `DocumentSection` frozen dataclass in
   `specmetrics/kernel/adapter_interface.py` — id, title, level, content,
   subsections
-- [ ] T006 [US1] Create `SpecificationAdapter` Protocol in
+- [X] T006 [US1] Create `SpecificationAdapter` Protocol in
   `specmetrics/kernel/adapter_interface.py` — scan() and supports() method
   signatures with pathlib.Path argument types
 
@@ -83,23 +83,23 @@ with correct identifiers and metadata.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T007 [P] [US1] Test: A class implementing SpecificationAdapter Protocol
+- [X] T007 [P] [US1] Test: A class implementing SpecificationAdapter Protocol
   passes isinstance check in `tests/unit/test_adapter_interface.py`
-- [ ] T008 [P] [US1] Test: A class missing scan() does NOT pass Protocol check
+- [X] T008 [P] [US1] Test: A class missing scan() does NOT pass Protocol check
   in `tests/unit/test_adapter_interface.py`
-- [ ] T009 [P] [US1] Test: A class missing supports() does NOT pass Protocol
+- [X] T009 [P] [US1] Test: A class missing supports() does NOT pass Protocol
   check in `tests/unit/test_adapter_interface.py`
-- [ ] T010 [P] [US1] Test: Mock adapter scan() returns all discovered documents
+- [X] T010 [P] [US1] Test: Mock adapter scan() returns all discovered documents
   in `tests/unit/test_adapter_interface.py`
-- [ ] T011 [P] [US1] Test: Mock adapter returns empty list for empty repository
+- [X] T011 [P] [US1] Test: Mock adapter returns empty list for empty repository
   in `tests/unit/test_adapter_interface.py`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement SpecificationAdapter Protocol in
+- [X] T012 [P] [US1] Implement SpecificationAdapter Protocol in
   `specmetrics/kernel/adapter_interface.py` — structural typing with scan()
   and supports()
-- [ ] T013 [US1] Implement Document and DocumentSection frozen dataclasses in
+- [X] T013 [US1] Implement Document and DocumentSection frozen dataclasses in
   `specmetrics/kernel/adapter_interface.py`
 
 **Checkpoint**: User Story 1 is complete — adapter interface is defined.
@@ -120,27 +120,27 @@ id, path, type, and raw content fields.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T014 [P] [US2] Test: Document dataclass accepts valid field values
+- [X] T014 [P] [US2] Test: Document dataclass accepts valid field values
   in `tests/unit/test_adapter_interface.py`
-- [ ] T015 [P] [US2] Test: Document preserves metadata dict in
+- [X] T015 [P] [US2] Test: Document preserves metadata dict in
   `tests/unit/test_adapter_interface.py`
-- [ ] T016 [P] [US2] Test: DocumentSection stores hierarchy correctly
+- [X] T016 [P] [US2] Test: DocumentSection stores hierarchy correctly
   (parent section with nested subsections) in
   `tests/unit/test_adapter_interface.py`
-- [ ] T017 [P] [US2] Test: Document with empty content is valid
+- [X] T017 [P] [US2] Test: Document with empty content is valid
   in `tests/unit/test_adapter_interface.py`
-- [ ] T018 [US2] Test: Mock adapter scan() returns Documents with correct
+- [X] T018 [US2] Test: Mock adapter scan() returns Documents with correct
   path and type fields in `tests/unit/test_adapter_interface.py`
 
 ### Implementation for User Story 2
 
-- [ ] T019 [P] [US2] Implement file discovery logic — recursive glob for
+- [X] T019 [P] [US2] Implement file discovery logic — recursive glob for
   text files (*.md, *.yml, *.yaml) in scan() base implementation in
   `specmetrics/kernel/adapter_interface.py`
-- [ ] T020 [US2] Implement per-document error isolation — try/except for each
+- [X] T020 [US2] Implement per-document error isolation — try/except for each
   file read, skip failures, log warning in
   `specmetrics/kernel/adapter_interface.py`
-- [ ] T021 [US2] Add document type inference helper — map parent directory
+- [X] T021 [US2] Add document type inference helper — map parent directory
   names to canonical types in
   `specmetrics/kernel/adapter_interface.py`
 
@@ -161,32 +161,32 @@ retrieved by type.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T022 [P] [US3] Test: AdapterRegistry.list_adapters() returns all
+- [X] T022 [P] [US3] Test: AdapterRegistry.list_adapters() returns all
   registered adapters in `tests/unit/test_adapter_registry.py`
-- [ ] T023 [P] [US3] Test: AdapterRegistry.find_adapter() returns correct
+- [X] T023 [P] [US3] Test: AdapterRegistry.find_adapter() returns correct
   adapter for a matching path in
   `tests/unit/test_adapter_registry.py`
-- [ ] T024 [P] [US3] Test: AdapterRegistry.find_adapter() returns None when
+- [X] T024 [P] [US3] Test: AdapterRegistry.find_adapter() returns None when
   no adapter supports the path in
   `tests/unit/test_adapter_registry.py`
-- [ ] T025 [P] [US3] Test: AdapterRegistry.scan_all() returns results from
+- [X] T025 [P] [US3] Test: AdapterRegistry.scan_all() returns results from
   multiple adapters in `tests/unit/test_adapter_registry.py`
-- [ ] T026 [US3] Integration test: Mock adapter registered via F02 plugin
+- [X] T026 [US3] Integration test: Mock adapter registered via F02 plugin
   mechanism is available through AdapterRegistry in
   `tests/integration/test_adapter_pipeline.py`
-- [ ] T027 [US3] Integration test: Adapter scan() output is consumable by
+- [X] T027 [US3] Integration test: Adapter scan() output is consumable by
   PipelineEngine in `tests/integration/test_adapter_pipeline.py`
 
 ### Implementation for User Story 3
 
-- [ ] T028 [P] [US3] Create `AdapterRegistry` class in
+- [X] T028 [P] [US3] Create `AdapterRegistry` class in
   `specmetrics/kernel/adapter_registry.py` — wraps F02 PluginRegistry,
   provides find_adapter(), list_adapters(), scan_all()
-- [ ] T029 [US3] Implement find_adapter() — iterates registered adapters
+- [X] T029 [US3] Implement find_adapter() — iterates registered adapters
   calling supports() on each, returns first match
-- [ ] T030 [US3] Implement scan_all() — runs scan() on all adapters that
+- [X] T030 [US3] Implement scan_all() — runs scan() on all adapters that
   support the given path
-- [ ] T031 [US3] Update `specmetrics/kernel/__init__.py` — export
+- [X] T031 [US3] Update `specmetrics/kernel/__init__.py` — export
   AdapterRegistry
 
 **Checkpoint**: User Story 3 is complete — adapters integrate with F02.
@@ -206,19 +206,19 @@ frameworks and verifying that each correctly handles its own document format.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T032 [P] [US4] Test: Two adapters registered, find_adapter() returns
+- [X] T032 [P] [US4] Test: Two adapters registered, find_adapter() returns
   correct one for each path in `tests/unit/test_adapter_registry.py`
-- [ ] T033 [P] [US4] Test: scan_all() with two adapters returns combined
+- [X] T033 [P] [US4] Test: scan_all() with two adapters returns combined
   results in `tests/unit/test_adapter_registry.py`
-- [ ] T034 [US4] Integration test: Two adapters coexist and each processes
+- [X] T034 [US4] Integration test: Two adapters coexist and each processes
   its own documents in `tests/integration/test_adapter_pipeline.py`
 
 ### Implementation for User Story 4
 
-- [ ] T035 [P] [US4] Ensure AdapterRegistry supports multiple adapters of
+- [X] T035 [P] [US4] Ensure AdapterRegistry supports multiple adapters of
   same type — no deduplication by adapter id in
   `specmetrics/kernel/adapter_registry.py`
-- [ ] T036 [US4] Add adapter routing — find_adapter() tries adapters in
+- [X] T036 [US4] Add adapter routing — find_adapter() tries adapters in
   registration order, returns first match
 
 **Checkpoint**: User Story 4 is complete — multiple adapters coexist.
@@ -229,8 +229,8 @@ frameworks and verifying that each correctly handles its own document format.
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T037 [P] Add docstrings to all public adapter classes and methods
-- [ ] T038 Run quickstart.md validation scenarios end-to-end
+- [X] T037 [P] Add docstrings to all public adapter classes and methods
+- [X] T038 Run quickstart.md validation scenarios end-to-end
 
 ---
 

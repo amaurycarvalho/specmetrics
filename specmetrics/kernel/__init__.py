@@ -1,3 +1,5 @@
+from .adapter_interface import Document, DocumentSection, SpecificationAdapter
+from .adapter_registry import AdapterRegistry
 from .diagnostics import Diagnostics, StageError as StageErrorRecord, StageStatus, StageTiming
 from .events import EventType, PipelineEvent
 from .exceptions import HandlerNotFoundError, PipelineError, PluginError, StageError
@@ -10,7 +12,10 @@ from .plugin_registry import PluginDescriptor, PluginRegistry
 from .plugin_validation import PluginValidator, ValidationResult
 
 __all__ = [
+    "AdapterRegistry",
     "Diagnostics",
+    "Document",
+    "DocumentSection",
     "EventHandler",
     "EventType",
     "HandlerNotFoundError",
@@ -27,6 +32,7 @@ __all__ = [
     "PluginStatus",
     "PluginType",
     "PluginValidator",
+    "SpecificationAdapter",
     "StageError",
     "StageErrorRecord",
     "StageStatus",
