@@ -17,7 +17,11 @@ def discover_publishers() -> list[PublisherPlugin]:
             if isinstance(cls, type) and issubclass(cls, PublisherPlugin):
                 instance = cls()
                 plugins.append(instance)
-                logger.debug("publisher_discovered", publisher_id=instance.publisher_id())
+                logger.debug(
+                    "publisher_discovered", publisher_id=instance.publisher_id()
+                )
         except Exception as exc:
-            logger.warning("publisher_discovery_failed", entry_point=ep.name, error=str(exc))
+            logger.warning(
+                "publisher_discovery_failed", entry_point=ep.name, error=str(exc)
+            )
     return plugins

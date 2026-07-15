@@ -6,7 +6,7 @@ import structlog
 
 from specmetrics.plugins.exporter.models import ExportMetadata, Measurement
 
-from .base import PublisherConfig, PublisherPlugin
+from .base import PublisherConfig, PublisherConfiguration, PublisherPlugin
 
 logger = structlog.get_logger(__name__)
 
@@ -27,6 +27,7 @@ def publish_all(
     measurements: list[Measurement],
     metadata: ExportMetadata,
     configs: dict[str, PublisherConfig] | None = None,
+    publisher_configs: list[PublisherConfiguration] | None = None,
 ) -> list[dict]:
     configs = configs or {}
     publishers = discover_publishers()
@@ -35,10 +36,22 @@ def publish_all(
     for pub in publishers:
         pid = pub.publisher_id()
         cfg = configs.get(pid, PublisherConfig())
+
+        if publisher_configs and hasattr(pub, "initialize"):
+            try:
+                pub.initialize(publisher_configs)  # type: ignore[union-attr]
+                pub.start()  # type: ignore[union-attr]
+            except Exception as exc:
+                logger.warning(
+                    "publisher_initialize_failed", publisher=pid, error=str(exc)
+                )
+
         try:
             result = pub.publish(measurements, metadata, cfg)
             if result.success:
-                logger.info("publish_succeeded", publisher=pid, metrics=result.metrics_count)
+                logger.info(
+                    "publish_succeeded", publisher=pid, metrics=result.metrics_count
+                )
             else:
                 logger.warning("publish_failed", publisher=pid, message=result.message)
             results.append(
@@ -59,5 +72,11 @@ def publish_all(
                     "metrics_count": 0,
                 }
             )
+
+        if hasattr(pub, "stop"):
+            try:
+                pub.stop()  # type: ignore[union-attr]
+            except Exception as exc:
+                logger.warning("publisher_stop_failed", publisher=pid, error=str(exc))
 
     return results
