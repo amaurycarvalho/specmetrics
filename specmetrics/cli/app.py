@@ -4,6 +4,7 @@ from pathlib import Path
 
 import typer
 
+from .export_commands import export_app
 from .measure import run_measure
 from .plugins import plugins_app
 
@@ -14,6 +15,7 @@ app = typer.Typer(
 )
 
 app.add_typer(plugins_app)
+app.add_typer(export_app)
 
 
 @app.command()

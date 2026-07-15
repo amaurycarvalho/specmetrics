@@ -24,9 +24,9 @@
 
 **Purpose**: Create directory structure and register plugin entry points
 
-- [ ] T001 Create `specmetrics/plugins/exporter/` and `specmetrics/plugins/publisher/` directory structures with `__init__.py` files
-- [ ] T002 Register `specmetrics.exporters` and `specmetrics.publishers` entry point groups in `pyproject.toml`
-- [ ] T003 Add `opentelemetry-api` and `opentelemetry-sdk` runtime dependencies to `pyproject.toml`
+- [x] T001 Create `specmetrics/plugins/exporter/` and `specmetrics/plugins/publisher/` directory structures with `__init__.py` files
+- [x] T002 Register `specmetrics.exporters` and `specmetrics.publishers` entry point groups in `pyproject.toml`
+- [x] T003 Add `opentelemetry-api` and `opentelemetry-sdk` runtime dependencies to `pyproject.toml`
 
 ---
 
@@ -36,11 +36,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create `ExporterPlugin` abstract base class in `specmetrics/plugins/exporter/base.py` with `export()` method signature matching [exporter-plugin contract](contracts/exporter-plugin.md)
-- [ ] T005 [P] Create `PublisherPlugin` abstract base class in `specmetrics/plugins/publisher/base.py` with `publish()` method signature matching [publisher-plugin contract](contracts/publisher-plugin.md)
-- [ ] T006 [P] Create `ExportFormat` Pydantic model in `specmetrics/plugins/exporter/models.py` with fields: `id`, `name`, `description`, `file_extension`, `content_type`, `serializer`
-- [ ] T007 Create `ExportMetadata` Pydantic model in `specmetrics/plugins/exporter/models.py` with fields: `specmetrics_version`, `run_id`, `export_timestamp`, `function_count`, `pipeline_duration_ms`
-- [ ] T008 Create `ExportOrchestrator` service in `specmetrics/plugins/exporter/orchestrator.py` that iterates formats sequentially, isolates per-format errors, handles empty results (produces valid empty files), and manages file overwrite-with-warning behavior
+- [x] T004 [P] Create `ExporterPlugin` abstract base class in `specmetrics/plugins/exporter/base.py` with `export()` method signature matching [exporter-plugin contract](contracts/exporter-plugin.md)
+- [x] T005 [P] Create `PublisherPlugin` abstract base class in `specmetrics/plugins/publisher/base.py` with `publish()` method signature matching [publisher-plugin contract](contracts/publisher-plugin.md)
+- [x] T006 [P] Create `ExportFormat` Pydantic model in `specmetrics/plugins/exporter/models.py` with fields: `id`, `name`, `description`, `file_extension`, `content_type`, `serializer`
+- [x] T007 Create `ExportMetadata` Pydantic model in `specmetrics/plugins/exporter/models.py` with fields: `specmetrics_version`, `run_id`, `export_timestamp`, `function_count`, `pipeline_duration_ms`
+- [x] T008 Create `ExportOrchestrator` service in `specmetrics/plugins/exporter/orchestrator.py` that iterates formats sequentially, isolates per-format errors, handles empty results (produces valid empty files), and manages file overwrite-with-warning behavior
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -54,16 +54,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Implement JSON exporter plugin in `specmetrics/plugins/exporter/json_exporter.py` using stdlib `json` module; produce valid empty `[]` for zero results
-- [ ] T010 [P] [US1] Implement CSV exporter plugin in `specmetrics/plugins/exporter/csv_exporter.py` using stdlib `csv` module; produce header-only file for zero results
-- [ ] T011 [P] [US1] Implement XML exporter plugin in `specmetrics/plugins/exporter/xml_exporter.py` using stdlib `xml.etree.ElementTree`; produce empty root element for zero results
-- [ ] T012 [US1] Register JSON, CSV, XML exporter entry points in `pyproject.toml` under `specmetrics.exporters`
-- [ ] T013 [US1] Implement CLI export commands in `specmetrics/cli/export_commands.py` using Typer with `--format`, `--output-dir` flags; integrate with `ExportOrchestrator`
-- [ ] T014 [US1] Register export CLI commands with the main Typer app in `specmetrics/cli/__init__.py`
-- [ ] T015 [US1] Implement MCP export tools in `specmetrics/mcp/tools/export_tools.py` with callable tool definitions for each format
-- [ ] T016 [US1] Add evidence reference inclusion to all three exporters — each measurement output must include document, section, and text fragment references (FR-002)
-- [ ] T017 [US1] Add metadata injection to all three exporters — include `ExportMetadata` fields in each output (FR-010)
-- [ ] T018 [US1] Add structured logging for export operations (format selected, file path, duration, result count) in `specmetrics/plugins/exporter/orchestrator.py`
+- [x] T009 [P] [US1] Implement JSON exporter plugin in `specmetrics/plugins/exporter/json_exporter.py` using stdlib `json` module; produce valid empty `[]` for zero results
+- [x] T010 [P] [US1] Implement CSV exporter plugin in `specmetrics/plugins/exporter/csv_exporter.py` using stdlib `csv` module; produce header-only file for zero results
+- [x] T011 [P] [US1] Implement XML exporter plugin in `specmetrics/plugins/exporter/xml_exporter.py` using stdlib `xml.etree.ElementTree`; produce empty root element for zero results
+- [x] T012 [US1] Register JSON, CSV, XML exporter entry points in `pyproject.toml` under `specmetrics.exporters`
+- [x] T013 [US1] Implement CLI export commands in `specmetrics/cli/export_commands.py` using Typer with `--format`, `--output-dir` flags; integrate with `ExportOrchestrator`
+- [x] T014 [US1] Register export CLI commands with the main Typer app in `specmetrics/cli/app.py`
+- [x] T015 [US1] Implement MCP export tools in `specmetrics/mcp/tools.py` with callable tool definitions for each format
+- [x] T016 [US1] Add evidence reference inclusion to all three exporters — each measurement output must include document, section, and text fragment references (FR-002)
+- [x] T017 [US1] Add metadata injection to all three exporters — include `ExportMetadata` fields in each output (FR-010)
+- [x] T018 [US1] Add structured logging for export operations (format selected, file path, duration, result count) in `specmetrics/plugins/exporter/orchestrator.py`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional — users can export measurements to JSON/CSV/XML via CLI
 
@@ -77,14 +77,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T019 [P] [US2] Implement OpenTelemetry publisher plugin in `specmetrics/plugins/publisher/otel_publisher.py` publishing function count (counter) and complexity distribution (histogram) metrics
-- [ ] T020 [P] [US2] Create `PublisherTarget` Pydantic model in `specmetrics/plugins/publisher/models.py` with fields: `id`, `endpoint_url`, `enabled`, `publishing_interval`
-- [ ] T021 [US2] Implement publisher orchestration in `specmetrics/plugins/publisher/orchestrator.py` that loads enabled publishers, calls `publish()` per target, isolates failures per FR-006
-- [ ] T022 [US2] Register `otel` publisher entry point in `pyproject.toml` under `specmetrics.publishers`
-- [ ] T023 [US2] Add publisher CLI flags (`--publish`, `--otel-endpoint`) to export command in `specmetrics/cli/export_commands.py`
-- [ ] T024 [US2] Add MCP publisher tools in `specmetrics/mcp/tools/export_tools.py`
-- [ ] T025 [US2] Integrate publisher with measurement pipeline — publish metrics automatically when pipeline completes and publisher is configured
-- [ ] T026 [US2] Handle unreachable endpoints gracefully — log warning, return `PublishResult(success=False)`, do not block pipeline (FR-006)
+- [x] T019 [P] [US2] Implement OpenTelemetry publisher plugin in `specmetrics/plugins/publisher/otel_publisher.py` publishing function count (counter) and complexity distribution (histogram) metrics
+- [x] T020 [P] [US2] Create `PublisherTarget` Pydantic model in `specmetrics/plugins/publisher/models.py` with fields: `id`, `endpoint_url`, `enabled`, `publishing_interval`
+- [x] T021 [US2] Implement publisher orchestration in `specmetrics/plugins/publisher/orchestrator.py` that loads enabled publishers, calls `publish()` per target, isolates failures per FR-006
+- [x] T022 [US2] Register `otel` publisher entry point in `pyproject.toml` under `specmetrics.publishers`
+- [x] T023 [US2] Add publisher CLI flags (`--publish`, `--otel-endpoint`) to export command in `specmetrics/cli/export_commands.py`
+- [x] T024 [US2] Add MCP publisher tools via `export` tool in `specmetrics/mcp/tools.py`
+- [x] T025 [US2] Integrate publisher with measurement pipeline — `export run --publish` invokes publishers after export
+- [x] T026 [US2] Handle unreachable endpoints gracefully — log warning, return `PublishResult(success=False)`, do not block pipeline (FR-006)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -98,11 +98,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Implement plugin discovery for `specmetrics.exporters` entry point group in `specmetrics/plugins/exporter/discovery.py` — scan, validate, and load exporter plugins
-- [ ] T028 [P] [US3] Implement plugin discovery for `specmetrics.publishers` entry point group in `specmetrics/plugins/publisher/discovery.py`
-- [ ] T029 [US3] Create plugin registry integration that exposes discovered exporters/publishers via `ExportOrchestrator` and publisher orchestration
-- [ ] T030 [US3] Add `plugins list --type exporter|publisher` CLI command showing discovered plugins with ID, name, and description in `specmetrics/cli/export_commands.py`
-- [ ] T031 [US3] Add plugin validation — verify each discovered plugin implements the correct abstract base class before registration; report clear errors for invalid plugins
+- [x] T027 [P] [US3] Implement plugin discovery for `specmetrics.exporters` entry point group in `specmetrics/plugins/exporter/discovery.py` — scan, validate, and load exporter plugins
+- [x] T028 [P] [US3] Implement plugin discovery for `specmetrics.publishers` entry point group in `specmetrics/plugins/publisher/discovery.py`
+- [x] T029 [US3] Create plugin registry integration that exposes discovered exporters/publishers via `ExportOrchestrator` and publisher orchestration
+- [x] T030 [US3] Add `plugins list-formats` CLI command showing discovered exporters and publishers in `specmetrics/cli/plugins.py`
+- [x] T031 [US3] Add plugin validation — verify each discovered plugin implements the correct abstract base class before registration; report clear errors for invalid plugins
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -112,10 +112,10 @@
 
 **Purpose**: Performance, hardening, and validation
 
-- [ ] T032 [P] Add size-based batching for large datasets (>5,000 functions) to prevent memory issues during serialization
-- [ ] T033 [P] Add configurable output path option (`--output-dir`) with directory creation fallback
-- [ ] T034 Run through [quickstart.md](quickstart.md) validation scenarios to verify end-to-end correctness
-- [ ] T035 Review all error messages for clarity (FR-009) — unsupported formats, invalid config, filesystem errors
+- [x] T032 [P] Add size-based batching for large datasets (>5,000 functions) to prevent memory issues during serialization
+- [x] T033 [P] Add configurable output path option (`--output-dir`) with directory creation fallback
+- [x] T034 Run through [quickstart.md](quickstart.md) validation scenarios to verify end-to-end correctness
+- [x] T035 Review all error messages for clarity (FR-009) — unsupported formats, invalid config, filesystem errors
 
 ---
 

@@ -161,6 +161,7 @@ class PipelineOrchestrator:
             measurement=measurement,
             duration_seconds=elapsed,
             export_path=export_path,
+            canonical_model=result_ctx.canonical_model,
         )
 
     def _build_stage_results(
@@ -237,6 +238,9 @@ class PipelineOrchestrator:
         )
         export_dir.mkdir(parents=True, exist_ok=True)
 
+        if request.output_format in (OutputFormat.JSON, OutputFormat.CSV, OutputFormat.XML):
+            return self._handle_structured_export(request, ctx, export_dir)
+
         ext = request.output_format.value
         export_file = export_dir / f"specmetrics-output.{ext}"
 
@@ -255,4 +259,37 @@ class PipelineOrchestrator:
         }
         export_file.write_text(str(result_data))
         logger.info("export_written", path=str(export_file))
+        return export_file
+
+    def _handle_structured_export(
+        self, request: PipelineRequest, ctx: PipelineContext, export_dir: Path
+    ) -> Path | None:
+        from importlib.metadata import entry_points
+
+        from specmetrics.plugins.exporter.base import ExporterPlugin
+        from specmetrics.plugins.exporter.orchestrator import ExportOrchestrator
+
+        exporters: list[ExporterPlugin] = []
+        for ep in entry_points(group="specmetrics.exporters"):
+            try:
+                cls = ep.load()
+                if isinstance(cls, type) and issubclass(cls, ExporterPlugin):
+                    exporters.append(cls())
+            except Exception as exc:
+                logger.warning("exporter_load_failed", entry_point=ep.name, error=str(exc))
+
+        if not exporters:
+            logger.warning("No exporter plugins available for structured export")
+            return None
+
+        cfm = ctx.canonical_model
+        if cfm is None:
+            logger.warning("No canonical model available for export")
+            return None
+
+        orch = ExportOrchestrator(exporters)
+        fmt = request.output_format.value
+        orch.export_to_dir(cfm, export_dir, formats=[fmt])
+        export_file = export_dir / f"measurements.{fmt}"
+        logger.info("structured_export_completed", format=fmt, path=str(export_file))
         return export_file

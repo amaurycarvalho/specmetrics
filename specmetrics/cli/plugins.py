@@ -66,3 +66,26 @@ def verify() -> None:
         print("All plugins compatible.")
     else:
         print("Some plugins are incompatible.")
+
+
+@plugins_app.command(name="list-formats")
+def list_formats() -> None:
+    from specmetrics.plugins.exporter.discovery import discover_exporters
+    from specmetrics.plugins.publisher.discovery import discover_publishers
+
+    exporters = discover_exporters()
+    publishers = discover_publishers()
+
+    print("Export Formats:")
+    if exporters:
+        for exp in exporters:
+            print(f"  \u2713 {exp.format_id():10s} ({exp.content_type()})")
+    else:
+        print("  (none discovered)")
+
+    print("Publishers:")
+    if publishers:
+        for pub in publishers:
+            print(f"  \u2713 {pub.publisher_id():10s} ({pub.name()})")
+    else:
+        print("  (none discovered)")

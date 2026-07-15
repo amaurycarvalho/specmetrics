@@ -11,6 +11,8 @@ dependencies = [
     "mcp>=1.0.0",
     "networkx>=3.0",
     "ruamel.yaml>=0.18.0",
+    "opentelemetry-api>=1.30.0",
+    "opentelemetry-sdk>=1.30.0",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +29,14 @@ apf = "specmetrics.plugins.measurement.apf.plugin:APFMeasurementPlugin"
 
 [project.entry-points."specmetrics.plugins.rule_pack"]
 rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:RulePackEnginePlugin"
+
+[project.entry-points."specmetrics.exporters"]
+json = "specmetrics.plugins.exporter.json_exporter:JsonExporter"
+csv = "specmetrics.plugins.exporter.csv_exporter:CsvExporter"
+xml = "specmetrics.plugins.exporter.xml_exporter:XmlExporter"
+
+[project.entry-points."specmetrics.publishers"]
+otel = "specmetrics.plugins.publisher.otel_publisher:OTelPublisher"
 
 [tool.setuptools.packages.find]
 include = ["specmetrics*"]

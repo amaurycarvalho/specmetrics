@@ -7,6 +7,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
 from .tools import (
+    EXPORT_TOOL,
     PLUGINS_LIST_TOOL,
     VERSION_TOOL,
     TOOL_HANDLERS,
@@ -24,7 +25,7 @@ server = Server("specmetrics")
 
 @server.list_tools()
 async def handle_list_tools() -> list:
-    return [MEASURE_TOOL, PLUGINS_LIST_TOOL, VERSION_TOOL]
+    return [MEASURE_TOOL, PLUGINS_LIST_TOOL, VERSION_TOOL, EXPORT_TOOL]
 
 
 @server.call_tool()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .enums import (
     OutputFormat,
@@ -48,6 +49,7 @@ class PipelineResult:
     duration_seconds: float = 0.0
     error: str = ""
     export_path: Path | None = None
+    canonical_model: Any | None = None
 
 
 @dataclass
