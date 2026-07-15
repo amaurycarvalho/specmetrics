@@ -1,5 +1,8 @@
 # specmetrics
+
 A Functional Measurement Engine for Specification Driven Development
+
+[![Spec-Driven Development](https://img.shields.io/badge/SDD-OpenSpec-yellow)](.specify/memory/constitution.md)
 
 ---
 
@@ -19,20 +22,19 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ### Methodologies
 
-* Function Point Analysis (IFPUG/APF)
-* Simplified Function Point (SPF)
-* SNAP
+- Function Point Analysis (IFPUG/APF)
+- Simplified Function Point (SPF)
+- SNAP
 
 ### Export Formats
 
-* JSON
-* CSV
-* XML
-* Markdown
+- JSON
+- CSV
+- XML
+- Markdown
 
 ---
 
 ## Know more
 
 You can find more information [here](docs/PRD.md) and [here](docs/system%20designs/Foundation.md).
-
