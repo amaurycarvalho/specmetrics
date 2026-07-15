@@ -18,15 +18,20 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ---
 
-## Support
+## How it Works
 
-### Methodologies
+### Input Specs
+
+- OpenSpec
+- SpecKit
+
+### Evaluate Metrics
 
 - Function Point Analysis (IFPUG/APF)
 - Simplified Function Point (SPF)
 - SNAP
 
-### Export Formats
+### Output Formats
 
 - JSON
 - CSV
@@ -35,11 +40,25 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ---
 
-## How to install
+## How to Install
+
+```
+uv ...
+```
+
+or
+
+```
+pipx ...
+```
 
 ---
 
-## How to use
+## How to Use
+
+```
+specmetrics measure
+```
 
 ---
 
