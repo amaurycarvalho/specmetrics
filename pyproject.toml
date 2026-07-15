@@ -7,12 +7,19 @@ dependencies = [
     "litellm>=1.0.0",
     "pydantic>=2.0.0",
     "structlog>=24.0.0",
+    "typer>=0.12.0",
+    "mcp>=1.0.0",
+    "ruamel.yaml>=0.18.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
 ]
+
+[project.scripts]
+specmetrics = "specmetrics.cli.app:app"
+specmetrics-mcp = "specmetrics.mcp.server:main"
 
 [project.entry-points."specmetrics.plugins.measurement"]
 apf = "specmetrics.plugins.measurement.apf.plugin:APFMeasurementPlugin"

@@ -24,10 +24,10 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Purpose**: Project initialization and directory structure
 
-- [ ] T001 Create CLI package structure at `specmetrics/cli/__init__.py`
-- [ ] T002 [P] Create MCP package structure at `specmetrics/mcp/__init__.py`
-- [ ] T003 [P] Create application package at `specmetrics/application/__init__.py`
-- [ ] T004 Add `typer`, `mcp`, and `structlog` dependencies to `pyproject.toml`
+- [X] T001 Create CLI package structure at `specmetrics/cli/__init__.py`
+- [X] T002 [P] Create MCP package structure at `specmetrics/mcp/__init__.py`
+- [X] T003 [P] Create application package at `specmetrics/application/__init__.py`
+- [X] T004 Add `typer`, `mcp`, and `structlog` dependencies to `pyproject.toml`
 
 ---
 
@@ -37,11 +37,11 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **⚠ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement `PipelineRequest`, `PipelineResult`, `StageResult`, `MeasurementResult` Pydantic models in `specmetrics/application/models.py`
-- [ ] T006 [P] Implement `StageName` and `OutputFormat` enums in `specmetrics/application/enums.py`
-- [ ] T007 [P] Implement `PluginInfo` and `VersionInfo` Pydantic models in `specmetrics/application/models.py`
-- [ ] T008 Create `PipelineOrchestrator` class skeleton in `specmetrics/application/orchestrator.py` with `execute(request: PipelineRequest) -> PipelineResult` method signature and docstring
-- [ ] T009 Implement project configuration loader from `.specify/config.yml` in `specmetrics/application/config.py`
+- [X] T005 Implement `PipelineRequest`, `PipelineResult`, `StageResult`, `MeasurementResult` Pydantic models in `specmetrics/application/models.py`
+- [X] T006 [P] Implement `StageName` and `OutputFormat` enums in `specmetrics/application/enums.py`
+- [X] T007 [P] Implement `PluginInfo` and `VersionInfo` Pydantic models in `specmetrics/application/models.py`
+- [X] T008 Create `PipelineOrchestrator` class skeleton in `specmetrics/application/orchestrator.py` with `execute(request: PipelineRequest) -> PipelineResult` method signature and docstring
+- [X] T009 Implement project configuration loader from `.specify/config.yml` in `specmetrics/application/config.py`
 
 **Checkpoint**: Foundation ready — user story implementation can begin
 
@@ -53,16 +53,16 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Independent Test**: Run `specmetrics measure` on a test project — verify all pipeline stages execute and a summary is printed to stdout with exit code 0
 
-- [ ] T010 [P] [US1] Create Typer application entry point with `measure`, `plugins`, `version`, and `help` commands in `specmetrics/cli/app.py`
-- [ ] T011 [P] [US1] Implement CLI output formatter for text summary in `specmetrics/cli/formatters.py` — includes progress display and the structured table format defined in research.md
-- [ ] T012 [US1] Implement `measure` command handler in `specmetrics/cli/measure.py` — accepts `PROJECT_PATH` argument, parses `--output`, `--verbose`, `--quiet` flags, calls orchestrator, and prints result
-- [ ] T013 [US1] Implement `--output <format>` flag handling in `specmetrics/cli/measure.py` — supports `json`, `csv`, `xml`, `text` formats with optional path (`json:./path.json`)
-- [ ] T014 [US1] Implement `--verbose` and `--quiet` flag handling in `specmetrics/cli/measure.py` — verbose shows per-stage detail, quiet suppresses all non-error output
-- [ ] T015 [US1] Implement exit code handling in `specmetrics/cli/app.py` — exit 0 on success, 1 on error, 2 on plugin error
-- [ ] T016 [US1] Implement `--help` and default help text for all commands in `specmetrics/cli/app.py`
-- [ ] T017 [US1] Implement `version` command in `specmetrics/cli/app.py` — displays platform version and plugin versions
-- [ ] T018 [US1] Wire `PipelineOrchestrator` into CLI `measure` command in `specmetrics/cli/measure.py` — calls `orchestrator.execute()` with the parsed `PipelineRequest`
-- [ ] T019 [US1] Wire project config loading into CLI startup in `specmetrics/cli/app.py` — loads `.specify/config.yml` and applies defaults (output format, verbosity)
+- [X] T010 [P] [US1] Create Typer application entry point with `measure`, `plugins`, `version`, and `help` commands in `specmetrics/cli/app.py`
+- [X] T011 [P] [US1] Implement CLI output formatter for text summary in `specmetrics/cli/formatters.py` — includes progress display and the structured table format defined in research.md
+- [X] T012 [US1] Implement `measure` command handler in `specmetrics/cli/measure.py` — accepts `PROJECT_PATH` argument, parses `--output`, `--verbose`, `--quiet` flags, calls orchestrator, and prints result
+- [X] T013 [US1] Implement `--output <format>` flag handling in `specmetrics/cli/measure.py` — supports `json`, `csv`, `xml`, `text` formats with optional path (`json:./path.json`)
+- [X] T014 [US1] Implement `--verbose` and `--quiet` flag handling in `specmetrics/cli/measure.py` — verbose shows per-stage detail, quiet suppresses all non-error output
+- [X] T015 [US1] Implement exit code handling in `specmetrics/cli/app.py` — exit 0 on success, 1 on error, 2 on plugin error
+- [X] T016 [US1] Implement `--help` and default help text for all commands in `specmetrics/cli/app.py`
+- [X] T017 [US1] Implement `version` command in `specmetrics/cli/app.py` — displays platform version and plugin versions
+- [X] T018 [US1] Wire `PipelineOrchestrator` into CLI `measure` command in `specmetrics/cli/measure.py` — calls `orchestrator.execute()` with the parsed `PipelineRequest`
+- [X] T019 [US1] Wire project config loading into CLI startup in `specmetrics/cli/app.py` — loads `.specify/config.yml` and applies defaults (output format, verbosity)
 
 **Checkpoint**: `specmetrics measure` runs the full pipeline with output and exit codes — validates quickstart Scenarios 1, 2, 4, 6, 10
 
@@ -74,14 +74,14 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Independent Test**: Start `specmetrics-mcp`, send an MCP `initialize` request, then send a `tools/call` for `measure` — verify structured response
 
-- [ ] T020 [P] [US2] Implement MCP server entry point with stdio transport and `initialize` handshake in `specmetrics/mcp/server.py`
-- [ ] T021 [P] [US2] Implement `measure` MCP tool handler in `specmetrics/mcp/tools.py` — accepts `project_path`, `output_format`, `from_stage` params, calls orchestrator, returns serialized `PipelineResult`
-- [ ] T022 [P] [US2] Implement `plugins_list` MCP tool handler in `specmetrics/mcp/tools.py` — returns list of installed plugins as serialized `PluginInfo`
-- [ ] T023 [P] [US2] Implement `specmetrics_version` MCP tool handler in `specmetrics/mcp/tools.py` — returns platform version and plugin versions as serialized `VersionInfo`
-- [ ] T024 [US2] Implement JSON-RPC error handling in `specmetrics/mcp/server.py` — returns structured error responses for parse errors, invalid requests, unknown methods, invalid params, and internal errors
-- [ ] T025 [US2] Implement concurrent request handling in `specmetrics/mcp/server.py` — queues or rejects second request while measurement is in progress, never crashes
-- [ ] T026 [US2] Implement stderr logging in `specmetrics/mcp/server.py` — logs requests, responses, and errors to stderr without interfering with stdio JSON-RPC
-- [ ] T027 [US2] Wire MCP tools to `PipelineOrchestrator` in `specmetrics/mcp/server.py` — all tool handlers call `orchestrator.execute()` through the shared `orchestrator` instance
+- [X] T020 [P] [US2] Implement MCP server entry point with stdio transport and `initialize` handshake in `specmetrics/mcp/server.py`
+- [X] T021 [P] [US2] Implement `measure` MCP tool handler in `specmetrics/mcp/tools.py` — accepts `project_path`, `output_format`, `from_stage` params, calls orchestrator, returns serialized `PipelineResult`
+- [X] T022 [P] [US2] Implement `plugins_list` MCP tool handler in `specmetrics/mcp/tools.py` — returns list of installed plugins as serialized `PluginInfo`
+- [X] T023 [P] [US2] Implement `specmetrics_version` MCP tool handler in `specmetrics/mcp/tools.py` — returns platform version and plugin versions as serialized `VersionInfo`
+- [X] T024 [US2] Implement JSON-RPC error handling in `specmetrics/mcp/server.py` — returns structured error responses for parse errors, invalid requests, unknown methods, invalid params, and internal errors
+- [X] T025 [US2] Implement concurrent request handling in `specmetrics/mcp/server.py` — queues or rejects second request while measurement is in progress, never crashes
+- [X] T026 [US2] Implement stderr logging in `specmetrics/mcp/server.py` — logs requests, responses, and errors to stderr without interfering with stdio JSON-RPC
+- [X] T027 [US2] Wire MCP tools to `PipelineOrchestrator` in `specmetrics/mcp/server.py` — all tool handlers call `orchestrator.execute()` through the shared `orchestrator` instance
 
 **Checkpoint**: MCP Server starts, handshakes, and handles `measure` requests — validates quickstart Scenarios 7, 8
 
@@ -93,11 +93,11 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Independent Test**: Run `specmetrics measure --stage extract` — verify only extraction stage executes. Run `specmetrics measure --from measure` — verify stages before `measure` are skipped.
 
-- [ ] T028 [US3] Add `--stage <name>` flag parsing to `specmetrics/cli/measure.py` — accepts one of the `StageName` values, populates `PipelineRequest.stages`
-- [ ] T029 [US3] Add `--from <name>` flag parsing to `specmetrics/cli/measure.py` — accepts one of the `StageName` values, populates `PipelineRequest.from_stage`
-- [ ] T030 [US3] Add stage name validation in `specmetrics/cli/measure.py` — unknown stage names produce descriptive error listing valid options
-- [ ] T031 [US3] Add `from_stage` parameter to MCP `measure` tool schema in `specmetrics/mcp/tools.py`
-- [ ] T032 [US3] Implement stage filtering logic in `specmetrics/application/orchestrator.py` — `execute()` resolves stage names to pipeline events, applies `stages` or `from_stage` filtering, invokes only selected stages
+- [X] T028 [US3] Add `--stage <name>` flag parsing to `specmetrics/cli/measure.py` — accepts one of the `StageName` values, populates `PipelineRequest.stages`
+- [X] T029 [US3] Add `--from <name>` flag parsing to `specmetrics/cli/measure.py` — accepts one of the `StageName` values, populates `PipelineRequest.from_stage`
+- [X] T030 [US3] Add stage name validation in `specmetrics/cli/measure.py` — unknown stage names produce descriptive error listing valid options
+- [X] T031 [US3] Add `from_stage` parameter to MCP `measure` tool schema in `specmetrics/mcp/tools.py`
+- [X] T032 [US3] Implement stage filtering logic in `specmetrics/application/orchestrator.py` — `execute()` resolves stage names to pipeline events, applies `stages` or `from_stage` filtering, invokes only selected stages
 
 **Checkpoint**: Stage selection works on both CLI and MCP — validates quickstart Scenario 3
 
@@ -109,11 +109,11 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Independent Test**: Run `specmetrics plugins list` with a known plugin installed — verify it appears in output with correct name, version, and type
 
-- [ ] T033 [P] [US4] Implement `plugins list` command in `specmetrics/cli/plugins.py` — lists all discovered plugins with name, version, type, and enabled status
-- [ ] T034 [P] [US4] Implement `plugins verify` command in `specmetrics/cli/plugins.py` — checks all installed plugins for version compatibility with current platform
-- [ ] T035 [US4] Add `--type` filter flag to `plugins list` in `specmetrics/cli/plugins.py` — filtered output for specific plugin families
-- [ ] T036 [US4] Wire `plugins list` and `plugins verify` to Plugin Discovery Registry (003) in `specmetrics/cli/plugins.py`
-- [ ] T037 [US4] Verify `plugins_list` and `specmetrics_version` MCP tools correctly expose the same data as their CLI counterparts in `specmetrics/mcp/tools.py`
+- [X] T033 [P] [US4] Implement `plugins list` command in `specmetrics/cli/plugins.py` — lists all discovered plugins with name, version, type, and enabled status
+- [X] T034 [P] [US4] Implement `plugins verify` command in `specmetrics/cli/plugins.py` — checks all installed plugins for version compatibility with current platform
+- [X] T035 [US4] Add `--type` filter flag to `plugins list` in `specmetrics/cli/plugins.py` — filtered output for specific plugin families
+- [X] T036 [US4] Wire `plugins list` and `plugins verify` to Plugin Discovery Registry (003) in `specmetrics/cli/plugins.py`
+- [X] T037 [US4] Verify `plugins_list` and `specmetrics_version` MCP tools correctly expose the same data as their CLI counterparts in `specmetrics/mcp/tools.py`
 
 **Checkpoint**: `specmetrics plugins list` and `specmetrics plugins verify` work — validates quickstart Scenario 5
 
@@ -123,10 +123,10 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 
 **Purpose**: Improvements that affect multiple user stories or the overall quality of the interaction layer
 
-- [ ] T038 [P] Add type hints and run `mypy` on all files under `specmetrics/cli/`, `specmetrics/mcp/`, and `specmetrics/application/`
-- [ ] T039 Add `structlog` logging across CLI app and MCP server with appropriate log levels in `specmetrics/cli/app.py` and `specmetrics/mcp/server.py`
+- [X] T038 [P] Add type hints and run `mypy` on all files under `specmetrics/cli/`, `specmetrics/mcp/`, and `specmetrics/application/`
+- [X] T039 Add `structlog` logging across CLI app and MCP server with appropriate log levels in `specmetrics/cli/app.py` and `specmetrics/mcp/server.py`
 - [ ] T040 Run all quickstart.md validation scenarios end-to-end and fix any issues
-- [ ] T041 Add module-level and function-level docstrings to all public interfaces in `specmetrics/cli/`, `specmetrics/mcp/`, and `specmetrics/application/`
+- [X] T041 Add module-level and function-level docstrings to all public interfaces in `specmetrics/cli/`, `specmetrics/mcp/`, and `specmetrics/application/`
 
 ---
 
