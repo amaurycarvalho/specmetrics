@@ -16,8 +16,6 @@ SpecMetrics leverages Large Language Models to semantically understand specifica
 
 Beyond functional measurement, SpecMetrics provides a foundation for engineering observability by exposing structured functional information that can be consumed by dashboards, DevOps platforms, software quality tools and AI-assisted development workflows through an extensible plugin ecosystem.
 
----
-
 ## How it Works
 
 ### Input Specs
@@ -40,7 +38,9 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ---
 
-## How to Install
+## 🧑‍💻 For Users
+
+### How to Install
 
 ```bash
 uv tool install specmetrics-<version>-py3-none-any.whl
@@ -52,9 +52,7 @@ or
 pipx install --force specmetrics-<version>-py3-none-any.whl
 ```
 
----
-
-## How to Use
+### How to Use
 
 ```bash
 specmetrics --help
@@ -65,20 +63,23 @@ specmetrics plugins list --help
 
 ---
 
-## How to Build
+## 👨‍🔧 For Developers
+
+### How to Build
 
 ```bash
 make build
 ```
 
-## How to Test
+### How to Test
 
 ```bash
+make lint
 make test
 ```
 
----
-
-## Know more
+### Know more
 
 You can find more information [here](docs/PRD.md) and [here](docs/system%20designs/Foundation.md).
+
+All specs can be found [here](specs/).
