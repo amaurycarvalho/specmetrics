@@ -4,8 +4,6 @@ from pathlib import Path
 
 import typer
 
-from specmetrics import __version__
-
 from .measure import run_measure
 from .plugins import plugins_app
 

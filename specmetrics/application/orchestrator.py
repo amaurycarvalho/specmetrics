@@ -6,8 +6,7 @@ from typing import Any
 
 import structlog
 
-from specmetrics.kernel.diagnostics import Diagnostics, StageStatus as KernelStageStatus
-from specmetrics.kernel.event_bus import EventBus
+from specmetrics.kernel.diagnostics import StageStatus as KernelStageStatus
 from specmetrics.kernel.events import EventType
 from specmetrics.kernel.exceptions import PipelineError
 from specmetrics.kernel.handler_registry import HandlerRegistry
@@ -17,7 +16,6 @@ from specmetrics.kernel.plugin_discovery import load_plugins
 from specmetrics.kernel.plugin_registry import PluginRegistry
 from specmetrics.kernel.plugin_validation import PluginValidator
 
-from .config import AppConfig
 from .enums import (
     OutputFormat,
     PipelineStatus,

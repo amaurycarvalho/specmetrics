@@ -4,7 +4,7 @@ import json
 
 from specmetrics import __version__
 from specmetrics.application.enums import StageExecutionStatus
-from specmetrics.application.models import PipelineResult, StageResult
+from specmetrics.application.models import PipelineResult
 
 
 def format_text_result(result: PipelineResult, verbose: bool = False) -> str:

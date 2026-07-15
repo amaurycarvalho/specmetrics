@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import json
 import logging
-import sys
 
 import structlog
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import ErrorData, JSONRPCMessage, JSONRPCRequest, JSONRPCError
 
 from .tools import (
     PLUGINS_LIST_TOOL,
