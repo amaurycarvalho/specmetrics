@@ -14,6 +14,9 @@ dev = [
     "pytest>=8.0.0",
 ]
 
+[project.entry-points."specmetrics.plugins.measurement"]
+apf = "specmetrics.plugins.measurement.apf.plugin:APFMeasurementPlugin"
+
 [tool.setuptools.packages.find]
 include = ["specmetrics*"]
 

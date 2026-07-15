@@ -32,3 +32,5 @@
 ## Notes
 
 - All items validated and passing. No clarifications needed.
+- All 38 implementation tasks completed and verified (56 tests passing, 0 regressions).
+- Entry point registered in `pyproject.toml` under `specmetrics.plugins.measurement` group.

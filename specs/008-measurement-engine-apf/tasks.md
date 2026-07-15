@@ -25,10 +25,10 @@
 
 **Purpose**: Create directory structure and scaffolding for the APF measurement plugin.
 
-- [ ] T001 Create `specmetrics/plugins/measurement/` package with `__init__.py`
-- [ ] T002 Create `specmetrics/plugins/measurement/apf/` package with `__init__.py`
-- [ ] T003 [P] Create `tests/unit/measurement/apf/` directory structure
-- [ ] T004 [P] Create `tests/integration/measurement/apf/` directory structure
+- [x] T001 Create `specmetrics/plugins/measurement/` package with `__init__.py`
+- [x] T002 Create `specmetrics/plugins/measurement/apf/` package with `__init__.py`
+- [x] T003 [P] Create `tests/unit/measurement/apf/` directory structure
+- [x] T004 [P] Create `tests/integration/measurement/apf/` directory structure
 
 ---
 
@@ -38,9 +38,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T005 [P] Define APF measurement Pydantic models in `specmetrics/plugins/measurement/apf/models.py` — `APFMeasurementResult`, `MeasuredFunction`, `MeasurementSummary`, `MeasurementExplanation`, `MeasurementWarning`, `MeasurementError`, `EvidenceRef`, `FunctionType` (Literal), `ComplexityRating` (Literal), `TypeBreakdown`, `ComplexityDistributionRow` per `data-model.md`
-- [ ] T006 [P] Implement IFPUG CPM 4.3 complexity matrix tables for all five function types in `specmetrics/plugins/measurement/apf/complexity.py` — including data function matrix (ILF/EIF: RETs × DETs), transactional matrices (EI: FTRs × DETs, EO/EQ: FTRs × DETs), and UFP weight table (ILF=7/10/15, EIF=5/7/10, EI=3/4/6, EO=4/5/7, EQ=3/4/6)
-- [ ] T007 [P] Implement `MeasurementPlugin` Protocol class in `specmetrics/plugins/measurement/apf/plugin.py` with `plugin_id()`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)` methods per contract in `contracts/measurement-plugin-interface.md`
+- [x] T005 [P] Define APF measurement Pydantic models in `specmetrics/plugins/measurement/apf/models.py` — `APFMeasurementResult`, `MeasuredFunction`, `MeasurementSummary`, `MeasurementExplanation`, `MeasurementWarning`, `MeasurementError`, `EvidenceRef`, `FunctionType` (Literal), `ComplexityRating` (Literal), `TypeBreakdown`, `ComplexityDistributionRow` per `data-model.md`
+- [x] T006 [P] Implement IFPUG CPM 4.3 complexity matrix tables for all five function types in `specmetrics/plugins/measurement/apf/complexity.py` — including data function matrix (ILF/EIF: RETs × DETs), transactional matrices (EI: FTRs × DETs, EO/EQ: FTRs × DETs), and UFP weight table (ILF=7/10/15, EIF=5/7/10, EI=3/4/6, EO=4/5/7, EQ=3/4/6)
+- [x] T007 [P] Implement `MeasurementPlugin` Protocol class in `specmetrics/plugins/measurement/apf/plugin.py` with `plugin_id()`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)` methods per contract in `contracts/measurement-plugin-interface.md`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -54,17 +54,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Unit test for DataGroup-to-ILF/EIF classification in `tests/unit/measurement/apf/test_counter.py`
-- [ ] T009 [P] [US1] Unit test for Operation-to-EI/EO/EQ classification in `tests/unit/measurement/apf/test_counter.py`
-- [ ] T010 [P] [US1] Unit test for complexity matrix lookups (all 5 function types × 3 complexity levels) in `tests/unit/measurement/apf/test_complexity.py`
-- [ ] T011 [P] [US1] Unit test for empty CFM returning zero count in `tests/unit/measurement/apf/test_counter.py`
+- [x] T008 [P] [US1] Unit test for DataGroup-to-ILF/EIF classification in `tests/unit/measurement/apf/test_counter.py`
+- [x] T009 [P] [US1] Unit test for Operation-to-EI/EO/EQ classification in `tests/unit/measurement/apf/test_counter.py`
+- [x] T010 [P] [US1] Unit test for complexity matrix lookups (all 5 function types × 3 complexity levels) in `tests/unit/measurement/apf/test_complexity.py`
+- [x] T011 [P] [US1] Unit test for empty CFM returning zero count in `tests/unit/measurement/apf/test_counter.py`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement `APFCounter` class in `specmetrics/plugins/measurement/apf/counter.py` — scans CFM DataGroups (data_type: internal→ILF, external→EIF, shared→ILF) and Operations (requires direction metadata: input→EI, output→EO, query→EQ); derives DET count from metadata or relationships; delegates complexity to `complexity.py`
-- [ ] T013 [US1] Wire basic measurement flow in `specmetrics/plugins/measurement/apf/plugin.py` — `measure()` method creates `APFCounter`, invokes it against the CFM, populates `APFMeasurementResult` with `MeasuredFunction` entries and `MeasurementSummary`, returns the result
-- [ ] T014 [US1] Handle edge cases in `specmetrics/plugins/measurement/apf/counter.py` — zero-count result for empty CFM; unresolvable references produce warnings
-- [ ] T015 [US1] Integration test: full measurement pipeline with a synthetic CFM in `tests/integration/measurement/apf/test_full_measurement.py`
+- [x] T012 [US1] Implement `APFCounter` class in `specmetrics/plugins/measurement/apf/counter.py` — scans CFM DataGroups (data_type: internal→ILF, external→EIF, shared→ILF) and Operations (requires direction metadata: input→EI, output→EO, query→EQ); derives DET count from metadata or relationships; delegates complexity to `complexity.py`
+- [x] T013 [US1] Wire basic measurement flow in `specmetrics/plugins/measurement/apf/plugin.py` — `measure()` method creates `APFCounter`, invokes it against the CFM, populates `APFMeasurementResult` with `MeasuredFunction` entries and `MeasurementSummary`, returns the result
+- [x] T014 [US1] Handle edge cases in `specmetrics/plugins/measurement/apf/counter.py` — zero-count result for empty CFM; unresolvable references produce warnings
+- [x] T015 [US1] Integration test: full measurement pipeline with a synthetic CFM in `tests/integration/measurement/apf/test_full_measurement.py`
 
 **Checkpoint**: US1 complete — basic APF measurement works end-to-end with default IFPUG rules.
 
@@ -78,14 +78,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Unit test for evidence trail preservation in `tests/unit/measurement/apf/test_counter.py` — verify each MeasuredFunction.evidence_refs contains the originating CFM element's evidence
+- [x] T016 [P] [US2] Unit test for evidence trail preservation in `tests/unit/measurement/apf/test_counter.py` — verify each MeasuredFunction.evidence_refs contains the originating CFM element's evidence
 
 ### Implementation for User Story 2
 
-- [ ] T017 [P] [US2] Implement `MeasurementExplainer` class in `specmetrics/plugins/measurement/apf/explainer.py` — builds `MeasurementExplanation` for each `MeasuredFunction` with `classification_reason`, `complexity_reason`, `rule_exceptions`, and `evidence_chain` tracing: spec section → evidence graph → CFM element → measured function
-- [ ] T018 [US2] Integrate explainer into `plugin.py` — after counter runs, invoke `MeasurementExplainer` to populate `APFMeasurementResult.explanations`
-- [ ] T019 [US2] Integrate evidence reference propagation into `counter.py` — each `MeasuredFunction` copies `EvidenceRef` from the originating CFM element's `.evidence` field
-- [ ] T020 [US2] Integration test: verify evidence trail completeness in `tests/integration/measurement/apf/test_full_measurement.py`
+- [x] T017 [P] [US2] Implement `MeasurementExplainer` class in `specmetrics/plugins/measurement/apf/explainer.py` — builds `MeasurementExplanation` for each `MeasuredFunction` with `classification_reason`, `complexity_reason`, `rule_exceptions`, and `evidence_chain` tracing: spec section → evidence graph → CFM element → measured function
+- [x] T018 [US2] Integrate explainer into `plugin.py` — after counter runs, invoke `MeasurementExplainer` to populate `APFMeasurementResult.explanations`
+- [x] T019 [US2] Integrate evidence reference propagation into `counter.py` — each `MeasuredFunction` copies `EvidenceRef` from the originating CFM element's `.evidence` field
+- [x] T020 [US2] Integration test: verify evidence trail completeness in `tests/integration/measurement/apf/test_full_measurement.py`
 
 **Checkpoint**: US2 complete — all measured functions are explainable with evidence trails.
 
@@ -99,18 +99,18 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Unit test for Rule Pack parsing and default fallback in `tests/unit/measurement/apf/test_rule_applicator.py`
-- [ ] T022 [P] [US3] Unit test for function type exclusion in `tests/unit/measurement/apf/test_rule_applicator.py`
-- [ ] T023 [P] [US3] Unit test for complexity threshold override in `tests/unit/measurement/apf/test_rule_applicator.py`
-- [ ] T024 [P] [US3] Unit test for weight table override in `tests/unit/measurement/apf/test_rule_applicator.py`
+- [x] T021 [P] [US3] Unit test for Rule Pack parsing and default fallback in `tests/unit/measurement/apf/test_rule_applicator.py`
+- [x] T022 [P] [US3] Unit test for function type exclusion in `tests/unit/measurement/apf/test_rule_applicator.py`
+- [x] T023 [P] [US3] Unit test for complexity threshold override in `tests/unit/measurement/apf/test_rule_applicator.py`
+- [x] T024 [P] [US3] Unit test for weight table override in `tests/unit/measurement/apf/test_rule_applicator.py`
 
 ### Implementation for User Story 3
 
-- [ ] T025 [P] [US3] Implement `RulePack` Pydantic model in `specmetrics/plugins/measurement/apf/models.py` — fields for `complexity_overrides`, `weight_overrides`, `excluded_types`, `element_exclusions`, `vaf` (GSC ratings), with all fields optional (defaults to IFPUG standard)
-- [ ] T026 [P] [US3] Implement `RulePackApplicator` class in `specmetrics/plugins/measurement/apf/rule_applicator.py` — loads Rule Pack from YAML, resolves overrides against default IFPUG matrices, applies exclusions by function type or CFM element ID, computes VAF from GSC ratings
-- [ ] T027 [US3] Integrate Rule Pack applicator into `plugin.py` — `measure()` accepts optional `rule_pack` parameter; passes it through counter and explainer; records `rule_pack_id` in `APFMeasurementResult`
-- [ ] T028 [US3] Update `MeasurementExplainer` to include `rule_exceptions` — when a Rule Pack modifies a function's count or complexity, document the specific override and its effect
-- [ ] T029 [US3] Integration test: Rule Pack exclusions and complexity overrides in `tests/integration/measurement/apf/test_full_measurement.py`
+- [x] T025 [P] [US3] Implement `RulePack` Pydantic model in `specmetrics/plugins/measurement/apf/models.py` — fields for `complexity_overrides`, `weight_overrides`, `excluded_types`, `element_exclusions`, `vaf` (GSC ratings), with all fields optional (defaults to IFPUG standard)
+- [x] T026 [P] [US3] Implement `RulePackApplicator` class in `specmetrics/plugins/measurement/apf/rule_applicator.py` — loads Rule Pack from YAML, resolves overrides against default IFPUG matrices, applies exclusions by function type or CFM element ID, computes VAF from GSC ratings
+- [x] T027 [US3] Integrate Rule Pack applicator into `plugin.py` — `measure()` accepts optional `rule_pack` parameter; passes it through counter and explainer; records `rule_pack_id` in `APFMeasurementResult`
+- [x] T028 [US3] Update `MeasurementExplainer` to include `rule_exceptions` — when a Rule Pack modifies a function's count or complexity, document the specific override and its effect
+- [x] T029 [US3] Integration test: Rule Pack exclusions and complexity overrides in `tests/integration/measurement/apf/test_full_measurement.py`
 
 **Checkpoint**: US3 complete — Rule Packs customize measurement without changing engine code or CFM.
 
@@ -124,14 +124,14 @@
 
 ### Tests for User Story 4
 
-- [ ] T030 [P] [US4] Unit test for entry point discovery in `tests/unit/measurement/apf/test_plugin.py`
+- [x] T030 [P] [US4] Unit test for entry point discovery in `tests/unit/measurement/apf/test_plugin.py`
 
 ### Implementation for User Story 4
 
-- [ ] T031 [P] [US4] Implement `APFMeasurementPlugin` class in `specmetrics/plugins/measurement/apf/plugin.py` — satisfies `MeasurementPlugin` protocol; exposes `plugin_id() -> "apf"`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)`
-- [ ] T032 [P] [US4] Register entry point in project's `pyproject.toml` under `specmetrics.plugins.measurement` group pointing to `APFMeasurementPlugin`
-- [ ] T033 [P] [US4] Wire `MeasurementCompleted` event emission in `plugin.py` — `measure()` returns `APFMeasurementResult` and the pipeline emits `EventType.MEASUREMENT_COMPLETED`
-- [ ] T034 [US4] Integration test: pipeline event flow in `tests/integration/measurement/apf/test_full_measurement.py` — verify the plugin registers correctly and `measurement_result` appears in pipeline context
+- [x] T031 [P] [US4] Implement `APFMeasurementPlugin` class in `specmetrics/plugins/measurement/apf/plugin.py` — satisfies `MeasurementPlugin` protocol; exposes `plugin_id() -> "apf"`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)`
+- [x] T032 [P] [US4] Register entry point in project's `pyproject.toml` under `specmetrics.plugins.measurement` group pointing to `APFMeasurementPlugin`
+- [x] T033 [P] [US4] Wire `MeasurementCompleted` event emission in `plugin.py` — `measure()` returns `APFMeasurementResult` and the pipeline emits `EventType.MEASUREMENT_COMPLETED`
+- [x] T034 [US4] Integration test: pipeline event flow in `tests/integration/measurement/apf/test_full_measurement.py` — verify the plugin registers correctly and `measurement_result` appears in pipeline context
 
 **Checkpoint**: US4 complete — APF plugin is fully integrated into the SpecMetrics pipeline.
 
@@ -141,10 +141,10 @@
 
 **Purpose**: Final validation, determinism verification, and documentation.
 
-- [ ] T035 [P] Implement determinism verification test — measure identical CFM twice, assert `model_dump_json()` outputs are byte-identical in `tests/unit/measurement/apf/test_counter.py`
-- [ ] T036 [P] Run quickstart.md validation scenarios end-to-end per `specs/008-measurement-engine-apf/quickstart.md`
-- [ ] T037 Update `specs/008-measurement-engine-apf/checklists/requirements.md` with task completion status
-- [ ] T038 Document any CFM model changes needed (e.g., Operation direction metadata, DataGroup field counts) in `specmetrics/kernel/cfm/model.py` notes
+- [x] T035 [P] Implement determinism verification test — measure identical CFM twice, assert `model_dump_json()` outputs are byte-identical in `tests/unit/measurement/apf/test_counter.py`
+- [x] T036 [P] Run quickstart.md validation scenarios end-to-end per `specs/008-measurement-engine-apf/quickstart.md`
+- [x] T037 Update `specs/008-measurement-engine-apf/checklists/requirements.md` with task completion status
+- [x] T038 Document any CFM model changes needed (e.g., Operation direction metadata, DataGroup field counts) in `specmetrics/kernel/cfm/model.py` notes
 
 ---
 
