@@ -1,6 +1,15 @@
 from .adapter_interface import Document, DocumentSection, SpecificationAdapter
 from .adapter_registry import AdapterRegistry
 from .diagnostics import Diagnostics, StageError as StageErrorRecord, StageStatus, StageTiming
+from .extraction_provider import (
+    EvidenceReference,
+    ExtractedElement,
+    ExtractionProvider,
+    ExtractionResult,
+    ProcessingStats,
+)
+from .extraction_registry import ProviderRouter
+from .extraction_stage import ExtractionStage
 from .events import EventType, PipelineEvent
 from .exceptions import HandlerNotFoundError, PipelineError, PluginError, StageError
 from .handler_registry import EventHandler, HandlerRegistry
@@ -15,6 +24,11 @@ __all__ = [
     "AdapterRegistry",
     "Diagnostics",
     "Document",
+    "EvidenceReference",
+    "ExtractedElement",
+    "ExtractionProvider",
+    "ExtractionResult",
+    "ExtractionStage",
     "DocumentSection",
     "EventHandler",
     "EventType",
@@ -32,6 +46,8 @@ __all__ = [
     "PluginStatus",
     "PluginType",
     "PluginValidator",
+    "ProcessingStats",
+    "ProviderRouter",
     "SpecificationAdapter",
     "StageError",
     "StageErrorRecord",

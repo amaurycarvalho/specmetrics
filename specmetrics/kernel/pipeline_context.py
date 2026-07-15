@@ -13,6 +13,7 @@ class PipelineContext:
     execution_id: UUID = field(default_factory=uuid4)
     repository: Optional[Any] = None
     adapter_result: Optional[Any] = None
+    extraction_result: Optional[Any] = None
     evidence_graph: Optional[Any] = None
     canonical_model: Optional[Any] = None
     measurement_result: Optional[Any] = None

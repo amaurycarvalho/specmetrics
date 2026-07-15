@@ -33,14 +33,14 @@ description: "Task list for Semantic Extraction (F04) implementation"
 
 **Purpose**: Project initialization for extraction infrastructure
 
-- [ ] T001 [P] Create `specmetrics/kernel/extraction_provider.py` —
+- [X] T001 [P] Create `specmetrics/kernel/extraction_provider.py` —
   ExtractionProvider Protocol, ExtractedElement model, EvidenceReference model,
   ExtractionResult model, ProcessingStats model
-- [ ] T002 [P] Create `specmetrics/kernel/extraction_registry.py` —
+- [X] T002 [P] Create `specmetrics/kernel/extraction_registry.py` —
   ProviderRouter class for document-type to provider mapping
-- [ ] T003 Create `specmetrics/kernel/extraction_stage.py` — ExtractionStage
+- [X] T003 Create `specmetrics/kernel/extraction_stage.py` — ExtractionStage
   EventHandler skeleton (placeholder handle method)
-- [ ] T004 Update `specmetrics/kernel/__init__.py` — Export ExtractionProvider,
+- [X] T004 Update `specmetrics/kernel/__init__.py` — Export ExtractionProvider,
   ExtractedElement, EvidenceReference, ExtractionResult, ProcessingStats,
   ProviderRouter, ExtractionStage
 
@@ -55,16 +55,16 @@ ANY user story can be implemented.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] [US1] Create `ExtractedElement` Pydantic model in
+- [X] T005 [P] [US1] Create `ExtractedElement` Pydantic model in
   `specmetrics/kernel/extraction_provider.py` — id, type (fact/entity/relationship/
   operation), confidence (0.0–1.0), evidence (EvidenceReference), content per
   data-model.md
-- [ ] T006 [P] [US1] Create `EvidenceReference` Pydantic model in
+- [X] T006 [P] [US1] Create `EvidenceReference` Pydantic model in
   `specmetrics/kernel/extraction_provider.py` — document_id, section_id (optional),
   text
-- [ ] T007 [P] [US1] Create `ExtractionResult` and `ProcessingStats` Pydantic
+- [X] T007 [P] [US1] Create `ExtractionResult` and `ProcessingStats` Pydantic
   models in `specmetrics/kernel/extraction_provider.py`
-- [ ] T008 [US1] Create `ExtractionProvider` Protocol in
+- [X] T008 [US1] Create `ExtractionProvider` Protocol in
   `specmetrics/kernel/extraction_provider.py` — extract() and supports_type()
   method signatures
 
@@ -87,28 +87,28 @@ contains expected semantic elements.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T009 [P] [US1] Test: A class implementing ExtractionProvider Protocol
+- [X] T009 [P] [US1] Test: A class implementing ExtractionProvider Protocol
   passes structural check in `tests/unit/test_extraction_provider.py`
-- [ ] T010 [P] [US1] Test: A class missing extract() does NOT pass Protocol
+- [X] T010 [P] [US1] Test: A class missing extract() does NOT pass Protocol
   check in `tests/unit/test_extraction_provider.py`
-- [ ] T011 [P] [US1] Test: A class missing supports_type() does NOT pass
+- [X] T011 [P] [US1] Test: A class missing supports_type() does NOT pass
   Protocol check in `tests/unit/test_extraction_provider.py`
-- [ ] T012 [P] [US1] Test: ExtractionStage handles DOCUMENTS_DISCOVERED event
+- [X] T012 [P] [US1] Test: ExtractionStage handles DOCUMENTS_DISCOVERED event
   and returns ExtractionResult in `tests/unit/test_extraction_stage.py`
-- [ ] T013 [P] [US1] Test: ExtractionStage routes documents to correct provider
+- [X] T013 [P] [US1] Test: ExtractionStage routes documents to correct provider
   based on document_type in `tests/unit/test_extraction_stage.py`
-- [ ] T014 [US1] Test: ExtractionStage processes multiple documents and
+- [X] T014 [US1] Test: ExtractionStage processes multiple documents and
   consolidates results in `tests/unit/test_extraction_stage.py`
 
 ### Implementation for User Story 1
 
-- [ ] T015 [P] [US1] Implement ExtractionProvider Protocol in
+- [X] T015 [P] [US1] Implement ExtractionProvider Protocol in
   `specmetrics/kernel/extraction_provider.py` — structural typing with
   extract() and supports_type()
-- [ ] T016 [P] [US1] Implement ProviderRouter in
+- [X] T016 [P] [US1] Implement ProviderRouter in
   `specmetrics/kernel/extraction_registry.py` — resolve document types to
   providers, register providers with optional type overrides
-- [ ] T017 [US1] Implement ExtractionStage in
+- [X] T017 [US1] Implement ExtractionStage in
   `specmetrics/kernel/extraction_stage.py` — EventHandler for
   DOCUMENTS_DISCOVERED, iterates documents and delegates to resolved providers,
   consolidates results
@@ -131,19 +131,19 @@ document ID, section identifier, and text excerpt.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T018 [P] [US2] Test: EvidenceReference accepts valid document_id and text
+- [X] T018 [P] [US2] Test: EvidenceReference accepts valid document_id and text
   in `tests/unit/test_extraction_provider.py`
-- [ ] T019 [P] [US2] Test: ExtractedElement requires valid evidence reference
+- [X] T019 [P] [US2] Test: ExtractedElement requires valid evidence reference
   in `tests/unit/test_extraction_provider.py`
-- [ ] T020 [US2] Test: ExtractionStage output includes evidence references for
+- [X] T020 [US2] Test: ExtractionStage output includes evidence references for
   each element in `tests/unit/test_extraction_stage.py`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Implement EvidenceReference validation — document_id and
+- [X] T021 [P] [US2] Implement EvidenceReference validation — document_id and
   text must be non-empty in
   `specmetrics/kernel/extraction_provider.py`
-- [ ] T022 [US2] Integrate evidence provenance into ExtractionStage — each
+- [X] T022 [US2] Integrate evidence provenance into ExtractionStage — each
   ExtractedElement from a provider carries provider-assigned evidence, stage
   verifies evidence completeness in
   `specmetrics/kernel/extraction_stage.py`
@@ -166,25 +166,25 @@ document of its declared type is processed.
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T023 [P] [US3] Test: ProviderRouter.register() stores provider for
+- [X] T023 [P] [US3] Test: ProviderRouter.register() stores provider for
   document type in `tests/unit/test_extraction_registry.py`
-- [ ] T024 [P] [US3] Test: ProviderRouter.resolve() returns correct provider
+- [X] T024 [P] [US3] Test: ProviderRouter.resolve() returns correct provider
   for matching type in `tests/unit/test_extraction_registry.py`
-- [ ] T025 [P] [US3] Test: ProviderRouter.resolve() returns None when no
+- [X] T025 [P] [US3] Test: ProviderRouter.resolve() returns None when no
   provider matches in `tests/unit/test_extraction_registry.py`
-- [ ] T026 [US3] Integration test: Mock provider registered via F02 plugin
+- [X] T026 [US3] Integration test: Mock provider registered via F02 plugin
   mechanism is available through ProviderRouter in
   `tests/integration/test_extraction_pipeline.py`
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Implement ProviderRouter.resolve() — iterates registered
+- [X] T027 [P] [US3] Implement ProviderRouter.resolve() — iterates registered
   providers calling supports_type(), returns first match in
   `specmetrics/kernel/extraction_registry.py`
-- [ ] T028 [US3] Implement F02 plugin discovery integration — extraction
+- [X] T028 [US3] Implement F02 plugin discovery integration — extraction
   providers with plugin_type SEMANTIC are discovered and registered with
   ProviderRouter in `specmetrics/kernel/extraction_registry.py`
-- [ ] T029 [US3] Update `specmetrics/kernel/__init__.py` — ensure ProviderRouter
+- [X] T029 [US3] Update `specmetrics/kernel/__init__.py` — ensure ProviderRouter
   is exported
 
 **Checkpoint**: User Story 3 is complete — extraction providers are pluggable.
@@ -204,19 +204,19 @@ repository with documents, and running extraction without any plugin configurati
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T030 [P] [US4] Test: Built-in LLM provider handles documents with valid
+- [X] T030 [P] [US4] Test: Built-in LLM provider handles documents with valid
   LiteLLM response in `tests/unit/test_llm_provider.py`
-- [ ] T031 [P] [US4] Test: Built-in LLM provider degrades gracefully when
+- [X] T031 [P] [US4] Test: Built-in LLM provider degrades gracefully when
   LLM unavailable in `tests/unit/test_llm_provider.py`
-- [ ] T032 [US4] Integration test: Full pipeline with built-in provider produces
+- [X] T032 [US4] Integration test: Full pipeline with built-in provider produces
   ExtractionResult in `tests/integration/test_extraction_pipeline.py`
 
 ### Implementation for User Story 4
 
-- [ ] T033 [P] [US4] Implement built-in LLM-assisted extraction provider in
+- [X] T033 [P] [US4] Implement built-in LLM-assisted extraction provider in
   `specmetrics/plugins/semantic/llm_provider.py` — uses LiteLLM gateway,
   graceful degradation to structural parsing, supports all document types
-- [ ] T034 [US4] Register built-in provider as default in ProviderRouter —
+- [X] T034 [US4] Register built-in provider as default in ProviderRouter —
   automatically available when no explicit routing configured in
   `specmetrics/kernel/extraction_registry.py`
 
@@ -228,8 +228,8 @@ repository with documents, and running extraction without any plugin configurati
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T035 [P] Add docstrings to all public extraction classes and methods
-- [ ] T036 Run quickstart.md validation scenarios end-to-end
+- [X] T035 [P] Add docstrings to all public extraction classes and methods
+- [X] T036 Run quickstart.md validation scenarios end-to-end
 
 ---
 
