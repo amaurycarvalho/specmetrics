@@ -57,7 +57,10 @@ pipx ...
 ## How to Use
 
 ```
-specmetrics measure
+specmetrics --help
+specmetrics measure --help
+specmetrics plugins --help
+specmetrics plugins list --help
 ```
 
 ---
