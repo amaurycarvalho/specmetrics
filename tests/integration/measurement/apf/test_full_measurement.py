@@ -87,9 +87,6 @@ class TestFullMeasurement:
         result_a = counter.count(cfm)
         result_b = counter.count(cfm)
 
-        json_a = result_a.model_dump_json()
-        json_b = result_b.model_dump_json()
-
         # Only compare fields that should be deterministic
         assert result_a.summary.model_dump() == result_b.summary.model_dump()
         assert len(result_a.measured_functions) == len(result_b.measured_functions)

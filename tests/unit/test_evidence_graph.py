@@ -4,10 +4,6 @@ import pytest
 
 from specmetrics.kernel.evidence_graph import (
     GraphNode,
-    GraphEdge,
-    GraphMetadata,
-    GraphBackend,
-    EvidenceGraph,
     NodeAlreadyExistsError,
     NodeNotFoundError,
     SelfLoopError,

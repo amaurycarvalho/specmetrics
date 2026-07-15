@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 
 from specmetrics.kernel.cfm.builder import CfmBuilderStage
 from specmetrics.kernel.events import EventType, PipelineEvent

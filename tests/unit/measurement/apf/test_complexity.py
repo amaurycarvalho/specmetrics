@@ -1,4 +1,3 @@
-import pytest
 
 from specmetrics.plugins.measurement.apf.complexity import (
     classify_data_function_complexity,

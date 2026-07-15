@@ -3,9 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-import pytest
 
-from specmetrics.kernel.adapter_interface import Document, DocumentSection, SpecificationAdapter
+from specmetrics.kernel.adapter_interface import Document, DocumentSection
 
 
 class TestSpecificationAdapterProtocol:

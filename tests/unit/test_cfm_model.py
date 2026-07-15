@@ -9,10 +9,8 @@ from specmetrics.kernel.cfm.model import (
     CanonicalFunctionalModel,
     DataGroup,
     EvidenceRef,
-    FunctionalProcess,
     Operation,
     Relationship,
-    UnclassifiedElement,
 )
 
 

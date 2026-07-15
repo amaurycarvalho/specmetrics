@@ -13,7 +13,6 @@ from specmetrics.kernel.cfm.model import (
     BusinessRule,
     CanonicalFunctionalModel,
     DataGroup,
-    EvidenceRef,
     FunctionalProcess,
     Operation,
     Relationship,

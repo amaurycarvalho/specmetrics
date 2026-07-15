@@ -22,7 +22,6 @@ from datetime import datetime, timezone
 
 from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode
 from specmetrics.kernel.events import EventType, PipelineEvent
-from specmetrics.kernel.handler_registry import EventHandler
 from specmetrics.kernel.pipeline_context import PipelineContext
 
 logger = structlog.get_logger(__name__)

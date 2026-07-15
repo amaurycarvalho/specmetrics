@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 
 from specmetrics.kernel.cfm.classifier import classify_node, strip_framework_labels
 from specmetrics.kernel.evidence_graph import GraphNode

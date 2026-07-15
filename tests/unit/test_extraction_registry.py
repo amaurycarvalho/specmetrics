@@ -2,11 +2,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-import pytest
 
 from specmetrics.kernel.extraction_provider import (
-    EvidenceReference,
-    ExtractedElement,
     ExtractionResult,
     ProcessingStats,
 )

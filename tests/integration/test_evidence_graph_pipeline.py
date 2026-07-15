@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import pytest
 
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.evidence_graph import (
-    EvidenceGraph,
-    GraphMetadata,
-    NodeAlreadyExistsError,
     fingerprint_node,
 )
 from specmetrics.kernel.evidence_graph_stage import EvidenceGraphStage, NetworkXBackend

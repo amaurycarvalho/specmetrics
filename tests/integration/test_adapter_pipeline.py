@@ -5,7 +5,7 @@ from typing import Optional
 
 import pytest
 
-from specmetrics.kernel.adapter_interface import Document, SpecificationAdapter
+from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.adapter_registry import AdapterRegistry
 from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginStatus, PluginType
 from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry

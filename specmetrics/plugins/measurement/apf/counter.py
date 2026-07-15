@@ -6,7 +6,6 @@ from uuid import uuid4
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 
 from .complexity import (
-    UFP_WEIGHTS,
     classify_data_function_complexity,
     classify_transactional_complexity,
     get_ufp_weight,
@@ -18,7 +17,6 @@ from .models import (
     EvidenceRef,
     FunctionType,
     MeasuredFunction,
-    MeasurementError,
     MeasurementSummary,
     MeasurementWarning,
     TypeBreakdown,

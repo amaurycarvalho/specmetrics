@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-import pytest
 
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.extraction_provider import (
     EvidenceReference,
     ExtractedElement,
-    ExtractionProvider,
     ExtractionResult,
     ProcessingStats,
 )

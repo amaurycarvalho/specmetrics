@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-import pytest
 
 from specmetrics.kernel.cfm.metadata import BuildMetadata
 from specmetrics.kernel.cfm.model import (

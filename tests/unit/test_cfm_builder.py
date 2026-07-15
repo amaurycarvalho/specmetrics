@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import pytest
 
 from specmetrics.kernel.cfm.builder import build
 from specmetrics.kernel.cfm.model import (
     CanonicalFunctionalModel,
-    Relationship,
 )
 from specmetrics.kernel.evidence_graph import (
     EvidenceGraph,

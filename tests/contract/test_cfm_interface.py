@@ -69,6 +69,5 @@ class TestCfmContract:
             cfm_model.Relationship,
             cfm_model.Operation,
         ]
-        ev = EvidenceRef(graph_node_id="n", document_id="d", text="t")
         for cls in model_classes:
             assert cls is not None

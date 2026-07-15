@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import structlog
 
-from .events import EventType, PipelineEvent
+from .events import PipelineEvent
 from .exceptions import StageError
 from .handler_registry import HandlerRegistry
 from .pipeline_context import PipelineContext

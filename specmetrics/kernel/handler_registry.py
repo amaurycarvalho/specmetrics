@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from typing import Protocol
 
 from .events import EventType, PipelineEvent
 from .exceptions import HandlerNotFoundError

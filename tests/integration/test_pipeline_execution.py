@@ -1,4 +1,3 @@
-import pytest
 
 from specmetrics.kernel import (
     EventType,
@@ -85,7 +84,9 @@ class TestPipelineIntegration:
 
         class SimpleHandler:
             def __init__(self, et: EventType, hid: str, sn: str):
-                self._et = et; self._hid = hid; self._sn = sn
+                self._et = et
+                self._hid = hid
+                self._sn = sn
             @property
             def handled_event_type(self): return self._et
             @property
@@ -109,7 +110,9 @@ class TestPipelineIntegration:
 
         class SimpleHandler:
             def __init__(self, et: EventType, hid: str, sn: str):
-                self._et = et; self._hid = hid; self._sn = sn
+                self._et = et
+                self._hid = hid
+                self._sn = sn
             @property
             def handled_event_type(self): return self._et
             @property

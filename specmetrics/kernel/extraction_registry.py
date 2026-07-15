@@ -4,7 +4,7 @@ from typing import Optional
 
 import structlog
 
-from .extraction_provider import ExtractionResult, ExtractionProvider
+from .extraction_provider import ExtractionProvider
 
 logger = structlog.get_logger(__name__)
 

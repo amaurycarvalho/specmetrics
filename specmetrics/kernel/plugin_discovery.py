@@ -4,7 +4,6 @@ from importlib.metadata import entry_points
 
 import structlog
 
-from .exceptions import PluginError
 from .plugin_metadata import PluginMetadata, PluginStatus
 from .plugin_registry import PluginDescriptor, PluginRegistry
 from .plugin_validation import PluginValidator

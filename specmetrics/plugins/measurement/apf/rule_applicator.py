@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Optional
 
 from .complexity import (
-    TRANSACTIONAL_MATRICES,
     UFP_WEIGHTS,
 )
 from .models import FunctionType, RulePack

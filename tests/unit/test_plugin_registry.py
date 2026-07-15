@@ -16,9 +16,12 @@ def _make_descriptor(
     status: PluginStatus = PluginStatus.REGISTERED,
     with_handler: bool = True,
 ) -> PluginDescriptor:
+    def _make_handler() -> _FakeHandler:
+        return _FakeHandler()
+
     handler_factory = None
     if with_handler:
-        handler_factory = lambda: _FakeHandler()
+        handler_factory = _make_handler
     meta = PluginMetadata(
         id=plugin_id,
         api_version="1.0.0",

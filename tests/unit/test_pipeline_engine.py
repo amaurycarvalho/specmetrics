@@ -34,7 +34,9 @@ class TestPipelineEngine:
             def handler_id(self) -> str: return self._hid
             @property
             def stage_name(self) -> str: return self._sn
-            def handle(self, event): order.append(self._sn); return event.context
+            def handle(self, event):
+                order.append(self._sn)
+                return event.context
 
         registry.register(OrderHandler(EventType.REPOSITORY_LOADED, "a", "A"))
         registry.register(OrderHandler(EventType.DOCUMENTS_DISCOVERED, "b", "B"))

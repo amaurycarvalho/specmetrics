@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
 
-import pytest
 
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.extraction_provider import (
     EvidenceReference,
     ExtractedElement,
-    ExtractionProvider,
     ExtractionResult,
     ProcessingStats,
 )

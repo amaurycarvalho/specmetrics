@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 
 import structlog
 
 from .events import EventType, PipelineEvent
-from .exceptions import StageError
-from .extraction_provider import ExtractedElement, ExtractionResult, ProcessingStats
+from .extraction_provider import ExtractionResult
 from .extraction_registry import ProviderRouter
 from .handler_registry import EventHandler
 from .pipeline_context import PipelineContext

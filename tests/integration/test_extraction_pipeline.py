@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
 
 import pytest
 
-from specmetrics.kernel import Document, EventType, HandlerRegistry, PipelineContext, PipelineEngine
+from specmetrics.kernel import Document, HandlerRegistry, PipelineContext, PipelineEngine
 from specmetrics.kernel.extraction_provider import (
     EvidenceReference,
     ExtractedElement,

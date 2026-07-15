@@ -17,7 +17,6 @@ from .evidence_graph import (
 )
 from .extraction_provider import ExtractedElement
 from .graph_persistence import GraphStore
-from .handler_registry import EventHandler
 from .pipeline_context import PipelineContext
 
 logger = structlog.get_logger(__name__)
@@ -226,7 +225,6 @@ class EvidenceGraphStage:
 
         try:
             import os
-            from pathlib import Path
             graphs_dir = os.path.join(os.getcwd(), ".evidence_graphs")
             os.makedirs(graphs_dir, exist_ok=True)
             save_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
