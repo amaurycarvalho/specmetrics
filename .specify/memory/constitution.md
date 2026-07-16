@@ -154,33 +154,34 @@ without affecting the remainder of the platform.
 SpecMetrics is organized as a layered architecture where each layer has a single
 well-defined responsibility:
 
-| Layer | Responsibility |
-|-------|---------------|
-| Specification Adapter | Unify SDD framework access; discover and expose documents |
-| Semantic Extraction | Transform documents into structured semantic knowledge |
-| Evidence Graph | Store facts with provenance and evidence references |
-| Canonical Functional Model | Normalize knowledge into framework-independent representation |
-| Rule Engine | Apply organization-specific measurement policies (Rule Packs) |
-| Measurement Engine | Execute deterministic measurement methodologies |
-| Publication Layer | Expose results via exporters (JSON, CSV, XML) and publishers (OpenTelemetry) |
-| Interaction Layer | Provide CLI, API and MCP interfaces |
+| Layer                      | Responsibility                                                               |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| Specification Adapter      | Unify SDD framework access; discover and expose documents                    |
+| Semantic Extraction        | Transform documents into structured semantic knowledge                       |
+| Evidence Graph             | Store facts with provenance and evidence references                          |
+| Canonical Functional Model | Normalize knowledge into framework-independent representation                |
+| Rule Engine                | Apply organization-specific measurement policies (Rule Packs)                |
+| Measurement Engine         | Execute deterministic measurement methodologies                              |
+| Publication Layer          | Expose results via exporters (JSON, CSV, XML) and publishers (OpenTelemetry) |
+| Interaction Layer          | Provide CLI, API and MCP interfaces                                          |
 
 ### Technology Stack
 
-| Domain | Technology |
-|--------|-----------|
-| Language | Python 3.13 |
-| Package Manager | uv / pipx |
-| CLI | Typer |
-| Models | Pydantic v2 |
-| Configuration | Pydantic Settings |
-| Markdown | markdown-it-py |
-| YAML | ruamel.yaml |
-| Graph | NetworkX |
-| LLM Gateway | LiteLLM |
-| Logging | structlog |
-| Telemetry | OpenTelemetry |
-| Testing | pytest |
+| Domain          | Technology        |
+| --------------- | ----------------- |
+| Language        | Python 3.13       |
+| Package Manager | uv / pipx         |
+| CLI             | Typer             |
+| Models          | Pydantic v2       |
+| Configuration   | Pydantic Settings |
+| Markdown        | markdown-it-py    |
+| YAML            | ruamel.yaml       |
+| Graph           | NetworkX          |
+| LLM Gateway     | LiteLLM           |
+| Logging         | structlog         |
+| Telemetry       | OpenTelemetry     |
+| Testing         | pytest            |
+| Linting         | ruff              |
 
 ### Project Structure
 
@@ -230,16 +231,16 @@ NOT communicate directly.
 
 All pipeline executions MUST satisfy:
 
-| Invariant | Description |
-|-----------|-------------|
-| Determinism | Same inputs, Rule Packs and plugin versions → identical measurement results |
-| Traceability | Every semantic concept preserves its originating evidence throughout the pipeline |
-| Canonical Isolation | Downstream components consume ONLY the Canonical Functional Model |
-| Plugin Isolation | Plugins communicate ONLY through the Kernel and public contracts |
-| Immutable Pipeline | Each stage produces immutable outputs; stages never mutate artifacts in-place |
-| Explainability | Every measurement result is explainable through semantic evidence and applied rules |
-| Fail Fast | Critical validation errors interrupt the pipeline before measurement execution |
-| Idempotence | Re-execution with identical inputs produces the same outputs without side effects |
+| Invariant           | Description                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Determinism         | Same inputs, Rule Packs and plugin versions → identical measurement results         |
+| Traceability        | Every semantic concept preserves its originating evidence throughout the pipeline   |
+| Canonical Isolation | Downstream components consume ONLY the Canonical Functional Model                   |
+| Plugin Isolation    | Plugins communicate ONLY through the Kernel and public contracts                    |
+| Immutable Pipeline  | Each stage produces immutable outputs; stages never mutate artifacts in-place       |
+| Explainability      | Every measurement result is explainable through semantic evidence and applied rules |
+| Fail Fast           | Critical validation errors interrupt the pipeline before measurement execution      |
+| Idempotence         | Re-execution with identical inputs produces the same outputs without side effects   |
 
 ### Plugin Architecture
 
@@ -280,4 +281,4 @@ or layer independence principles.
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-15 | **Last Amended**: 2026-07-15
+**Version**: 1.0.1 | **Ratified**: 2026-07-16 | **Last Amended**: 2026-07-16

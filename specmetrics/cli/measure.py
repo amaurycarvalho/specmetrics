@@ -8,10 +8,20 @@ from specmetrics.application.config import AppConfig
 from specmetrics.application.enums import OutputFormat, StageName
 from specmetrics.application.models import PipelineRequest
 from specmetrics.application.orchestrator import PipelineOrchestrator
+from specmetrics.infrastructure.config.loader import ConfigurationSystem
 
 from .formatters import format_json_result, format_text_result
 
 logger = structlog.get_logger(__name__)
+
+_config_system: ConfigurationSystem | None = None
+
+
+def get_config_system() -> ConfigurationSystem:
+    global _config_system
+    if _config_system is None:
+        _config_system = ConfigurationSystem()
+    return _config_system
 
 
 def run_measure(
@@ -21,11 +31,17 @@ def run_measure(
     from_stage: str | None = None,
     verbose: bool = False,
     quiet: bool = False,
+    config_path: Path | None = None,
 ) -> int:
     config = AppConfig.load(project_path)
 
     output_format = OutputFormat.TEXT
     output_path: Path | None = None
+
+    cfg_system = get_config_system()
+    if config_path is not None:
+        cfg_system = ConfigurationSystem(project_root=project_path, config_path=config_path)
+        cfg_system.load()
 
     if output:
         if ":" in output:

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import typer
 
+from .config_commands import config_app
 from .export_commands import export_app
 from .measure import run_measure
 from .plugins import plugins_app
@@ -16,6 +18,7 @@ app = typer.Typer(
 
 app.add_typer(plugins_app)
 app.add_typer(export_app)
+app.add_typer(config_app)
 
 
 @app.command()
@@ -57,6 +60,16 @@ def measure(
         "-q",
         help="Suppress non-error output",
     ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Path to configuration file (supports $ENV_VAR expansion)",
+        exists=False,
+        file_okay=True,
+        dir_okay=False,
+        resolve_path=False,
+    ),
 ) -> None:
     exit_code = run_measure(
         project_path=project_path,
@@ -65,6 +78,7 @@ def measure(
         from_stage=from_stage,
         verbose=verbose,
         quiet=quiet,
+        config_path=config,
     )
     raise typer.Exit(code=exit_code)
 
