@@ -1,216 +1,238 @@
 ---
 name: changelog
-description: Update CHANGELOG.md and CHANGELOG-ARCHIVE.md from a specific spec. Asks for change name if not provided.
+description: Update CHANGELOG.md and CHANGELOG-ARCHIVE.md, reconciling registered vs unregistered changes from both OpenSpec and SpecKit directory structures.
 license: MIT
-compatibility: Requires specify CLI.
+compatibility: Requires OpenSpec or SpecKit directory structure.
 metadata:
   author: amaurycarvalho
-  version: "1.1"
+  version: "2.0"
   generatedBy: "1.4.1"
 ---
 
-Update all changelog-related files from a specific spec.
+Reconcile all changes between the project's changes/specs directories and the CHANGELOG files.
 
-**Input**: Optional change name (directory name under `specs/` or `specs/archive/`). If not provided, the skill will ask the user.
+**Input**: None. The skill auto-detects the project structure and scans for all changes.
 
 **Steps**
 
-### 1. Resolve change name and release version
+### 0. Detect project scenario
 
-1.1. **If a change name was provided as input**, use it directly. Otherwise:
+Check which directory structure exists at the project root:
 
-- Find the most recently archived change by running `ls -t specs/ | head -1`.
-- List all unarchived changes: `ls specs/`.
-- Ask the user to pick a change name, presenting the last archived change and all unarchived changes as suggestions.
+- **OpenSpec**: If `openspec/changes/` exists.
+  - Changes live in `openspec/changes/` (active) and `openspec/changes/archive/` (archived).
+  - Each change is a subdirectory containing `proposal.md`, `design.md`, `tasks.md`, and optionally `specs/<subchange>/spec.md`.
+  - Summary source: `proposal.md` (first sentence of "What Changes" or "Why" section).
+  - Items source: `proposal.md` ("What Changes" bullet list).
+  - Fallback for both: `tasks.md`.
 
-1.2. **Read the spec's spec.md** at `specs/<spec-name>/spec.md`. Search for the target release in the Impact section by looking for a line matching `- **Target**: Release <version>` or `- **Release**: <version>`. Extract the version string (e.g., `1.5.0`).
+- **SpecKit**: If `specs/` exists and OpenSpec does not.
+  - Changes live in `specs/` (no separate archive directory; all specs are flat).
+  - Each spec is a subdirectory containing `spec.md`, `quickstart.md`, `research.md`, `plan.md`, `tasks.md`, `data-model.md`, `checklists/`, `contracts/`.
+  - Summary source: `plan.md` (text under `## Summary`) or `spec.md` (first heading / first paragraph).
+  - Items source: `tasks.md` (task descriptions).
+  - Fallback: `spec.md`.
 
-1.3. **If no release is specified** in the proposal, default to the **current release** from `pyproject.toml` (extract the value of `version`, e.g., `"0.1.0"`).
+If neither exists, abort with an error telling the user no recognized structure was found.
 
-1.4. **Ask the user to confirm the release version** and allow them to edit it. Present the detected release as the default suggestion.
+Set these context variables for use in later steps:
+- `changes_dirs` — list of `(dir, label)` where label is `"active"` or `"archived"`.
+- `summary_file` — primary file name for extracting the summary.
+- `summary_fallback` — fallback file name for summary.
+- `items_file` — primary file name for extracting item bullets.
+- `items_fallback` — fallback file name for items.
+- `path_prefix` — URL prefix for change links (e.g. `openspec/changes` or `specs`).
 
-1.5. **Compare the confirmed release** with the release recorded in the spec's proposal.md. If they differ, **update the spec.md** by replacing the old `- **Target**: Release <old>` line with `- **Target**: Release <confirmed>`. If no Target line exists, add `- **Target**: Release <confirmed>` to the Impact section.
+### 1. Collect all changes
 
-### 2. Determine spec classification and CHANGELOG strategy
+1.1. **List subdirectories** in each `changes_dirs` entry. Each subdirectory name is a change name. Record its full relative path (e.g. `openspec/changes/my-feature` or `specs/002-kernel-pipeline-engine`) and whether it is active or archived.
 
-2.1. **Read `pyproject.toml`** to get the current release version from `version`. This is the **latest published release**.
+1.2. Build a flat list of all change names with their metadata (name, path, is_archived).
 
-2.2. **Check if the confirmed release matches the current release** in `pyproject.toml`:
+### 2. Read existing CHANGELOG references
 
-- **Same version**: The change targets the current release.
-- **Newer version**: The change targets a future release.
+2.1. **Read `CHANGELOG.md`** and **`CHANGELOG-ARCHIVE.md`** in full.
 
-2.3. **Read `CHANGELOG.md`** and check if an entry for the confirmed release already exists. Look for a heading matching `## [<version>] -`.
+2.2. Extract every change reference — any markdown heading `### [<change-name>](...)` or list item `- [<change-name>](...)` found under any release section (including Unreleased). Build a set of registered change names.
 
-### 3. Update CHANGELOG.md — release entry exists
+2.3. Also extract all release versions present. The current release is the first `## [<version>] -` heading that is not `[Unreleased]`. The latest release is the one with the highest semver (or the first non-Unreleased heading if order is guaranteed).
 
-If an entry for the confirmed release **already exists** in `CHANGELOG.md`:
+### 3. Identify unregistered changes
 
-3.1. **Build the change's content** as a sub-section with Keep a Changelog categories. Use the following structure:
+Compare the collected change names (step 1) with the registered set (step 2). Build a list of changes whose name does NOT appear in either CHANGELOG file.
 
-    ```markdown
-    ### [<spec-name>](<change-name-relative-path>) <ultra-condensed summary>
+If there are no unregistered changes, notify the user and exit.
 
-    #### Added
-    - item 1
+### 4. Resolve release version
 
-    #### Changed
-    - item 1
+4.1. **Identify the current release version** from CHANGELOG.md (the first non-Unreleased `## [<version>] -` heading).
 
-    #### Fixed
-    - item 1
-    ```
+4.2. **Ask the user**:
+   - **Keep current version**: Unregistered changes will be added under this same release.
+   - **Update to new version**: Propose a semver bump (patch bump by default, e.g. `0.1.0` → `0.2.0`). Allow manual free-text input for the new version.
 
-    Where:
-    - `<spec-name>` is the change directory name.
-    - `<change-name-relative-path>` is the relative path to the change in the project (`specs/<spec-name>` or `specs/archive/<spec-name>`).
-    - `<ultra-condensed summary>` is a 1-sentence summary extracted from the proposal's "Why" or "What Changes" section title.
-    - Items come from the "What Changes" bullet list in `proposal.md`, categorized as:
-      - `#### Added` — items starting with "Implement", "Add", "Create", "Write", or describing new features
-      - `#### Changed` — items starting with "Change", "Migrate", "Update", "Rename", "Expand", "Reuse", "Convert", or describing behavior changes
-      - `#### Fixed` — items starting with "Fix", "Correct", or describing bug fixes
-      - `#### Removed` — items starting with "Remove", "Delete"
-      - `#### Deprecated` — items starting with "Deprecate"
-      - `#### Security` — items starting with "Security" or describing security improvements
+4.3. **If updating**:
+   - The current release entry (from `## [<current-version>] -` to the next `## [` heading or EOF) will be moved to `CHANGELOG-ARCHIVE.md` before the new release is written.
 
-3.2. **Insert or update the change's sub-section** within the existing release entry in `CHANGELOG.md`. If a sub-section for this change name already exists, replace it entirely. If not, append it after the release heading and any existing change sub-sections.
+### 5. Distribute unregistered changes
 
-3.3. **Review the release entry's other information** (other change sub-sections that already existed). Verify that every change listed there still has an archived or active proposal at its path. If a change sub-section references a change that no longer exists, remove it. Update any outdated summary text to match the current proposal.
+Present the list of unregistered changes to the user and ask three questions:
 
-### 4. Update CHANGELOG.md — release entry does NOT exist
+5.1. **Which changes go into the selected release** (step 4) in `CHANGELOG.md`? (multi-select)
 
-If an entry for the confirmed release **does NOT exist** in `CHANGELOG.md`:
+5.2. **Which changes go into `CHANGELOG-ARCHIVE.md`**? (multi-select, default: none)
+   - For each change selected here, ask: **Under which release version** should this change appear in the archive? (free text, default: the current version from step 4.1, or the archive version if the current release was already archived)
 
-4.1. **Find the current release entry** in `CHANGELOG.md` (the entry matching `__version__` from `src/flowscope/__init__.py`). Move its entire content (from `## [<current-version>] -` to the next `## [` heading or end of file) into `CHANGELOG-ARCHIVE.md`:
+5.3. **Which changes go as Unreleased** in `CHANGELOG.md`? (default: all remaining changes not selected in 5.1 or 5.2)
 
-- Read `CHANGELOG-ARCHIVE.md`.
-- Insert the moved content right after the header (after the intro paragraph and before the first `## [` entry), preserving archive ordering.
-- Write the updated `CHANGELOG-ARCHIVE.md`.
+### 6. Build content for each change
 
-4.2. **Build the new release entry** for the confirmed release into `CHANGELOG.md` using the change sub-section structure:
+For each change assigned to any destination (release, archive, or unreleased):
 
-    ```markdown
-    ## [<version>] - YYYY-MM-DD
+6.1. **Extract summary**:
+   - Try the `summary_file` first. Look for:
+     - OpenSpec: `proposal.md` — find `## What Changes` or `## Why` section heading, take the first non-empty line after it.
+     - SpecKit: `plan.md` — find `## Summary`, take text until the next heading.
+   - If not found, try `summary_fallback`:
+     - SpecKit: `spec.md` — use the first `# ` heading or first paragraph.
+   - If nothing yields a summary, use the change directory name as the summary.
 
-    ### [<spec-name>](<change-name-relative-path>) <ultra-condensed summary>
+6.2. **Extract items**:
+   - Try `items_file` first. For OpenSpec, read `proposal.md` and extract all bullet points under `## What Changes`. For SpecKit, read `tasks.md` and extract all task descriptions (lines starting with `- [ ]` or `- [X]`).
+   - Fallback to `items_fallback` if primary file is missing.
+   - Categorize each item using the same heuristics as the existing skill (see **Heuristics** below).
+   - If no items found, the change entry will have no sub-items (just the summary heading).
 
-    #### Added
-    - item 1
+6.3. **Build the change entry**:
+   ```markdown
+   ### [<change-name>](<relative-path>) <summary>
 
-    #### Changed
-    - item 1
-    ```
+   #### Added
+   - item
 
-    Use today's date as `YYYY-MM-DD`.
+   #### Changed
+   - item
+   ```
+   Only include categories that have at least one item.
 
-4.3. **Rebuild `CHANGELOG.md`**:
+### 7. Update CHANGELOG.md
 
-- Keep the header (everything from the top until the first `## [` heading).
-- Add the new Unreleased section (see step 5).
-- Add the new release entry (from 4.2).
-- Add/update version compare links at the bottom:
-  - `[Unreleased]: ...compare/v<new-version>...HEAD`
-  - `[<version>]: ...releases/tag/v<version>`
-- Add the link to the archive: `See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.`
+7.1. **If version was updated** (step 4.2):
+   - Locate the current release entry in CHANGELOG.md (from `## [<current-version>] -` to the next `## [` heading or EOF).
+   - Read `CHANGELOG-ARCHIVE.md`.
+   - Insert the current release entry into `CHANGELOG-ARCHIVE.md` right after its header (after the introductory paragraph and before the first existing `## [` entry).
+   - Remove the entry from CHANGELOG.md.
+   - Write the updated `CHANGELOG-ARCHIVE.md`.
 
+7.2. **Build the release entry** for the resolved version (from step 4):
+   ```markdown
+   ## [<version>] - YYYY-MM-DD
+   ```
+   Append all change entries assigned to this release (step 5.1), ordered alphabetically by change name. Use today's date.
 
-    The structure should be:
+7.3. **Build the Unreleased section**:
+   ```markdown
+   ## [Unreleased]
+   ```
+   Append all change entries assigned to Unreleased (step 5.3), ordered alphabetically by change name.
+   If no changes were assigned to Unreleased, leave the section empty (no items).
 
-    ```markdown
-    # Changelog
-    ...
-    ## [Unreleased]
-    ...
-    ## [<version>] - YYYY-MM-DD
-    ...
-    [Unreleased]: https://github.com/amaurycarvalho/flowscope/compare/v<version>...HEAD
+7.4. **Rebuild the full CHANGELOG.md**:
+   - Keep the header (everything from the top of the file until the first `## [` heading).
+   - Add the Unreleased section (from 7.3).
+   - Add the release entry (from 7.2).
+   - Add/update version compare links at the bottom:
+     - `[Unreleased]: ...compare/v<version>...HEAD`
+     - `[<version>]: ...releases/tag/v<version>`
+   - Add the archive link: `See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.`
+   - Derive the GitHub repo URL from existing links in CHANGELOG.md (preserve the existing format), or from `pyproject.toml` metadata if available, or ask the user.
 
-    [<version>]: https://github.com/amaurycarvalho/flowscope/releases/tag/v<version>
-    See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.
-    ```
+   The final structure:
+   ```markdown
+   # Changelog
 
-### 5. Update the Unreleased section
+   ...
 
-5.1. **Scan all unarchived changes** in `specs/` (excluding `archive/`):
+   ## [Unreleased]
 
-- If the change being processed in this skill run is **not archived**, skip it (do not include it in Unreleased, since it was already placed in the release section).
-- Include all other unarchived changes.
+   ### [<change>](path) summary
 
-5.2. **For each unarchived change**, read its `proposal.md` and extract an ultra-condensed 1-sentence summary. Build an Unreleased entry:
+   ## [<version>] - YYYY-MM-DD
 
-    ```markdown
-    ## [Unreleased]
+   ### [<change>](path) summary
 
-    ### Added
+   #### Added
+   - item
 
-    - [<spec-name>](<change-name-relative-path>) <ultra-condensed summary>
-    ```
+   [Unreleased]: https://github.com/<owner>/<repo>/compare/v<version>...HEAD
+   [<version>]: https://github.com/<owner>/<repo>/releases/tag/v<version>
 
-5.3. **Replace the existing Unreleased section** in `CHANGELOG.md` with the newly built content from 5.2. If there are no unarchived changes, set the Unreleased section to:
+   See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.
+   ```
 
-    ```markdown
-    ## [Unreleased]
-    ```
+### 8. Update CHANGELOG-ARCHIVE.md
 
-    (with no items).
+8.1. **Group changes assigned to archive** (step 5.2) by their specified archive version:
+   ```markdown
+   ## [<archive-version>] - YYYY-MM-DD
 
-### 6. Update `CHANGELOG-ARCHIVE.md`
+   ### [<change-name>](<relative-path>) <summary>
+   ```
 
-6.1. **Check and update CHANGELOG-ARCHIVE.md**:
+8.2. **Rebuild the full CHANGELOG-ARCHIVE.md**:
+   - Keep the header (everything from the top until the first `## [` heading).
+   - Append the new archive entries (from 8.1), ordered by version (descending).
+   - If the current release was moved here in step 7.1, that entry is already present.
+   - Add/update version compare links at the bottom:
+     - `[<version>]: ...releases/tag/v<version>`
+   - Add the link to the main changelog: `See main [CHANGELOG](CHANGELOG.md) for newer releases.`
 
-- Keep the header (everything from the top until the first `## [` heading).
-- Add/update version compare links at the bottom:
-  - `[<version>]: ...releases/tag/v<version>`
-- Add the link to the archive: `See main [CHANGELOG](CHANGELOG.md) for newer releases.`
-
-
-    The structure should be:
-
-    ```markdown
-    # Changelog Archive
-    ...
-    [<version>]: https://github.com/amaurycarvalho/flowscope/releases/tag/v<version>
-
-    See main [CHANGELOG](CHANGELOG.md) for newer releases.
-    ```
-
-### 7. Verify consistency
+### 9. Verify consistency
 
 Read back all modified files and verify:
+- `CHANGELOG.md` has the correct release entry with all assigned changes.
+- `CHANGELOG.md` has the Unreleased section (if any changes were assigned there).
+- `CHANGELOG-ARCHIVE.md` has the archived entries properly formatted.
+- No duplicate change references exist.
+- Version compare links are correct and point to the right repository.
 
-- `CHANGELOG.md` has the release entry for the change's version
-- `CHANGELOG.md` has the Unreleased section (if there are active unarchived changes)
-- `CHANGELOG-ARCHIVE.md` has the previous releases appended
+### 10. Suggest release-version skill
+
+If the version was updated in step 4.2, suggest the user run the `release-version` skill manually to update the version number across all project files (pyproject.toml, __init__.py, etc.).
 
 **Heuristics for categorization**
 
-- Read the "What Changes" bullets from `proposal.md`. The bullet text often starts with verbs like "Implement", "Add", "Fix", "Remove", "Change", "Deprecate".
-- If a bullet starts with "Implement" or "Add" or "Create" or "Write" → `#### Added`
-- If a bullet starts with "Change" or "Migrate" or "Update" or "Rename" or "Expand" or "Reuse" or "Convert" → `#### Changed`
-- If a bullet starts with "Fix" or "Correct" → `#### Fixed`
-- If a bullet starts with "Remove" or "Delete" → `#### Removed`
-- If a bullet starts with "Deprecate" → `#### Deprecated`
-- If in doubt, read the `tasks.md` for that change — task descriptions provide more context.
+- Read the extracted item text. The first word often indicates the category:
+  - "Implement", "Add", "Create", "Write", "Build", "Develop" → `#### Added`
+  - "Change", "Migrate", "Update", "Rename", "Expand", "Reuse", "Convert", "Refactor" → `#### Changed`
+  - "Fix", "Correct", "Patch", "Resolve" → `#### Fixed`
+  - "Remove", "Delete", "Drop" → `#### Removed`
+  - "Deprecate" → `#### Deprecated`
+  - "Security" → `#### Security`
+- If in doubt, assign to `#### Changed`.
 
 **Graceful Degradation**
 
-- If `proposal.md` does not exist for a change, read `tasks.md` and derive items from task descriptions.
-- If neither `proposal.md` nor `tasks.md` exist, skip the change with a warning.
-- If a change has no explicit version in `proposal.md`, scan `tasks.md` for "Release" mentions. If none found, treat it as targeting the next version (Unreleased).
+- If a change's primary content files do not exist, try the fallback.
+- If neither exists, skip the change with a warning and list it as "skipped (no content files found)".
+- If a change cannot be categorized, default all items to `#### Changed`.
 
 **Output**
 
 ```markdown
 ## Changelog Update Complete
 
-**Change:** <spec-name>
-**Version:** <version>
+**Scenario:** <OpenSpec | SpecKit>
+**Release version:** <version>
 **Release date:** YYYY-MM-DD
-**Changes archived:** N changes
-**Unreleased changes:** M changes
-**Files updated:**
+**Changes registered in release:** N
+**Changes archived:** N
+**Changes marked as Unreleased:** N
+**Changes skipped:** N
 
+**Files updated:**
 - CHANGELOG.md ✓
 - CHANGELOG-ARCHIVE.md ✓
-  **Commentary:** release-push skill can now be used manually to publish it on GitHub.
+
+**Next steps:** If the version was updated, run the `release-version` skill to update version numbers across the project.
 ```

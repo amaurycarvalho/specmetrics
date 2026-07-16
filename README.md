@@ -1,6 +1,6 @@
-# specmetrics
+# SpecMetrics
 
-A Functional Measurement Engine for Specification Driven Development
+A Functional Measurement Engine for Spec Driven Development (SDD)
 
 [![Spec-Driven Development](https://img.shields.io/badge/SDD-SpecKit-yellow)](.specify/memory/constitution.md)
 
