@@ -43,17 +43,32 @@ class EvidenceTracer:
                 )
 
         if self._graph is not None:
-            for node in self._graph.nodes.values():
-                if node.element_id == element_id:
-                    refs.append(
-                        EvidenceReference(
-                            document_id=node.document_id,
-                            section_id=node.section_id,
-                            text=node.text,
-                            node_id=node.id,
-                            confidence=node.confidence,
+            visited: set[str] = set()
+            to_visit: list[tuple[str, int]] = [(element_id, 0)]
+            while to_visit:
+                current_id, depth = to_visit.pop(0)
+                if current_id in visited or depth > max_depth:
+                    continue
+                visited.add(current_id)
+
+                for node in self._graph.nodes.values():
+                    if node.element_id == current_id:
+                        refs.append(
+                            EvidenceReference(
+                                document_id=node.document_id,
+                                section_id=node.section_id,
+                                text=node.text,
+                                node_id=node.id,
+                                confidence=node.confidence,
+                            )
                         )
-                    )
+
+                    if depth < max_depth:
+                        for edge in self._graph.edges:
+                            if edge.source == node.id:
+                                target_node = self._graph.nodes.get(edge.target)
+                                if target_node and target_node.element_id:
+                                    to_visit.append((target_node.element_id, depth + 1))
 
         return refs
 

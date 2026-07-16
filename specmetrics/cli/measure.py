@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import structlog
@@ -17,6 +18,26 @@ logger = structlog.get_logger(__name__)
 _config_system: ConfigurationSystem | None = None
 
 
+def _setup_log_file(project_path: Path, filename: str) -> str | None:
+    import re
+    logs_dir = project_path / ".specmetrics" / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    path = str(logs_dir / filename)
+    root = logging.getLogger()
+    for h in root.handlers[:]:
+        if isinstance(h, logging.StreamHandler):
+            h.setLevel(logging.WARNING)
+    ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
+    fh = logging.FileHandler(path, encoding="utf-8")
+    fh.setLevel(logging.DEBUG)
+    plain = logging.Formatter("%(message)s")
+    fh.setFormatter(plain)
+    fh.addFilter(lambda rec: setattr(rec, "msg", ansi_escape.sub("", rec.msg)) or True)
+    root.addHandler(fh)
+    root.setLevel(logging.DEBUG)
+    return path
+
+
 def get_config_system() -> ConfigurationSystem:
     global _config_system
     if _config_system is None:
@@ -31,6 +52,7 @@ def run_measure(
     from_stage: str | None = None,
     verbose: bool = False,
     quiet: bool = False,
+    log_file: str | None = None,
     config_path: Path | None = None,
 ) -> int:
     config = AppConfig.load(project_path)
@@ -62,6 +84,14 @@ def run_measure(
 
     if not verbose and config.verbose:
         verbose = True
+
+    if log_file:
+        _setup_log_file(Path(project_path).resolve(), log_file)
+    else:
+        if quiet:
+            logging.getLogger().setLevel(logging.ERROR)
+        elif verbose:
+            logging.getLogger().setLevel(logging.INFO)
 
     request = PipelineRequest(
         project_path=project_path.resolve(),

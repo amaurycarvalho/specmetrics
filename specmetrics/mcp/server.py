@@ -235,7 +235,9 @@ class MCPServer:
 
     def _register_tools(self) -> None:
         from specmetrics.mcp.tools.explain import (
+            EXPLAIN_COMPARE_TOOL,
             EXPLAIN_TOOL,
+            handle_explain_compare,
             handle_explain_measurement,
         )
         from specmetrics.mcp.tools.export import EXPORT_RESULTS_TOOL, handle_export_results
@@ -244,6 +246,7 @@ class MCPServer:
         from specmetrics.mcp.tools.status import GET_STATUS_TOOL
 
         self.tool_registry.register(EXPLAIN_TOOL, handle_explain_measurement)
+        self.tool_registry.register(EXPLAIN_COMPARE_TOOL, handle_explain_compare)
         self.tool_registry.register(RUN_PIPELINE_TOOL, handle_run_pipeline)
         self.tool_registry.register(LIST_SPECS_TOOL, handle_list_specs)
         self.tool_registry.register(READ_SPEC_TOOL, handle_read_spec)

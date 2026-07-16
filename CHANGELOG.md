@@ -538,6 +538,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Programmatic API for querying resolved configuration
 - Environment variable expansion in file paths
 
+### [015-validation-pipeline](specs/015-validation-pipeline) Pre-measurement quality gate that validates specification documents for structural correctness, mandatory section completeness, and constitutional compliance before they enter the Semantic Measurement Pipeline.
+
+#### Added
+- Create validation package and rules package structure
+- Create SpecificationDocument, ValidationRule, ValidationResult, ValidationReport models with enums
+- Implement FORMAT rules (file-readable, file-not-empty, parseable-markdown)
+- Implement STRUCTURAL rules (mandatory-sections-exist, no-unknown-sections)
+- Implement ValidationPipeline single-document and batch run methods
+- Add specmetrics validate CLI subcommand with single-spec and batch modes
+- Implement constitutional compliance rules (constitution-engaged, constitution-compliance-notes)
+- Add --constitution-only, --structural-only, --batch, --format, --rules CLI flags
+- Implement JSON and text output formatters
+- Add structured logging for all validation operations
+
+#### Changed
+- Integrate validation into pipeline engine as pre-measurement gate
+- Run quickstart.md validation scenarios end-to-end
+
+### [016-explain-measurement](specs/016-explain-measurement) Structured, traceable explanations of measurement results showing which specification elements contributed, what evidence supports each count, and which Rule Pack rules were applied.
+
+#### Added
+- Create explanation package, models, and formatters structure
+- Create ExplainService and EvidenceTracer classes
+- Implement text and JSON formatters
+- Add explain() and load_explanation() methods to ExplainService
+- Create specmetrics explain CLI command with --metric and --compare options
+- Register explain CLI subcommand
+- Implement trace_element() and trace_metric() in EvidenceTracer
+- Wire ExplainService to Evidence Graph and CFM interfaces
+- Add drill-down evidence output and orphan-count warning handling
+- Create comparison logic for measurement runs
+- Create MCP explain tool and register in MCP server
+- Add explanation config support (formatter selection, evidence depth)
+- Update documentation references
+
+#### Changed
+- Run quickstart.md validation scenarios end-to-end
+
 [Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.1.0
 

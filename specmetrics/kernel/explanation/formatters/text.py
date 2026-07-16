@@ -8,6 +8,16 @@ from ..models import (
 )
 
 
+class TextFormatter:
+    name = "text"
+
+    def format(self, explanation: MeasurementExplanation) -> str:
+        return format_explanation(explanation)
+
+    def format_comparison(self, comparison: ExplanationComparison) -> str:
+        return format_comparison(comparison)
+
+
 def _format_metric(metric: MetricExplanation, indent: str = "  ") -> str:
     lines: list[str] = []
     lines.append(f"{indent}{metric.metric_name} = {metric.metric_value}")

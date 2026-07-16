@@ -9,29 +9,8 @@ from specmetrics.kernel.explanation.formatters.json import (
     format_comparison,
     format_explanation,
 )
+from specmetrics.kernel.explanation.loader import load_cfm, load_evidence_graph
 from specmetrics.kernel.explanation.service import ExplainService
-
-
-def _load_cfm(run_dir: Path):
-    cfm_path = run_dir / "canonical_model.json"
-    if not cfm_path.exists():
-        return None
-    from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
-
-    with open(cfm_path) as f:
-        data = json.load(f)
-    return CanonicalFunctionalModel.model_validate(data)
-
-
-def _load_evidence_graph(run_dir: Path):
-    graph_path = run_dir / "evidence_graph.json"
-    if not graph_path.exists():
-        return None
-    from specmetrics.kernel.evidence_graph import EvidenceGraph
-
-    with open(graph_path) as f:
-        data = json.load(f)
-    return EvidenceGraph.model_validate(data)
 
 
 EXPLAIN_TOOL = Tool(
@@ -98,15 +77,17 @@ def handle_explain_measurement(arguments: dict) -> list[TextContent]:
 
     if run_dir_str:
         run_dir = Path(run_dir_str)
-        cfm = _load_cfm(run_dir)
-        graph = _load_evidence_graph(run_dir)
+        cfm = load_cfm(run_dir)
+        graph = load_evidence_graph(run_dir)
+
+    spec_path_arg = str(run_dir / "spec.md") if run_dir_str else None
 
     try:
-        explanation = service.explain(run_id, metric_name=metric, cfm=cfm, graph=graph)
+        explanation = service.explain(run_id, metric_name=metric, cfm=cfm, graph=graph, spec_path=spec_path_arg)
         result = json.loads(format_explanation(explanation))
 
         if compare:
-            _ = service.explain(compare, cfm=cfm, graph=graph)
+            _ = service.explain(compare, cfm=cfm, graph=graph, spec_path=spec_path_arg)
             comparison = service.compare(compare, run_id)
             result["comparison"] = json.loads(format_comparison(comparison))
 
@@ -128,12 +109,14 @@ def handle_explain_compare(arguments: dict) -> list[TextContent]:
 
     if run_dir_str:
         run_dir = Path(run_dir_str)
-        cfm = _load_cfm(run_dir)
-        graph = _load_evidence_graph(run_dir)
+        cfm = load_cfm(run_dir)
+        graph = load_evidence_graph(run_dir)
+
+    spec_path_arg = str(run_dir / "spec.md") if run_dir_str else None
 
     try:
-        _ = service.explain(baseline_run_id, cfm=cfm, graph=graph)
-        _ = service.explain(comparison_run_id, cfm=cfm, graph=graph)
+        _ = service.explain(baseline_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg)
+        _ = service.explain(comparison_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg)
         comparison = service.compare(baseline_run_id, comparison_run_id)
         return [TextContent(type="text", text=format_comparison(comparison))]
     except ValueError as exc:

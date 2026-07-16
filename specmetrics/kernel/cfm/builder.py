@@ -160,7 +160,7 @@ class CfmBuilderStage:
         try:
             from specmetrics.kernel.graph_persistence import GraphStore
             import os
-            graphs_dir = os.path.join(os.getcwd(), ".evidence_graphs")
+            graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             graph_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
             evidence_graph = GraphStore.load(graph_path)
         except Exception:

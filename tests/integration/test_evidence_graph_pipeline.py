@@ -16,11 +16,14 @@ from specmetrics.kernel.pipeline_context import PipelineContext
 
 
 def _make_event(payload: dict) -> PipelineEvent:
-    context = PipelineContext()
+    context = PipelineContext().with_stage_output(
+        field_name="extraction_result",
+        value=payload,
+    )
     return PipelineEvent(
         event_type=EventType.SEMANTIC_EXTRACTION_COMPLETED,
         publisher="extraction_stage",
-        payload=payload,
+        payload={},
         context=context,
     )
 

@@ -252,6 +252,5 @@ __pycache__/
 /.cocoindex_code/
 
 # Specmetrics
-.evidence_graphs/
-specmetrics-output.text
+.specmetrics/
 

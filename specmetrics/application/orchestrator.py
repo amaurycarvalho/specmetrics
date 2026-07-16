@@ -237,7 +237,7 @@ class PipelineOrchestrator:
         export_dir = (
             request.output_path
             if request.output_path
-            else request.project_path
+            else request.project_path / ".specmetrics" / "output"
         )
         export_dir.mkdir(parents=True, exist_ok=True)
 

@@ -49,11 +49,14 @@ class _MockProvider:
 
 def _make_event(documents: list[Document]) -> PipelineEvent:
     from uuid import uuid4
-    context = PipelineContext(execution_id=uuid4())
+    context = PipelineContext(execution_id=uuid4()).with_stage_output(
+        field_name="adapter_result",
+        value={"documents": documents},
+    )
     return PipelineEvent(
         event_type=EventType.DOCUMENTS_DISCOVERED,
         publisher="test",
-        payload={"documents": documents},
+        payload={},
         context=context,
     )
 

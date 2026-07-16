@@ -6,6 +6,16 @@ from datetime import datetime
 from ..models import ExplanationComparison, MeasurementExplanation
 
 
+class JsonFormatter:
+    name = "json"
+
+    def format(self, explanation: MeasurementExplanation) -> str:
+        return format_explanation(explanation)
+
+    def format_comparison(self, comparison: ExplanationComparison) -> str:
+        return format_comparison(comparison)
+
+
 def _default_serializer(obj: object) -> str:
     if isinstance(obj, datetime):
         return obj.isoformat()

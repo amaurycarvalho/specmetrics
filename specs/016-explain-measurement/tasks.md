@@ -194,3 +194,24 @@ With multiple developers:
 - The Evidence Graph and CFM must already exist with data for explanation to work
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps between the specification/plan and the current implementation.
+
+- [x] T029 [CRITICAL] [US1] Wire `ExplainService.explain()` to load real measurement results from the measurement engine instead of the hardcoded `"function_count"` metric; list all real metrics present in the data per FR-002 (missing — Constitution VI)
+- [x] T030 [CRITICAL] Implement persistent storage for explanations (FR-009) — save `MeasurementExplanation` to disk (JSONL or sqlite) after each `explain()` call; add a load-from-persistence path so explanations survive restarts and source file changes
+- [x] T031 [HIGH] Add structured gap reporting: when evidence graph is `None`, emit a warning in the explanation output; when CFM is `None`, emit a warning; when rules referenced in measurement are missing from CFM, flag them as gaps per FR-007/EC2
+- [x] T032 [HIGH] Create test suite: `tests/unit/explanation/test_service.py`, `tests/unit/explanation/test_evidence_tracer.py`, `tests/unit/explanation/test_comparison.py`, `tests/integration/test_explain_service.py`, `tests/contract/test_explain_cli.py` per the plan.md structure
+- [x] T033 [HIGH] [US3] Register `EXPLAIN_COMPARE_TOOL` and `handle_explain_compare` from `specmetrics.mcp.tools.explain` in `specmetrics/mcp/server.py` so the compare tool is available via MCP per FR-006
+- [x] T034 [MEDIUM] [US2] Implement recursive graph traversal in `EvidenceTracer.trace_element()` that respects `max_depth` — currently `max_depth` is accepted but never used per FR-005
+- [x] T035 [MEDIUM] Add validation in `ExplainService.explain()` to detect when Rule Pack rules were applied during measurement but their definitions are no longer present in the CFM; flag them as gaps per EC2 — *merged into T031*
+- [x] T036 [MEDIUM] Fix `spec_path` in `MeasurementExplanation` to store the actual specification file path (not `cfm.metadata.run_id`) per FR-003
+- [x] T037 [MEDIUM] Either implement `ExplanationFormatter` Protocol in text and JSON formatters or remove the dead Protocol from `formatters/__init__.py`
+- [x] T038 [MEDIUM] [US3] Extend `EvidenceTracer` comparison logic in `comparison.py` to detect changes in `element_type`, `element_label`, and `evidence` lists — currently only `complexity` and `weight` are compared per FR-006
+- [x] T039 [MEDIUM] Add "source no longer available" annotation to elements whose evidence cannot be loaded from persistence, and implement the persistent load path in `load_explanation()` per EC4/FR-009
+- [x] T040 [LOW] Extract `_load_cfm()` and `_load_evidence_graph()` into a shared utility module (both `cli/commands/explain.py` and `mcp/tools/explain.py` have identical copies)
+- [x] T041 [LOW] Change CLI exit code for invalid `--metric` argument to 2 (currently all errors return 1) per EC3
+- [x] T042 [LOW] [US3] Make `ExplainService.compare()` gracefully handle missing comparison runs by returning a result with a missing-run flag instead of raising `ValueError` per US3/AC3

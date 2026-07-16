@@ -226,7 +226,7 @@ class EvidenceGraphStage:
 
         try:
             import os
-            graphs_dir = os.path.join(os.getcwd(), ".evidence_graphs")
+            graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             os.makedirs(graphs_dir, exist_ok=True)
             save_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
             GraphStore.save(evidence_graph, save_path)

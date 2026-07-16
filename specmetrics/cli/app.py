@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
+import sys
 from pathlib import Path
 from typing import Optional
 
+import structlog
 import typer
 
 from .commands.explain import explain_cli
@@ -11,6 +14,25 @@ from .config_commands import config_app
 from .export_commands import export_app
 from .measure import run_measure
 from .plugins import plugins_app
+
+logging.basicConfig(
+    format="%(message)s",
+    stream=sys.stderr,
+    level=logging.WARNING,
+)
+structlog.configure(
+    wrapper_class=structlog.stdlib.BoundLogger,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.dev.ConsoleRenderer(),
+    ],
+)
 
 app = typer.Typer(
     name="specmetrics",
@@ -64,6 +86,12 @@ def measure(
         "-q",
         help="Suppress non-error output",
     ),
+    log_file: Optional[str] = typer.Option(
+        None,
+        "--log-file",
+        "-l",
+        help="Persist logs to .specmetrics/logs/<filename>",
+    ),
     config: Optional[Path] = typer.Option(
         None,
         "--config",
@@ -82,6 +110,7 @@ def measure(
         from_stage=from_stage,
         verbose=verbose,
         quiet=quiet,
+        log_file=log_file,
         config_path=config,
     )
     raise typer.Exit(code=exit_code)

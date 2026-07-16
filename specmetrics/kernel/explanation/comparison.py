@@ -8,6 +8,28 @@ from .models import (
 )
 
 
+def _compare_element_fields(be, ce) -> list[dict]:
+    changes: list[dict] = []
+    for field in ("element_type", "element_label", "complexity", "weight"):
+        bv = getattr(be, field, None)
+        cv = getattr(ce, field, None)
+        if bv != cv:
+            changes.append({
+                "field": field,
+                "baseline": bv,
+                "comparison": cv,
+            })
+    be_evidence_ids = sorted(e.node_id for e in (be.evidence or []))
+    ce_evidence_ids = sorted(e.node_id for e in (ce.evidence or []))
+    if be_evidence_ids != ce_evidence_ids:
+        changes.append({
+            "field": "evidence",
+            "baseline": be_evidence_ids,
+            "comparison": ce_evidence_ids,
+        })
+    return changes
+
+
 def compare_explanations(
     baseline: MeasurementExplanation,
     comparison: MeasurementExplanation,
@@ -55,16 +77,21 @@ def compare_explanations(
                                 baseline_state={"element_type": be.element_type, "element_label": be.element_label},
                             )
                         )
-                    elif be.complexity != ce.complexity or be.weight != ce.weight:
-                        change_type = "complexity_changed" if be.complexity != ce.complexity else "weight_changed"
-                        elem_changes.append(
-                            ElementChange(
-                                element_id=eid,
-                                change_type=change_type,
-                                baseline_state={"complexity": be.complexity, "weight": be.weight},
-                                comparison_state={"complexity": ce.complexity, "weight": ce.weight},
+                    else:
+                        field_changes = _compare_element_fields(be, ce)
+                        if field_changes:
+                            change_type = "modified"
+                            for fc in field_changes:
+                                if fc["field"] in ("complexity", "weight"):
+                                    change_type = f"{fc['field']}_changed"
+                            elem_changes.append(
+                                ElementChange(
+                                    element_id=eid,
+                                    change_type=change_type,
+                                    baseline_state={fc["field"]: fc["baseline"] for fc in field_changes},
+                                    comparison_state={fc["field"]: fc["comparison"] for fc in field_changes},
+                                )
                             )
-                        )
 
                 changed.append(
                     MetricChange(
