@@ -4,6 +4,16 @@
 
 **Created**: 2026-07-16
 
+## Clarifications
+
+### Session 2026-07-16
+
+- Q: How should the engine identify Functional Processes and Logical Functions from the CFM? → A: CFM node type/attribute-based matching.
+- Q: What defines "medium-sized CFM" for the SC-003 five-second performance target? → A: ≤500 Functional Processes, ≤300 Logical Functions.
+- Q: What observability signals should the SFP measurement engine emit? → A: Structured logging + OpenTelemetry metrics (duration histogram, component count gauges).
+- Q: What tolerance defines "approximately linear" scaling for SC-007? → A: ≤15% deviation per doubling of Functional Process count.
+- Q: What identity key determines duplicates for merging (FR-017, FR-018)? → A: CFM node ID + content fingerprint (SHA-256 of `document_id`, `section_id`, `text`, `semantic_type`).
+
 **Status**: Draft
 
 **Input**: User description: "F17"
@@ -231,7 +241,7 @@ Each process becomes one measurable component.
 
 ### FR-011
 
-The engine SHALL identify Logical Functions from CFM Data Groups.
+The engine SHALL identify Logical Functions from CFM Data Groups via node type/attribute matching on the CFM schema (`node_type`, `semantic_type`).
 
 ---
 
@@ -249,7 +259,7 @@ Logical Functions SHALL ignore implementation details.
 
 ### FR-014
 
-The engine SHALL identify Functional Processes.
+The engine SHALL identify Functional Processes via CFM node type/attribute matching (`node_type == "elementary_process"` or equivalent semantic marker).
 
 ---
 
@@ -267,13 +277,13 @@ Partial business operations SHALL NOT be measured independently.
 
 ### FR-017
 
-Duplicate Functional Processes SHALL be merged.
+Duplicate Functional Processes SHALL be merged by CFM node ID and content fingerprint (SHA-256 of `document_id`, `section_id`, `text`, `semantic_type`).
 
 ---
 
 ### FR-018
 
-Duplicate Logical Functions SHALL be merged.
+Duplicate Logical Functions SHALL be merged by CFM node ID and content fingerprint (SHA-256 of `document_id`, `section_id`, `text`, `semantic_type`).
 
 ---
 
@@ -542,6 +552,20 @@ version()
 
 ---
 
+# Observability
+
+### FR-041
+
+The engine SHALL emit structured INFO/ERROR log messages for measurement start, completion, and failures.
+
+---
+
+### FR-042
+
+The engine SHALL emit an OpenTelemetry histogram metric for measurement duration and gauges for component counts (Logical Functions, Functional Processes).
+
+---
+
 # Success Criteria
 
 ## SC-001
@@ -558,7 +582,7 @@ Repeated executions SHALL produce identical results.
 
 ## SC-003
 
-Measurement SHALL complete in under five seconds for medium-sized CFMs.
+Measurement SHALL complete in under five seconds for medium-sized CFMs (≤500 Functional Processes, ≤300 Logical Functions).
 
 ---
 
@@ -582,7 +606,7 @@ Invalid Rule Packs SHALL not prevent measurement.
 
 ## SC-007
 
-Large CFMs (>1000 Functional Processes) SHALL scale approximately linearly.
+Large CFMs (>1000 Functional Processes) SHALL scale approximately linearly (≤15% deviation per doubling of Functional Process count).
 
 ---
 

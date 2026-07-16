@@ -4,6 +4,16 @@
 
 **Created**: 2026-07-16
 
+## Clarifications
+
+### Session 2026-07-16
+
+- Q: Which path pattern accurately describes where delta specs live? → A: `changes/<change>/specs/**/spec.md` — nested under a `specs/` subdirectory within each change.
+- Q: What should "implementation-specific temporary folders" excluded from change discovery include? → A: Common patterns — `.git`, `__pycache__`, `.venv`, `node_modules`, `.specify`, and `_`-prefixed folders.
+- Q: What observability signals should the OpenSpec adapter emit? → A: Structured INFO/ERROR logging (scan start, completion, per-file errors, summary counts).
+- Q: What is the correct performance threshold — SC-001's 500 or the >1000 edge case? → A: SC-001 (500) is the binding minimum; >1000 is an advisory stress test.
+- Q: Should unrecognized `.md` files be included or filtered out? → A: All `.md` files included; unrecognized files get `document_type: unknown`.
+
 **Status**: Draft
 
 **Input**: User description: "OpenSpec Specification Adapter Plugin"
@@ -173,7 +183,7 @@ Verify `supports()` returns True only for valid OpenSpec repositories.
 - Missing optional artifacts (`design.md`, `tasks.md`).
 - Duplicate domain names.
 - Invalid Markdown.
-- Large repositories (>1000 documents).
+- Large repositories (>1000 documents) — advisory stress test; SC-001 target applies to 500 artifacts.
 - Symbolic links.
 - Corrupted UTF-8 files.
 - Repository containing both archived and active changes.
@@ -250,6 +260,8 @@ Supported artifacts include:
 | design.md   | design        |
 | tasks.md    | tasks         |
 
+Unrecognized Markdown files SHALL be included with a `document_type: unknown`.
+
 ---
 
 **FR-005**
@@ -270,7 +282,7 @@ The adapter MUST recursively discover
 openspec/changes/*/
 ```
 
-excluding implementation-specific temporary folders.
+excluding implementation-specific temporary folders (`.git`, `__pycache__`, `.venv`, `node_modules`, `.specify`, and any folder starting with `_`).
 
 ---
 
@@ -426,6 +438,14 @@ Plugin metadata SHALL include
 
 ---
 
+### Observability
+
+**FR-024**
+
+The adapter SHALL emit structured INFO/ERROR log messages for scan start, completion, per-file errors, and artifact count summaries.
+
+---
+
 ### Error Handling
 
 **FR-021**
@@ -506,6 +526,7 @@ Possible artifact kinds:
 - proposal
 - design
 - tasks
+- unknown (unrecognized Markdown files)
 
 ---
 
@@ -576,13 +597,13 @@ OpenSpecAdapter
 
 ## Metadata Mapping
 
-| OpenSpec Artifact  | Canonical document_type | Metadata.kind |
-| ------------------ | ----------------------- | ------------- |
-| specs/\*/spec.md   | specification           | current-spec  |
-| proposal.md        | proposal                | proposal      |
-| design.md          | design                  | design        |
-| tasks.md           | tasks                   | tasks         |
-| changes/\*/spec.md | specification           | delta-spec    |
+| OpenSpec Artifact                     | Canonical document_type | Metadata.kind |
+| ------------------------------------- | ----------------------- | ------------- |
+| specs/\*/spec.md                      | specification           | current-spec  |
+| proposal.md                           | proposal                | proposal      |
+| design.md                             | design                  | design        |
+| tasks.md                              | tasks                   | tasks         |
+| changes/\*/specs/**/spec.md           | specification           | delta-spec    |
 
 ---
 

@@ -8,6 +8,16 @@
 
 **Input**: User description: "F18"
 
+## Clarifications
+
+### Session 2026-07-16
+
+- Q: How should the engine identify SNAP assessment candidates from the CFM? → A: CFM semantic metadata markers produced by earlier pipeline stages.
+- Q: What defines a "medium-sized CFM" for the SC-003 five-second performance target? → A: ≤500 assessment candidates.
+- Q: How should assessment category definitions be versioned (FR-015)? → A: Semantic versioning (SemVer) on category schema, validated at engine load time.
+- Q: What observability signals should the SNAP measurement engine emit? → A: Structured logging + OpenTelemetry metrics (duration histogram, per-category count gauges).
+- Q: What tolerance defines "approximately linear" scaling for SC-007? → A: ≤15% deviation per doubling of assessment candidate count.
+
 ---
 
 # Overview
@@ -239,7 +249,7 @@ Assessment categories SHALL remain extensible through Rule Packs.
 
 ### FR-015
 
-Category definitions SHALL be versioned.
+Category definitions SHALL be versioned using semantic versioning (SemVer) on the category schema, validated at engine load time.
 
 ---
 
@@ -247,7 +257,7 @@ Category definitions SHALL be versioned.
 
 ### FR-016
 
-The engine SHALL identify assessment candidates from semantic metadata.
+The engine SHALL identify assessment candidates from CFM semantic metadata markers (tags/annotations produced by earlier pipeline stages).
 
 ---
 
@@ -409,6 +419,20 @@ Only modified assessment candidates SHALL be recomputed.
 
 ---
 
+# Observability
+
+### FR-038
+
+The engine SHALL emit structured INFO/ERROR log messages for assessment start, completion, and failures.
+
+---
+
+### FR-039
+
+The engine SHALL emit an OpenTelemetry histogram metric for assessment duration and gauges for per-category assessment item counts.
+
+---
+
 # Measurement Result
 
 The output SHALL include:
@@ -529,7 +553,7 @@ Every assessed item SHALL contain evidence references.
 
 ### SC-003
 
-Medium-sized CFMs SHALL be processed within five seconds.
+Medium-sized CFMs (≤500 assessment candidates) SHALL be processed within five seconds.
 
 ### SC-004
 
@@ -545,7 +569,7 @@ Invalid Rule Packs SHALL generate warnings without aborting execution.
 
 ### SC-007
 
-Assessment SHALL scale approximately linearly with the number of assessment candidates.
+Assessment SHALL scale approximately linearly with the number of assessment candidates (≤15% deviation per doubling of candidate count).
 
 ---
 

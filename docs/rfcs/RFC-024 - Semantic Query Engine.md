@@ -6,7 +6,7 @@
 
 **Authors:** SpecMetrics Project
 
-**Target Version:** 0.2
+**Target Version:** 0.3
 
 ---
 

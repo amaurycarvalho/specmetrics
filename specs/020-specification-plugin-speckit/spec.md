@@ -4,6 +4,16 @@
 
 **Created**: 2026-07-16
 
+## Clarifications
+
+### Session 2026-07-16
+
+- Q: Should `data-model.md` have `kind: research` or `kind: data-model`? → A: Separate `kind: data-model`, consistent with the entity enumeration.
+- Q: Which files under `.specify/` should be included as governance documents? → A: Only `.md` files under `.specify/memory/`.
+- Q: Should `checklists/*.md` match nested checklists (e.g., `checklists/subdir/foo.md`)? → A: Yes — use recursive `checklists/**/*.md`.
+- Q: What observability signals should the SpecKit adapter emit? → A: Structured INFO/ERROR logging (scan start, completion, per-file errors, summary counts).
+- Q: What threshold qualifies as "very large repositories" for the SpecKit adapter? → A: >1000 artifacts.
+
 **Status**: Draft
 
 **Input**: User description: "SpecKit Specification Adapter Plugin"
@@ -171,7 +181,7 @@ Verify `supports()` correctly identifies SpecKit repositories.
 - Duplicate feature identifiers
 - Corrupted UTF-8 files
 - Symbolic links
-- Very large repositories
+- Very large repositories (>1000 artifacts)
 - Additional custom Markdown documents inside feature folders
 
 ---
@@ -264,7 +274,7 @@ Supported artifacts include:
 
 **FR-006**
 
-The adapter MUST ignore framework helper scripts and executable assets located under `.specify/`, except documents intended for semantic consumption.
+The adapter MUST ignore framework helper scripts and executable assets located under `.specify/`. Only `.md` files under `.specify/memory/` SHALL be included as governance documents.
 
 ---
 
@@ -379,6 +389,16 @@ kind: research
 
 **FR-018**
 
+Data model documents MUST include
+
+```yaml
+kind: data-model
+```
+
+---
+
+**FR-019**
+
 Checklist documents MUST include
 
 ```yaml
@@ -389,13 +409,13 @@ kind: checklist
 
 ### Plugin Registration
 
-**FR-019**
+**FR-020**
 
 The plugin MUST register through the Specification Adapter Plugin Interface defined by F03.
 
 ---
 
-**FR-020**
+**FR-021**
 
 Plugin metadata SHALL expose:
 
@@ -406,21 +426,29 @@ Plugin metadata SHALL expose:
 
 ---
 
+### Observability
+
+**FR-025**
+
+The adapter SHALL emit structured INFO/ERROR log messages for scan start, completion, per-file errors, and artifact count summaries.
+
+---
+
 ### Error Handling
 
-**FR-021**
+**FR-022**
 
 Individual file failures SHALL generate document-level errors.
 
 ---
 
-**FR-022**
+**FR-023**
 
 Malformed Markdown SHALL NOT interrupt repository scanning.
 
 ---
 
-**FR-023**
+**FR-024**
 
 Scanning SHALL continue after individual document failures.
 
@@ -543,8 +571,8 @@ SpecKitAdapter
 | plan.md          | plan                    | architecture   |
 | tasks.md         | tasks                   | implementation |
 | research.md      | research                | research       |
-| data-model.md    | data-model              | research       |
-| checklists/\*.md | checklist               | checklist      |
+| data-model.md    | data-model              | data-model     |
+| checklists/\*\*/\*.md | checklist               | checklist      |
 | \*.md            | unknown                 | unknown        |
 
 ---

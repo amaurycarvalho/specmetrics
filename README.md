@@ -20,8 +20,8 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ### Input Specs
 
-- OpenSpec;
-- SpecKit.
+- [OpenSpec](https://github.com/Fission-AI/openspec);
+- [SpecKit](https://github.com/github/spec-kit).
 
 ### Evaluate Metrics
 
