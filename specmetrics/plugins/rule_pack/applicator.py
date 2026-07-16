@@ -53,11 +53,25 @@ class RuleApplicator:
         weight_overrides: list[dict[str, Any]] = []
         glossary: dict[str, str] = {}
 
+        seen_exclusions: set[str] = set()
+        seen_complexity: set[str] = set()
+        seen_weight: set[str] = set()
+
         for pack in packs:
             glossary.update(pack.glossary_overrides)
             for rule in pack.rules:
                 if rule.type == "exclusion":
                     ftypes = rule.config.function_types or []
+                    for ft in ftypes:
+                        if ft in seen_exclusions:
+                            logger.warning(
+                                "rule_pack_override_exclusion",
+                                rule_pack_id=pack.id,
+                                rule_id=rule.id,
+                                function_type=ft,
+                                message=f"Exclusion for '{ft}' already defined by another pack; this pack's rule takes precedence",
+                            )
+                        seen_exclusions.add(ft)
                     excluded_types.update(ftypes)
                     self._annotator.record_application(
                         rule_pack_id=pack.id,
@@ -79,6 +93,16 @@ class RuleApplicator:
                     )
 
                 elif rule.type == "complexity_override":
+                    ft_key = (rule.config.function_type or "").upper()
+                    if ft_key in seen_complexity:
+                        logger.warning(
+                            "rule_pack_override_complexity",
+                            rule_pack_id=pack.id,
+                            rule_id=rule.id,
+                            function_type=rule.config.function_type,
+                            message=f"Complexity override for '{rule.config.function_type}' already defined by another pack; this pack's rule takes precedence",
+                        )
+                    seen_complexity.add(ft_key)
                     override = {
                         "pack_id": pack.id,
                         "rule_id": rule.id,
@@ -98,6 +122,17 @@ class RuleApplicator:
                     )
 
                 elif rule.type == "weight_override":
+                    wk = f"{rule.config.function_type or ''}|{rule.config.complexity or ''}"
+                    if wk in seen_weight:
+                        logger.warning(
+                            "rule_pack_override_weight",
+                            rule_pack_id=pack.id,
+                            rule_id=rule.id,
+                            function_type=rule.config.function_type,
+                            complexity=rule.config.complexity,
+                            message=f"Weight override for '{rule.config.function_type}/{rule.config.complexity}' already defined by another pack; this pack's rule takes precedence",
+                        )
+                    seen_weight.add(wk)
                     override = {
                         "pack_id": pack.id,
                         "rule_id": rule.id,
@@ -130,6 +165,34 @@ class RuleApplicator:
                             description=f"Computed VAF={vaf_value} from GSC (total={total})",
                             after_state={"vaf": vaf_value, "gsc_total": total},
                         )
+
+        cfm_types = {
+            metadata.get("function_type", "").upper()
+            for _pid, process in cfm.functional_processes.items()
+            if (metadata := getattr(process, "metadata", None) or {})
+        }
+        for pack in packs:
+            for rule in pack.rules:
+                if rule.type == "exclusion":
+                    for ft in (rule.config.function_types or []):
+                        if ft.upper() not in cfm_types:
+                            logger.info(
+                                "rule_pack_unused_type",
+                                rule_pack_id=pack.id,
+                                rule_id=rule.id,
+                                function_type=ft,
+                                message=f"Rule references function type '{ft}' not present in CFM",
+                            )
+                elif rule.type == "element_exclusion":
+                    for eid in (rule.config.element_ids or []):
+                        if eid not in cfm.functional_processes:
+                            logger.info(
+                                "rule_pack_unused_element",
+                                rule_pack_id=pack.id,
+                                rule_id=rule.id,
+                                element_id=eid,
+                                message=f"Rule references element ID '{eid}' not present in CFM",
+                            )
 
         if excluded_types or excluded_element_ids:
             result = self._mark_exclusions(result, excluded_types, excluded_element_ids)

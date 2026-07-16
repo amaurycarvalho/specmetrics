@@ -36,7 +36,7 @@ class Rule(BaseModel):
 class RulePack(BaseModel):
     id: str
     description: str = ""
-    methodology: str = "APF"
+    methodology: str = "FPA"
     rules: list[Rule] = []
     glossary_overrides: dict[str, str] = {}
 

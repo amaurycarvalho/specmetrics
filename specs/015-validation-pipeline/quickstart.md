@@ -74,7 +74,7 @@ pytest tests/contract/test_validate_cli.py
 | CLI interface | [contracts/validation-pipeline-interface.md](contracts/validation-pipeline-interface.md) |
 | Data model | [data-model.md](data-model.md) |
 | Validation rules | Plugin entry point group `specmetrics.validation_rules` |
-| Rule config | `.specify/validation-rules.yml` |
+| Rule config | `.specmetrics/rules/validation-rules.yml` |
 
 ## Scenarios Covered
 

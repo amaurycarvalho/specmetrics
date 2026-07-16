@@ -17,6 +17,9 @@ def with_exponential_backoff(
     config: PublisherConfiguration,
     context: str = "",
 ) -> T:
+    if config.retry_max_attempts <= 0:
+        return fn()
+
     last_exc: Exception | None = None
     for attempt in range(1, config.retry_max_attempts + 1):
         try:

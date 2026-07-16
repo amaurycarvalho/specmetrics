@@ -103,7 +103,7 @@ Entry point group: `specmetrics.validation_rules`
 ### Rule Configuration File (YAML)
 
 ```yaml
-# .specify/validation-rules.yml
+# .specmetrics/rules/validation-rules.yml
 rules:
   mandatory-sections-exist:
     enabled: true

@@ -1,26 +1,13 @@
 from __future__ import annotations
 
-from importlib.metadata import entry_points
-
 import structlog
 
 from specmetrics.plugins.exporter.models import ExportMetadata, Measurement
 
-from .base import PublisherConfig, PublisherConfiguration, PublisherPlugin
+from .base import PublisherConfig, PublisherConfiguration
+from .discovery import discover_publishers
 
 logger = structlog.get_logger(__name__)
-
-
-def discover_publishers() -> list[PublisherPlugin]:
-    publishers: list[PublisherPlugin] = []
-    for ep in entry_points(group="specmetrics.publishers"):
-        try:
-            cls = ep.load()
-            if isinstance(cls, type) and issubclass(cls, PublisherPlugin):
-                publishers.append(cls())
-        except Exception as exc:
-            logger.warning("publisher_load_failed", entry_point=ep.name, error=str(exc))
-    return publishers
 
 
 def publish_all(

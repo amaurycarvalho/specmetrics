@@ -17,6 +17,8 @@
 - Q: Empty/Null Results Export Behavior → A: Produce valid empty files (empty JSON array, CSV with header only, XML with empty root element)
 - Q: Concurrent Export Handling → A: Serial per-format, errors isolated (formats export sequentially; one format failure does not block others)
 - Q: Output File Conflict Strategy → A: Overwrite with warning (replace existing file; log a warning)
+- Q: Default Export Output Directory → A: `exports/` inside `.specmetrics/` (`.specmetrics/exports/`). Users can override with `--output-dir`.
+- Q: Pipeline Orchestrator Output Directory → A: The orchestrator also writes measurement output files to `.specmetrics/output/` as a fallback when no explicit path is given.
 
 ## User Scenarios & Testing *(mandatory)*
 

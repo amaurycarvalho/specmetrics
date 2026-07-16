@@ -108,7 +108,7 @@ PluginRegistry.install_handlers(handler_registry)  # populates F01's registry
 |------|---------------------|---------|
 | ADAPTER | `adapter` | SDD framework adapters |
 | SEMANTIC | `semantic` | Semantic extraction providers |
-| MEASUREMENT | `measurement` | Measurement engines (APF, etc.) |
+| MEASUREMENT | `measurement` | Measurement engines (FPA, etc.) |
 | EXPORTER | `exporter` | Export format plugins |
 | PUBLISHER | `publisher` | Telemetry publishers |
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 from .sources import SourceLevel
 
@@ -18,9 +18,15 @@ class LoggingSettings(BaseModel):
     format: str = Field("console", description="Log format: console, json")
 
 
+class SecuritySettings(BaseModel):
+    api_key: SecretStr | None = Field(None, description="API key for external services", json_schema_extra={"sensitive": True})
+    tls_ca_cert_path: str | None = Field(None, description="Path to CA certificate bundle")
+
+
 class CoreConfig(BaseModel):
     pipeline: PipelineSettings = Field(default_factory=PipelineSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
+    security: SecuritySettings = Field(default_factory=SecuritySettings)
 
 
 @runtime_checkable

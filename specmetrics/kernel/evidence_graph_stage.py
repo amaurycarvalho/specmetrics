@@ -105,8 +105,13 @@ class EvidenceGraphStage:
     graph from extracted elements, and persists it for downstream stages.
     """
 
-    def __init__(self, backend: GraphBackend | None = None) -> None:
+    def __init__(
+        self,
+        backend: GraphBackend | None = None,
+        max_memory_nodes: int = 50_000,
+    ) -> None:
         self._backend = backend or NetworkXBackend()
+        self._max_memory_nodes = max_memory_nodes
         self._handled_event_type = EventType.SEMANTIC_EXTRACTION_COMPLETED
         self._handler_id = "evidence_graph_stage"
         self._stage_name = "evidence_graph"
@@ -136,6 +141,12 @@ class EvidenceGraphStage:
             elements_data = result_data.get("elements", [])
             for elem_data in elements_data:
                 element = ExtractedElement(**elem_data)
+                if not element.evidence.document_id or not element.evidence.text:
+                    logger.warning(
+                        "broken_evidence_reference",
+                        element_id=element.id,
+                        document_id=element.evidence.document_id,
+                    )
                 nid = fingerprint_node(
                     element.evidence.document_id,
                     element.evidence.section_id,
@@ -234,9 +245,24 @@ class EvidenceGraphStage:
         except Exception as exc:
             logger.warning("evidence_graph_save_failed", error=str(exc))
 
+        if node_count > self._max_memory_nodes:
+            logger.warning(
+                "evidence_graph_exceeded_memory_threshold",
+                node_count=node_count,
+                max_memory_nodes=self._max_memory_nodes,
+                hint="Consider increasing max_memory_nodes or switching to a persistent database backend",
+            )
+
+        built_event = PipelineEvent(
+            event_type=EventType.EVIDENCE_GRAPH_BUILT,
+            publisher=self._handler_id,
+            payload=payload_out,
+            context=context,
+        )
         return context.with_stage_output(
             field_name="evidence_graph",
             value=payload_out,
+            event=built_event,
         )
 
     def update_for_document(self, document_id: str, extraction_result_data: dict) -> None:

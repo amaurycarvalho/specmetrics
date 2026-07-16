@@ -9,6 +9,17 @@ from .extraction_registry import ProviderRouter
 from .handler_registry import EventHandler
 from .pipeline_context import PipelineContext
 
+_NON_TEXT_THRESHOLD = 0.3
+
+
+def _is_likely_binary(content: str) -> bool:
+    """Heuristic check: if more than 30 % of characters are nulls or
+    control chars (excluding common whitespace), treat as binary."""
+    if not content:
+        return False
+    control = sum(1 for c in content if ord(c) < 32 and c not in "\n\r\t\f\v")
+    return control / len(content) > _NON_TEXT_THRESHOLD
+
 logger = structlog.get_logger(__name__)
 
 
@@ -48,6 +59,13 @@ class ExtractionStage(EventHandler):
 
         for doc in documents:
             try:
+                if _is_likely_binary(doc.content):
+                    logger.warning(
+                        "skipping_binary_content",
+                        doc_id=getattr(doc, "id", "unknown"),
+                    )
+                    documents_skipped += 1
+                    continue
                 provider = self._router.resolve(doc.document_type)
                 if provider is None:
                     logger.warning(

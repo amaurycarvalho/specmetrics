@@ -214,6 +214,17 @@ timing entries, and each execution has a unique execution_id.
 
 ---
 
+## Phase 7: Convergence
+
+**Purpose**: Close gaps between specification/plan intent and current implementation
+
+- [X] T041 Fix `_STAGE_NAME_TO_EVENT` off-by-one mapping in `orchestrator.py` — each StageName currently maps to the wrong EventType (e.g. `CFM→EVIDENCE_GRAPH_BUILT` instead of `CANONICAL_MODEL_BUILT`, `MEASURE→RULE_PACK_APPLIED` instead of `MEASUREMENT_COMPLETED`) per plan: stage mapping (contradicts)
+- [X] T042 Add `run_id` field to `PipelineResult` in `models.py` and populate it from `PipelineContext.execution_id` — `mcp/tools/measure.py` accesses `result.run_id` which would raise `AttributeError` at runtime per FR-009 (missing)
+- [X] T043 Review/justify or remove `DOCUMENTS_VALIDATED` from `CANONICAL_EVENT_ORDER` and `EventType` enum — this event is not specified in the spec's canonical pipeline order or the plan's event sequence per spec: canonical order (unrequested)
+- [X] T044 Add test verifying that a non-`StageError` exception (e.g. `ValueError`) raised by a handler is wrapped into `StageError` and the pipeline halts correctly per spec: edge cases — unexpected handler exceptions (partial)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

@@ -44,7 +44,7 @@ A developer or analyst inspects the generated CFM to verify that semantic elemen
 
 ### User Story 3 - CFM feeds downstream consumers (Priority: P2)
 
-A measurement engine plugin developer implements a measurement methodology (e.g., APF Function Point Analysis) that consumes the CFM. They depend on the CFM's stable, documented structure and never need to know which SDD framework originated the specification.
+A measurement engine plugin developer implements a measurement methodology (e.g., FPA Function Point Analysis) that consumes the CFM. They depend on the CFM's stable, documented structure and never need to know which SDD framework originated the specification.
 
 **Why this priority**: Principle VIII (Plugin-Oriented) requires that measurement engines be independent of framework specifics. The CFM is the contract that enables this independence.
 

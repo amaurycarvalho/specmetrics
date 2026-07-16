@@ -157,11 +157,29 @@ class PublisherInstance:
             raise ConnectionError(f"Export failed with status: {status_name}")
 
 
+def _build_evidence_refs(measurements: list[Measurement]) -> list[dict[str, str]]:
+    refs: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for m in measurements:
+        for ref in m.evidence:
+            key = f"{ref.document_id}|{ref.section_id or ''}|{ref.graph_node_id or ''}"
+            if key not in seen:
+                seen.add(key)
+                refs.append({
+                    "spec_document": ref.document_id,
+                    "spec_section": ref.section_id or "",
+                    "spec_element_id": ref.graph_node_id or "",
+                    "extracted_text": ref.text or "",
+                })
+    return refs
+
+
 def convert_measurements(
     measurements: list[Measurement],
     metadata: ExportMetadata,
 ) -> list[dict[str, Any]]:
     metrics: list[dict[str, Any]] = []
+    evidence_refs = _build_evidence_refs(measurements)
     base_attrs = {
         "service.name": "specmetrics",
         "project_name": metadata.run_id or "unknown",
@@ -178,6 +196,7 @@ def convert_measurements(
             "description": "Total unadjusted function point count",
             "timestamp": time.time(),
             "attributes": {**base_attrs, "metric.type": "function_points_total"},
+            "evidence_refs": evidence_refs,
         }
     )
 
@@ -189,18 +208,24 @@ def convert_measurements(
             "description": "Total number of identified functions",
             "timestamp": time.time(),
             "attributes": {**base_attrs, "metric.type": "functions_count"},
+            "evidence_refs": evidence_refs,
         }
     )
 
     by_type: dict[str, int] = {}
     by_complexity: dict[str, int] = {}
+    type_measurements: dict[str, list[Measurement]] = {}
+    complexity_measurements: dict[str, list[Measurement]] = {}
     for m in measurements:
         cat = m.category or "unknown"
         by_type[cat] = by_type.get(cat, 0) + 1
+        type_measurements.setdefault(cat, []).append(m)
         comp = m.complexity or "unknown"
         by_complexity[comp] = by_complexity.get(comp, 0) + 1
+        complexity_measurements.setdefault(comp, []).append(m)
 
     for ftype, count in by_type.items():
+        type_refs = _build_evidence_refs(type_measurements[ftype])
         metrics.append(
             {
                 "name": "specmetrics.functions.by_type",
@@ -213,10 +238,12 @@ def convert_measurements(
                     "type": ftype,
                     "metric.type": "functions_by_type",
                 },
+                "evidence_refs": type_refs,
             }
         )
 
     for comp, count in by_complexity.items():
+        comp_refs = _build_evidence_refs(complexity_measurements[comp])
         metrics.append(
             {
                 "name": "specmetrics.functions.by_complexity",
@@ -229,6 +256,7 @@ def convert_measurements(
                     "complexity": comp,
                     "metric.type": "functions_by_complexity",
                 },
+                "evidence_refs": comp_refs,
             }
         )
 

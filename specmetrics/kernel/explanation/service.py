@@ -38,7 +38,7 @@ class ExplanationConfig:
     @classmethod
     def from_yaml(cls, path: str | Path | None = None) -> ExplanationConfig:
         if path is None:
-            base = Path(".specify") / "explanation.yml"
+            base = Path(".specmetrics") / "explanations" / "explanation.yml"
             if base.exists():
                 path = base
             else:

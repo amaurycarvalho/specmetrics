@@ -20,14 +20,16 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 ### Input Specs
 
-- OpenSpec
-- SpecKit
+- OpenSpec;
+- SpecKit.
 
 ### Evaluate Metrics
 
-- Function Point Analysis (IFPUG/APF)
-- Simplified Function Point (SPF)
-- SNAP
+- [Function Point Analysis (IFPUG/FPA)](https://ifpug.org/ifpug-standards/fpa);
+- [Simplified Function Point (IFPUG/SFP)](https://ifpug.org/ifpug-standards/sfp);
+- [Software Non-Functional Assessment Process (IFPUG/SNAP)](https://ifpug.org/ifpug-standards/snap).
+
+> **Note:** The current implementations of **FPA**, **SFP**, and **SNAP** are **draft prototypes** intended solely for demonstration and validation purposes. They provide a highly simplified approximation of their respective measurement methodologies and **do not constitute complete or standards-compliant implementations**. Full conformance with the official specifications requires additional counting rules, validation logic, and methodological details beyond the scope of these prototype implementations.
 
 ### Output Formats
 

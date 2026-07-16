@@ -54,7 +54,7 @@ The handler returns a modified `PipelineContext` with:
 
 ### File Location
 
-- Directory: `.specify/rules/`
+- Directory: `.specmetrics/rules/`
 - Extension: `.yml` (YAML)
 - Discovery: All `.yml` files in the directory, sorted alphabetically
 - Load order: Files loaded in alphabetical order; for conflicting rules, the last-loaded file wins
@@ -64,10 +64,10 @@ The handler returns a modified `PipelineContext` with:
 #### Root Structure
 
 ```yaml
-# .specify/rules/acme-corp.yml
+# .specmetrics/rules/acme-corp.yml
 id: "acme-corp-v1"
 description: "ACME Corp measurement policies for embedded systems"
-methodology: "APF"           # optional, default: "APF"
+methodology: "FPA"           # optional, default: "FPA"
 glossary_overrides:          # optional
   EI: "Sensor Input"
   EO: "Control Signal"

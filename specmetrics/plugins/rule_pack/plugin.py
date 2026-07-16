@@ -16,7 +16,7 @@ from .validator import RulePackValidator
 
 logger = structlog.get_logger(__name__)
 
-RULES_DIR = ".specify/rules"
+RULES_DIR = ".specmetrics/rules"
 
 
 class RulePackEnginePlugin:

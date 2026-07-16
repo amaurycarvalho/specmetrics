@@ -35,3 +35,4 @@ class PluginMetadata:
     description: Optional[str] = None
     author: Optional[str] = None
     version: Optional[str] = None
+    dependencies: tuple[str, ...] = ()

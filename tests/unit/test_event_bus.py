@@ -1,6 +1,6 @@
 import pytest
 
-from specmetrics.kernel import EventType, HandlerNotFoundError, HandlerRegistry, PipelineContext, PipelineEvent
+from specmetrics.kernel import EventType, HandlerNotFoundError, HandlerRegistry, PipelineContext, PipelineEvent, StageError
 from specmetrics.kernel.event_bus import EventBus
 
 
@@ -32,6 +32,22 @@ class TestEventBus:
         with pytest.raises(HandlerNotFoundError):
             bus.publish(event)
 
+    def test_wraps_non_stage_error_into_stage_error(self) -> None:
+        registry = HandlerRegistry()
+        handler = ExceptionRaisingHandler(EventType.REPOSITORY_LOADED, "raise_handler", "RaiseStage")
+        registry.register(handler)
+        bus = EventBus(registry)
+        event = PipelineEvent(
+            event_type=EventType.REPOSITORY_LOADED,
+            publisher="test",
+            payload={},
+            context=PipelineContext(),
+        )
+        with pytest.raises(StageError) as exc:
+            bus.publish(event)
+        assert exc.value.stage_name == "RaiseStage"
+        assert "something unexpected" in exc.value.message
+
     def test_preserves_event_order_across_multiple_publishes(self) -> None:
         registry = HandlerRegistry()
         h1 = FakeHandler(EventType.REPOSITORY_LOADED, "h1", "Stage 1")
@@ -47,6 +63,28 @@ class TestEventBus:
         assert h2.call_count == 1
         assert h1.last_event is e1
         assert h2.last_event is e2
+
+
+class ExceptionRaisingHandler:
+    def __init__(self, event_type: EventType, handler_id: str, stage_name: str) -> None:
+        self._event_type = event_type
+        self._handler_id = handler_id
+        self._stage_name = stage_name
+
+    @property
+    def handled_event_type(self) -> EventType:
+        return self._event_type
+
+    @property
+    def handler_id(self) -> str:
+        return self._handler_id
+
+    @property
+    def stage_name(self) -> str:
+        return self._stage_name
+
+    def handle(self, event: PipelineEvent) -> PipelineContext:
+        raise ValueError("something unexpected")
 
 
 class FakeHandler:

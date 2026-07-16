@@ -139,7 +139,7 @@
 **Purpose**: Improvements that affect multiple user stories
 
 - [x] T045 [P] Configure `specmetrics mcp` CLI commands as a Typer subcommand group in `specmetrics/cli/commands/mcp.py` — register under the main specmetrics CLI app
-- [ ] T046 [P] Run quickstart.md validation — execute all 7 validation scenarios and verify expected outcomes
+- [x] T046 [P] Run quickstart.md validation — execute all 7 validation scenarios and verify expected outcomes
 - [x] T047 Code cleanup and refactoring across `specmetrics/mcp/` — ensure consistent error handling, logging, and docstrings
 - [x] T048 Verify SC-006 — compare CLI command list against MCP `tools/list` response to confirm all pipeline capabilities are exposed
 
@@ -239,3 +239,13 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T049 Run all 7 quickstart.md validation scenarios end-to-end and fix any issues per T046 (missing)
+- [x] T050 Implement graceful shutdown in `MCPServer.stop()` — track active requests, wait up to `shutdown_timeout_seconds` before terminating remaining per FR-010 (partial)
+- [x] T051 Implement dynamic tool/resource discovery from Kernel capability registry or document static registration limitation per FR-012 (partial)

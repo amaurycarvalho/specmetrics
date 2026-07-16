@@ -10,9 +10,9 @@ from .adapter_interface import Document
 class EvidenceReference(BaseModel):
     """Pointer back to the source material that justifies an extracted element."""
 
-    document_id: str
+    document_id: str = Field(min_length=1)
     section_id: Optional[str] = None
-    text: str
+    text: str = Field(min_length=1)
 
 
 class ExtractedElement(BaseModel):

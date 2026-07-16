@@ -10,7 +10,7 @@
 
 ### User Story 1 — Run Full Measurement Pipeline via CLI (Priority: P1)
 
-A quality engineer runs a single command to execute the complete measurement pipeline on their project. The CLI discovers specifications, performs semantic extraction, builds the evidence graph and CFM, applies Rule Packs, runs the APF measurement, and exports results — all from one terminal command.
+A quality engineer runs a single command to execute the complete measurement pipeline on their project. The CLI discovers specifications, performs semantic extraction, builds the evidence graph and CFM, applies Rule Packs, runs the FPA measurement, and exports results — all from one terminal command.
 
 **Why this priority**: The CLI is the primary interaction mechanism for human users and CI/CD pipelines. Without it, no user can execute the platform capabilities.
 
@@ -113,7 +113,7 @@ A team lead wants to inspect which plugins are installed, verify their versions,
 - **FR-015**: Both CLI and MCP Server MUST use the same underlying pipeline orchestration — equivalent operations MUST produce equivalent results regardless of interface
 - **FR-016**: The CLI MUST NOT require a running MCP Server (or vice versa) — each interface must operate independently
 - **FR-017**: The CLI MUST provide a `help` command (or `--help` flag) that documents available commands, flags, and usage examples
-- **FR-018**: The CLI MUST support loading project configuration from the `.specify/` directory, including plugin selection and pipeline options
+- **FR-018**: The CLI MUST support loading project configuration from the `.specmetrics/` directory, including plugin selection and pipeline options
 - **FR-019**: The MCP Server MUST log its activity to stderr for debugging without interfering with the stdio JSON-RPC communication
 - **FR-020**: The MCP Server MUST support the MCP `initialize` handshake, returning server capabilities including a list of available tools
 
@@ -146,3 +146,4 @@ A team lead wants to inspect which plugins are installed, verify their versions,
 - The CLI targets Unix-like environments (Linux, macOS) for the MVP; Windows support is deferred
 - Authentication and authorization are out of scope for the MVP — both CLI and MCP operate with the permissions of the invoking user/process
 - The MCP Server runs as a single process serving one client at a time for the MVP; concurrent client support is deferred
+- Log files are persisted to `.specmetrics/logs/<filename>` when `--log-file` is specified

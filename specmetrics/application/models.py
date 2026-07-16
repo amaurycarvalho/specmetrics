@@ -44,6 +44,7 @@ class MeasurementResult:
 class PipelineResult:
     status: PipelineStatus
     project_path: Path | None = None
+    run_id: str = ""
     stages_executed: list[StageResult] = field(default_factory=list)
     measurement: MeasurementResult | None = None
     duration_seconds: float = 0.0

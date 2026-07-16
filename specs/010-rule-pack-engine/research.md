@@ -5,7 +5,7 @@
 ### Decision 1: Rule Pack Format
 
 - **Decision**: YAML, using ruamel.yaml
-- **Rationale**: The project already depends on ruamel.yaml for configuration. YAML supports comments, anchors, and complex nested structures needed for exclusion rules, thresholds, and VAF configuration. The existing `RulePack` model in the APF measurement plugin already demonstrates the structure.
+- **Rationale**: The project already depends on ruamel.yaml for configuration. YAML supports comments, anchors, and complex nested structures needed for exclusion rules, thresholds, and VAF configuration. The existing `RulePack` model in the FPA measurement plugin already demonstrates the structure.
 - **Alternatives considered**: JSON (no comment support, less readable for policy files), TOML (limited nesting, less suitable for complex rule definitions), Python code (violates Principle IX - Rule Externalization)
 
 ### Decision 2: Pipeline Integration Pattern
@@ -16,7 +16,7 @@
 
 ### Decision 3: Rule Pack Model Location
 
-- **Decision**: Extract `RulePack` model from `specmetrics.plugins.measurement.apf.models` to `specmetrics.kernel.cfm.models` as a shared contract
+- **Decision**: Extract `RulePack` model from `specmetrics.plugins.measurement.fpa.models` to `specmetrics.kernel.cfm.models` as a shared contract
 - **Rationale**: Both the Rule Pack Engine (producer) and Measurement Engine (consumer) need the same model. Placing it in the kernel's CFM module makes it a stable, published contract. The measurement plugin imports from the new shared location; backward compatibility is maintained with a re-export.
 - **Alternatives considered**: Keep model in measurement plugin (creates circular dependency), duplicate the model (maintenance burden), create a separate `specmetrics.models` package (over-engineered for one model)
 
@@ -28,7 +28,7 @@
 
 ### Decision 5: Rule Pack File Layout
 
-- **Decision**: One or more `.yml` files in `.specify/rules/`, each self-contained with its own `id`, `description`, and rules
+- **Decision**: One or more `.yml` files in `.specmetrics/rules/`, each self-contained with its own `id`, `description`, and rules
 - **Rationale**: Multiple files allow teams to organize rules by domain, methodology, or project phase. Each file is independently loadable and validatable. File-level conflict resolution (last-loaded wins) is simple and predictable.
 - **Alternatives considered**: Single `rule-pack.yml` (becomes unwieldy with many rules), single JSON file in `.specify/init-options.json` (mixes policy with project config), directory with subdirectories per methodology (over-engineered for v1)
 
@@ -45,7 +45,7 @@
 ```python
 class RulePack(BaseModel):
     id: str
-    methodology: str = "APF"
+    methodology: str = "FPA"
     complexity_overrides: Optional[dict[str, dict[str, list[int]]]] = None
     weight_overrides: Optional[dict[str, dict[str, int]]] = None
     excluded_types: list[FunctionType] = []
@@ -73,7 +73,7 @@ The applicator resolves weight overrides, excluded types, complexity overrides, 
 
 ```
 ┌──────────────────────┐
-│  .specify/rules/*.yml│  (Rule Pack files)
+│  .specmetrics/rules/*.yml│  (Rule Pack files)
 └────────┬─────────────┘
          │ loaded by
          ▼
@@ -84,7 +84,7 @@ The applicator resolves weight overrides, excluded types, complexity overrides, 
          │ produces annotated CFM
          ▼
 ┌──────────────────────┐
-│  Measurement Engine  │  plugins/measurement/apf/
+│  Measurement Engine  │  plugins/measurement/fpa/
 │  (reads annotations) │
 └──────────────────────┘
 ```

@@ -102,6 +102,28 @@ class TestPluginValidator:
 
         assert result.is_valid
 
+    def test_accepts_plugin_with_satisfied_dependencies(self) -> None:
+        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+            validator = PluginValidator()
+            meta = _make_metadata(id="dependent", dependencies=("dep-a", "dep-b"))
+            result = validator.validate(meta, known_plugin_ids={"dep-a", "dep-b"})
+        assert result.is_valid
+
+    def test_rejects_plugin_with_missing_dependency(self) -> None:
+        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+            validator = PluginValidator()
+            meta = _make_metadata(id="dependent", dependencies=("missing-dep",))
+            result = validator.validate(meta, known_plugin_ids={"other-plugin"})
+        assert not result.is_valid
+        assert any("Missing plugin dependency" in e for e in result.errors)
+
+    def test_accepts_plugin_no_dependencies_when_known_ids_provided(self) -> None:
+        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+            validator = PluginValidator()
+            meta = _make_metadata()
+            result = validator.validate(meta, known_plugin_ids={"some-plugin"})
+        assert result.is_valid
+
     def test_validation_result_dataclass(self) -> None:
         result = ValidationResult(is_valid=True)
         assert result.is_valid

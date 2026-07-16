@@ -22,6 +22,8 @@ from .enums import (
     StageExecutionStatus,
     StageName,
 )
+from specmetrics.infrastructure.config.loader import ConfigurationSystem
+
 from .models import (
     MeasurementResult,
     PipelineRequest,
@@ -35,12 +37,12 @@ logger = structlog.get_logger(__name__)
 
 _STAGE_NAME_TO_EVENT: dict[StageName, EventType] = {
     StageName.DISCOVER: EventType.REPOSITORY_LOADED,
-    StageName.EXTRACT: EventType.DOCUMENTS_DISCOVERED,
-    StageName.GRAPH: EventType.SEMANTIC_EXTRACTION_COMPLETED,
-    StageName.CFM: EventType.EVIDENCE_GRAPH_BUILT,
-    StageName.RULE: EventType.CANONICAL_MODEL_BUILT,
-    StageName.MEASURE: EventType.RULE_PACK_APPLIED,
-    StageName.EXPORT: EventType.MEASUREMENT_COMPLETED,
+    StageName.EXTRACT: EventType.SEMANTIC_EXTRACTION_COMPLETED,
+    StageName.GRAPH: EventType.EVIDENCE_GRAPH_BUILT,
+    StageName.CFM: EventType.CANONICAL_MODEL_BUILT,
+    StageName.RULE: EventType.RULE_PACK_APPLIED,
+    StageName.MEASURE: EventType.MEASUREMENT_COMPLETED,
+    StageName.EXPORT: EventType.EXPORT_COMPLETED,
 }
 
 
@@ -82,6 +84,10 @@ class PipelineOrchestrator:
         self._registry = PluginRegistry()
         self._handler_registry = HandlerRegistry()
         self._plugin_validator = PluginValidator()
+        self._config_system: ConfigurationSystem | None = None
+
+    def set_config_system(self, config_system: ConfigurationSystem) -> None:
+        self._config_system = config_system
 
     def discover_plugins(self) -> None:
         self._registry = load_plugins(
@@ -89,6 +95,21 @@ class PipelineOrchestrator:
             validator=self._plugin_validator,
         )
         self._registry.install_handlers(self._handler_registry)
+        if self._config_system is not None:
+            for desc in self._registry.list_plugins():
+                factory = desc.metadata.handler_factory
+                if factory is not None:
+                    try:
+                        handler = factory()
+                        schema_method = getattr(handler, "config_schema", None)
+                        if schema_method is not None and callable(schema_method):
+                            schema = schema_method()
+                            if schema is not None:
+                                self._config_system.register_plugin_schema(
+                                    desc.metadata.id, schema,
+                                )
+                    except Exception:
+                        pass
 
     def list_plugins(self) -> list[PluginInfo]:
         descriptors = self._registry.list_plugins()
@@ -157,6 +178,7 @@ class PipelineOrchestrator:
         return PipelineResult(
             status=PipelineStatus.FAILED if has_failures else PipelineStatus.SUCCESS,
             project_path=request.project_path,
+            run_id=str(result_ctx.execution_id),
             stages_executed=stages_executed,
             measurement=measurement,
             duration_seconds=elapsed,

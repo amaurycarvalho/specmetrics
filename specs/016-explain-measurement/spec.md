@@ -117,3 +117,4 @@ A maintainer has made changes to a specification and wants to understand how the
 - The Measurement Engine preserves intermediate computation details (not just final values) to enable granular explanations
 - Explanations are consumed via CLI, MCP, and API interfaces (consistent with Principle X - AI-Friendly by Design)
 - The Canonical Functional Model is the authoritative source for what elements were counted and their classification
+- Explanation files are persisted to `.specmetrics/explanations/{run_id}.json` by default

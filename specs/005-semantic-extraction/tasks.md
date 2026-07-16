@@ -317,3 +317,17 @@ Task: "T016 [P] [US1] Implement ProviderRouter"
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break
   independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [X] T037 [US4] Write unit tests for LLMExtractionProvider covering valid LiteLLM response and graceful degradation when LLM unavailable per T030/T031 (missing)
+- [X] T038 [US4] Implement built-in OpenSpec and SpecKit extraction providers per US4 (partial)
+- [X] T039 [US3] Integrate ProviderRouter with F02 PluginRegistry to dynamically discover SEMANTIC-type plugins per plan.md & FR-005 (partial)
+- [X] T040 Add Pydantic validators to EvidenceReference enforcing non-empty document_id and text per FR-002/FR-003 (partial)
+- [X] T041 Implement configuration file (YAML) loader for provider-to-document-type routing per FR-008 (partial)
+- [X] T042 Add content-type validation in ExtractionStage to skip non-text content with logged warning per spec.md edge case (missing)
+- [X] T043 Implement document chunking for documents exceeding provider context limits per spec.md edge case (missing)

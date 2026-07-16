@@ -174,7 +174,7 @@ class EvidenceTracer:
 ### Explanation Settings
 
 ```yaml
-# .specify/explanation.yml
+# .specmetrics/explanations/explanation.yml
 explanation:
   max_evidence_depth: 3
   include_low_confidence: false

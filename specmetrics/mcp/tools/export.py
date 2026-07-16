@@ -27,7 +27,7 @@ EXPORT_RESULTS_TOOL = Tool(
             "format": {
                 "type": "string",
                 "description": "Export format",
-                "enum": ["json", "csv"],
+                "enum": ["json", "csv", "xml"],
             },
             "output_path": {
                 "type": "string",

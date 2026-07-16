@@ -10,6 +10,7 @@ from .events import EventType, PipelineEvent
 from .exceptions import HandlerNotFoundError, PipelineError, StageError
 from .handler_registry import HandlerRegistry
 from .pipeline_context import PipelineContext
+from .validation.pipeline import ValidationPipeline
 
 logger = structlog.get_logger(__name__)
 
@@ -28,9 +29,10 @@ CANONICAL_EVENT_ORDER: list[EventType] = [
 
 
 class PipelineEngine:
-    def __init__(self, registry: HandlerRegistry) -> None:
+    def __init__(self, registry: HandlerRegistry, validation_pipeline: ValidationPipeline | None = None) -> None:
         self._registry = registry
         self._bus = EventBus(registry)
+        self._validation_pipeline = validation_pipeline or ValidationPipeline()
 
     def run(self, context: PipelineContext) -> PipelineContext:
         if not self._registry.registered_types:
@@ -66,6 +68,20 @@ class PipelineEngine:
                 payload={},
                 context=ctx,
             )
+
+            if event_type == EventType.DOCUMENTS_VALIDATED and self._validation_pipeline is not None:
+                from pathlib import Path
+                docs_data = getattr(ctx, "adapter_result", None) or {}
+                doc_paths = [Path(d.get("path")) for d in docs_data.get("documents", []) if d.get("path")]
+                if doc_paths:
+                    report = self._validation_pipeline.run_batch(doc_paths)
+                    if not report.overall_passed:
+                        logger.warning(
+                            "document_validation_failed",
+                            execution_id=str(ctx.execution_id),
+                            failed_documents=report.failed_documents,
+                            total=report.total_documents,
+                        )
 
             try:
                 next_ctx = self._bus.publish(event)

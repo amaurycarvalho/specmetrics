@@ -38,7 +38,11 @@ class PluginValidator:
         except Exception:
             self._platform_api_version = "0.0.0"
 
-    def validate(self, metadata: PluginMetadata) -> ValidationResult:
+    def validate(
+        self,
+        metadata: PluginMetadata,
+        known_plugin_ids: set[str] | None = None,
+    ) -> ValidationResult:
         errors: list[str] = []
 
         for field_name in _REQUIRED_TEXT_FIELDS:
@@ -67,5 +71,10 @@ class PluginValidator:
                 f"Plugin '{metadata.id}' declares handled_event_types "
                 f"but no handler_factory"
             )
+
+        if metadata.dependencies:
+            for dep_id in metadata.dependencies:
+                if known_plugin_ids is not None and dep_id not in known_plugin_ids:
+                    errors.append(f"Missing plugin dependency: {dep_id}")
 
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)

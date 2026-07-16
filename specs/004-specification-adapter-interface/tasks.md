@@ -317,3 +317,12 @@ Task: "T013 [US1] Implement Document and DocumentSection"
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break
   independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified during convergence assessment between implemented code and specified intent.
+
+- [X] T039 Create `tests/unit/test_adapter_interface.py`, `tests/unit/test_adapter_registry.py`, and `tests/integration/test_adapter_pipeline.py` with tests for Protocol compliance, document normalization, registry lookup, F02 integration, and multi-adapter coexistence per US1/US2/US3/US4 acceptance scenarios (missing)
+- [X] T040 Add `supported_document_types` property to `SpecificationAdapter` Protocol in `specmetrics/kernel/adapter_interface.py` to expose supported document types as metadata accessible before scanning per FR-008 (missing)

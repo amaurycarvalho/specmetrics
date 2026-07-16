@@ -126,10 +126,10 @@ Each MCP tool is registered with a name, description, and typed parameter schema
 
 ---
 
-## Configuration Schema (`.specify/config.yml`)
+## Configuration Schema (`.specmetrics/config.yml`)
 
 ```yaml
-# CLI/MCP Configuration — loaded from .specify/ directory
+# CLI/MCP Configuration — loaded from .specmetrics/ directory
 pipeline:
   default_stages: full              # full | stage name
   default_output_format: json       # json | csv | xml | text | none

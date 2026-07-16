@@ -108,7 +108,7 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [x] T028 [P] Create sample `.specify/validation-rules.yml` configuration file
+- [x] T028 [P] Create sample `.specmetrics/rules/validation-rules.yml` configuration file
 - [x] T029 Integrate validation into pipeline engine as pre-measurement gate in `specmetrics/kernel/pipeline_engine.py`
 - [x] T030 Add structured logging for all validation operations using structlog
 - [x] T031 Run quickstart.md validation scenarios end-to-end
@@ -198,3 +198,13 @@ With multiple developers:
 - No test task generation — tests not requested in spec (see quickstart.md for manual validation scenarios)
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T032 Wire `ValidationPipeline` into `PipelineEngine.run()` as a pre-measurement gate — invoke validation on discovered documents via the `DOCUMENTS_VALIDATED` event per T029 (missing)
+- [x] T033 Create sample validation rules config at `.specmetrics/rules/validation-rules.yml` per T028 (missing)
+- [x] T034 Create test files: `tests/unit/validation/test_structural_rules.py`, `tests/unit/validation/test_constitutional_rules.py`, `tests/integration/test_validation_pipeline.py`, `tests/contract/test_validate_cli.py` per plan.md (missing)

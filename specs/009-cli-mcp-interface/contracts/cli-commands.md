@@ -125,7 +125,7 @@ Python 3.13.3
 Plugins:
   openspec v0.1.0 (adapter) ✓
   speckit  v0.1.0 (adapter) ✓
-  apf      v0.1.0 (measurement) ✓
+  fpa      v0.1.0 (measurement) ✓
 ```
 
 ---

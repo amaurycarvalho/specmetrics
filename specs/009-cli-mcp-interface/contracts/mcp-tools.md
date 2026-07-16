@@ -118,7 +118,7 @@ None.
   "content": [
     {
       "type": "text",
-      "text": "[{\"name\":\"apf\",\"version\":\"0.1.0\",\"type\":\"measurement\",\"enabled\":true,\"compatible\":true}]"
+      "text": "[{\"name\":\"fpa\",\"version\":\"0.1.0\",\"type\":\"measurement\",\"enabled\":true,\"compatible\":true}]"
     }
   ]
 }

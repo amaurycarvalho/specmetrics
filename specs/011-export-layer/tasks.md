@@ -199,3 +199,13 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` — metadata completeness and MCP format coverage
+
+- [x] T036 Add `"xml"` to the format enum in the MCP export tool `specmetrics/mcp/tools/export.py` so that XML export is available via MCP per FR-001 and US1/AC3 (partial)
+- [x] T037 Populate `pipeline_duration_ms` in `ExportMetadata` from `cfm.metadata.build_duration_ms` in `specmetrics/plugins/exporter/orchestrator.py` per FR-010 (partial)
+- [x] T038 Fix `export_timestamp` in `ExportMetadata` — use `cfm.metadata.created_at` instead of the non-existent `cfm.metadata.build_date` in `specmetrics/plugins/exporter/orchestrator.py` per FR-010 (partial)

@@ -12,10 +12,10 @@
 ### 1. Create Rule Pack files
 
 ```bash
-mkdir -p .specify/rules
+mkdir -p .specmetrics/rules
 ```
 
-Create `.specify/rules/example.yml`:
+Create `.specmetrics/rules/example.yml`:
 
 ```yaml
 id: "example-v1"
@@ -121,18 +121,18 @@ assert result.get_element("fp-002").metadata["excluded_by"] == "example-v1/exclu
 
 ```bash
 # Create invalid Rule Pack
-echo 'id: "bad-pack"' > .specify/rules/bad.yml
-echo 'rules:' >> .specify/rules/bad.yml
-echo '  - id: "bad-rule"' >> .specify/rules/bad.yml
-echo '    type: "exclusion"' >> .specify/rules/bad.yml
-echo '    config:' >> .specify/rules/bad.yml
-echo '      function_types: ["UNKNOWN"]' >> .specify/rules/bad.yml
+echo 'id: "bad-pack"' > .specmetrics/rules/bad.yml
+echo 'rules:' >> .specmetrics/rules/bad.yml
+echo '  - id: "bad-rule"' >> .specmetrics/rules/bad.yml
+echo '    type: "exclusion"' >> .specmetrics/rules/bad.yml
+echo '    config:' >> .specmetrics/rules/bad.yml
+echo '      function_types: ["UNKNOWN"]' >> .specmetrics/rules/bad.yml
 
 # Run pipeline
 python -c "
 from specmetrics.plugins.rule_pack.validator import RulePackValidator
 validator = RulePackValidator()
-report = validator.validate_file('.specify/rules/bad.yml')
+report = validator.validate_file('.specmetrics/rules/bad.yml')
 assert len(report.errors) == 1
 assert 'UNKNOWN' in report.errors[0].message
 print('Validation correctly rejected invalid function type')
@@ -147,7 +147,7 @@ print('Validation correctly rejected invalid function type')
 
 ```python
 cfm = create_test_cfm()
-rule_pack_dir = ".specify/rules/"
+rule_pack_dir = ".specmetrics/rules/"
 
 result1 = engine.run(cfm, rule_pack_dir)
 result2 = engine.run(cfm, rule_pack_dir)
@@ -164,8 +164,8 @@ assert json.dumps(result1.model_dump(), sort_keys=True) == json.dumps(result2.mo
 **Goal**: Verify the engine works with no Rule Pack files.
 
 ```bash
-# Ensure .specify/rules/ is empty
-rm -f .specify/rules/*.yml
+# Ensure .specmetrics/rules/ is empty
+rm -f .specmetrics/rules/*.yml
 
 python -c "
 from specmetrics.plugins.rule_pack.plugin import RulePackEnginePlugin

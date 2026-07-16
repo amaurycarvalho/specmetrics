@@ -242,6 +242,16 @@ discovery path and verifying the system starts with remaining plugins intact.
 
 ---
 
+## Phase 8: Convergence
+
+**Purpose**: Close gaps between spec requirements and current implementation
+
+- [X] T045 Isolate per-plugin validation and registration in `load_plugins()` with try/except so that a single plugin crash cannot block remaining plugins per FR-005 (`missing`)
+- [X] T046 Change duplicate detection in `PluginRegistry.register()` to use `entry_point_name` instead of `metadata.id`, logging the warning with the entry point name per FR-009 (`contradicts`)
+- [X] T047 Add `dependencies` field to `PluginMetadata` and dependency validation to `PluginValidator` — skipped plugins report missing dependencies per US4/AC3 (`missing`)
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

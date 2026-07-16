@@ -14,7 +14,7 @@ class AppConfig:
 
     @classmethod
     def load(cls, project_path: Path) -> AppConfig:
-        config_path = project_path / ".specify" / "config.yml"
+        config_path = project_path / ".specmetrics" / "config.yml"
         if not config_path.exists():
             return cls()
         with open(config_path) as f:

@@ -269,3 +269,13 @@ Task: "T021 [P] [US1] Implement fingerprint function"
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [X] T055 Emit `EVIDENCE_GRAPH_BUILT` PipelineEvent from `EvidenceGraphStage.handle()` with graph metadata (node count, edge count, documents covered, run ID) per FR-011 (missing)
+- [X] T056 Add warning log in `EvidenceGraphStage` when evidence reference fields are missing or unresolvable per spec.md edge case (missing)
+- [X] T057 Implement or document configurable spill-to-disk strategy for evidence graphs exceeding configurable memory threshold per spec.md edge case (missing)

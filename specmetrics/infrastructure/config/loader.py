@@ -14,7 +14,7 @@ from .schema import (
     ResolvedConfiguration,
 )
 from .sources import ConfigurationSource, EnvironmentSource, FileSource, SourceLevel
-from .validator import Validator
+from .validator import ConfigValidationError, Validator
 
 logger = logging.getLogger(__name__)
 
@@ -70,11 +70,21 @@ class Loader:
 class ConfigurationSystem:
     def __init__(self, project_root: Path | None = None, config_path: Path | None = None) -> None:
         self._project_root = project_root or Path.cwd()
-        self._config_path = config_path
+        self._config_path = config_path or self._resolve_env_config_path()
         self._loader = Loader()
         self._resolver = Resolver()
         self._plugin_collector = PluginConfigCollector()
         self._config: ResolvedConfiguration | None = None
+
+    @staticmethod
+    def _resolve_env_config_path() -> Path | None:
+        env_path = os.environ.get("SPECMETRICS_CONFIG_PATH")
+        if env_path:
+            expanded = os.path.expandvars(env_path)
+            resolved = Path(expanded)
+            if resolved.exists():
+                return resolved
+        return None
 
     def register_plugin_schema(self, plugin_id: str, schema: type) -> None:
         self._plugin_collector.register(plugin_id, schema)
@@ -100,6 +110,15 @@ class ConfigurationSystem:
             resolved_dict, known_prefixes=known_prefixes
         )
         warnings = list(warnings_raw) + unrecognized_warnings
+
+        try:
+            validator.validate(resolved_dict)
+        except ConfigValidationError as exc:
+            logger.error("config_validation_failed", field=exc.field, value=exc.value, expected=exc.expected_type)
+            warnings.append(ConfigWarning(
+                message=str(exc),
+                key=exc.field,
+            ))
 
         config = CoreConfig()
         for key, value in resolved_dict.items():

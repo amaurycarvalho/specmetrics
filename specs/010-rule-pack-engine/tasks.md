@@ -30,7 +30,7 @@ description: "Task list for Rule Pack Engine implementation"
 
 - [x] T001 Create `specmetrics/plugins/rule_pack/` package with `__init__.py`
 - [x] T002 Create `tests/plugins/rule_pack/` test package with `__init__.py`
-- [x] T003 [P] Create sample Rule Pack YAML files at `.specify/rules/` for development and testing
+- [x] T003 [P] Create sample Rule Pack YAML files at `.specmetrics/rules/` for development and testing
 - [x] T004 Register `RulePackEnginePlugin` entry point in `pyproject.toml` under `specmetrics.plugins.rule_pack`
 
 ---
@@ -41,7 +41,7 @@ description: "Task list for Rule Pack Engine implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T005 Extract shared `RulePack` Pydantic model from `specmetrics/plugins/measurement/apf/models.py` to new `specmetrics/kernel/cfm/models.py` with added fields: `rules: list[Rule]`, `glossary_overrides: dict[str, str]`
+- [x] T005 Extract shared `RulePack` Pydantic model from `specmetrics/plugins/measurement/fpa/models.py` to new `specmetrics/kernel/cfm/models.py` with added fields: `rules: list[Rule]`, `glossary_overrides: dict[str, str]`
 - [x] T006 Create `Rule` model with `type` (literal: exclusion, complexity_override, weight_override, vaf, element_exclusion), `id`, `description`, and `config` fields in `specmetrics/kernel/cfm/models.py`
 - [x] T007 Create `AppliedRuleRecord` Pydantic model with `rule_pack_id`, `rule_id`, `rule_type`, `description`, `before_state`, `after_state` fields in `specmetrics/kernel/cfm/models.py`
 - [x] T008 Create `RuleValidationReport` Pydantic model with `loaded_files`, `total_rules`, `active_rules`, `errors`, `warnings` fields in `specmetrics/kernel/cfm/models.py`
@@ -56,14 +56,14 @@ description: "Task list for Rule Pack Engine implementation"
 
 **Goal**: Team leads author YAML Rule Pack files; the engine discovers, loads, and validates them
 
-**Independent Test**: Create a `.specify/rules/test.yml` with 3 rules, run the pipeline, verify engine logs all 3 as active
+**Independent Test**: Create a `.specmetrics/rules/test.yml` with 3 rules, run the pipeline, verify engine logs all 3 as active
 
 ### Implementation for User Story 1
 
-- [x] T011 [P] [US1] Implement `RulePackLoader` in `specmetrics/plugins/rule_pack/loader.py` — discover `.yml` files in `.specify/rules/`, parse via `ruamel.yaml`, return list of `RulePack` objects sorted alphabetically by filename
+- [x] T011 [P] [US1] Implement `RulePackLoader` in `specmetrics/plugins/rule_pack/loader.py` — discover `.yml` files in `.specmetrics/rules/`, parse via `ruamel.yaml`, return list of `RulePack` objects sorted alphabetically by filename
 - [x] T012 [P] [US1] Implement `RulePackValidator` in `specmetrics/plugins/rule_pack/validator.py` — validate RulePack `id` format, rule `type` enum, rule `config` structure per type; return `RuleValidationReport` with errors and warnings
 - [x] T013 [US1] Wire loader and validator into `RulePackEnginePlugin.handle()` in `specmetrics/plugins/rule_pack/plugin.py` — on `RULE_PACK_APPLIED` event, load and validate all Rule Packs, store validated packs in context metadata
-- [x] T014 [US1] Implement graceful no-op behavior in `specmetrics/plugins/rule_pack/plugin.py` — when `.specify/rules/` is empty or absent, pass CFM through unmodified with no active rules
+- [x] T014 [US1] Implement graceful no-op behavior in `specmetrics/plugins/rule_pack/plugin.py` — when `.specmetrics/rules/` is empty or absent, pass CFM through unmodified with no active rules
 - [x] T015 [US1] Implement error handling in `specmetrics/plugins/rule_pack/plugin.py` — invalid YAML files produce descriptive error messages (file path, line number, issue) without crashing the pipeline
 
 **Checkpoint**: Rule Pack files are discovered, parsed, validated, and made available to the pipeline. Empty rules directory produces no-op.
@@ -180,7 +180,7 @@ description: "Task list for Rule Pack Engine implementation"
 # Create package structure in parallel:
 Task: "Create specmetrics/plugins/rule_pack/__init__.py"
 Task: "Create tests/plugins/rule_pack/__init__.py"
-Task: "Create sample Rule Pack YAML files at .specify/rules/"
+Task: "Create sample Rule Pack YAML files at .specmetrics/rules/"
 ```
 
 ### Phase 2: Foundational
@@ -249,3 +249,12 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T038 Add informational log in `RuleApplicator` when a rule references function types or element IDs not present in the current CFM per FR-013 (partial)
+- [x] T039 Add explicit warning log in `RuleApplicator` when a later Rule Pack's rule overrides a previously applied rule on the same target (function type or element) per FR-006 (partial)

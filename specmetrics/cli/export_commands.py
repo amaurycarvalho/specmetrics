@@ -99,7 +99,7 @@ def run(
         typer.echo("No exporter plugins found", err=True)
         raise typer.Exit(code=1)
 
-    out_dir = output_dir or (project_path / "exports")
+    out_dir = output_dir or (project_path / ".specmetrics" / "exports")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     selected_formats = [f.strip() for f in formats.split(",") if f.strip()]

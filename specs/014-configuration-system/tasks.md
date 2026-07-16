@@ -223,3 +223,15 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T039 Wire `Validator.validate()` into `ConfigurationSystem.load()` — validate merged config against `CoreConfig` schema before returning per FR-002 (missing)
+- [x] T040 Create test files for all config modules: `tests/unit/config/test_loader.py`, `test_schema.py`, `test_sources.py`, `test_validator.py`, `test_resolver.py`, `test_introspection.py`, `test_plugin.py` and `tests/integration/config/test_integration.py` per plan.md (missing)
+- [x] T041 Implement `SPECMETRICS_CONFIG_PATH` environment variable support in `ConfigurationSystem.__init__()` per T017 (missing)
+- [x] T042 Wire `register_plugin_schema()` into the plugin discovery flow in `PipelineOrchestrator.discover_plugins()` per FR-005 (partial)
+- [x] T043 Add `SecretStr` type to sensitive config fields (e.g., API keys) and fix `_mask_if_sensitive()` dead code branch per FR-007 (partial)

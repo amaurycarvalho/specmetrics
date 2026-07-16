@@ -60,18 +60,27 @@ def load_plugins(
     if validator is None:
         validator = PluginValidator()
 
+    known_ids = {d.metadata.id for d in descriptors}
+
     for descriptor in descriptors:
-        result = validator.validate(descriptor.metadata)
-        if result.is_valid:
-            descriptor.status = PluginStatus.REGISTERED
-        else:
-            descriptor.status = PluginStatus.REJECTED
-            descriptor.validation_errors = result.errors
+        try:
+            result = validator.validate(descriptor.metadata, known_plugin_ids=known_ids)
+            if result.is_valid:
+                descriptor.status = PluginStatus.REGISTERED
+            else:
+                descriptor.status = PluginStatus.REJECTED
+                descriptor.validation_errors = result.errors
+                logger.warning(
+                    "plugin_rejected",
+                    plugin_id=descriptor.metadata.id,
+                    errors=result.errors,
+                )
+            registry.register(descriptor)
+        except Exception as exc:
             logger.warning(
-                "plugin_rejected",
+                "plugin_skipped",
                 plugin_id=descriptor.metadata.id,
-                errors=result.errors,
+                error=str(exc),
             )
-        registry.register(descriptor)
 
     return registry

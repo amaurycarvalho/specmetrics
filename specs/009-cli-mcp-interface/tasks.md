@@ -41,7 +41,7 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 - [X] T006 [P] Implement `StageName` and `OutputFormat` enums in `specmetrics/application/enums.py`
 - [X] T007 [P] Implement `PluginInfo` and `VersionInfo` Pydantic models in `specmetrics/application/models.py`
 - [X] T008 Create `PipelineOrchestrator` class skeleton in `specmetrics/application/orchestrator.py` with `execute(request: PipelineRequest) -> PipelineResult` method signature and docstring
-- [X] T009 Implement project configuration loader from `.specify/config.yml` in `specmetrics/application/config.py`
+- [X] T009 Implement project configuration loader from `.specmetrics/config.yml` in `specmetrics/application/config.py`
 
 **Checkpoint**: Foundation ready — user story implementation can begin
 
@@ -62,7 +62,7 @@ All source files under `specmetrics/` at repository root. Tests mirror source la
 - [X] T016 [US1] Implement `--help` and default help text for all commands in `specmetrics/cli/app.py`
 - [X] T017 [US1] Implement `version` command in `specmetrics/cli/app.py` — displays platform version and plugin versions
 - [X] T018 [US1] Wire `PipelineOrchestrator` into CLI `measure` command in `specmetrics/cli/measure.py` — calls `orchestrator.execute()` with the parsed `PipelineRequest`
-- [X] T019 [US1] Wire project config loading into CLI startup in `specmetrics/cli/app.py` — loads `.specify/config.yml` and applies defaults (output format, verbosity)
+- [X] T019 [US1] Wire project config loading into CLI startup in `specmetrics/cli/app.py` — loads `.specmetrics/config.yml` and applies defaults (output format, verbosity)
 
 **Checkpoint**: `specmetrics measure` runs the full pipeline with output and exit codes — validates quickstart Scenarios 1, 2, 4, 6, 10
 
@@ -235,3 +235,15 @@ With two developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same-file conflicts, cross-story dependencies that break independence
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T042 Implement `main()` entry point function in `specmetrics/mcp/server.py` and update `pyproject.toml` entry point if needed per FR-010/FR-013 (missing)
+- [x] T043 Wire `mcp_cli` Typer app from `specmetrics/cli/commands/mcp.py` into `specmetrics/cli/app.py` via `app.add_typer()` per FR-001 (missing)
+- [x] T044 Create test files: `tests/cli/test_app.py`, `tests/cli/test_measure.py`, `tests/cli/test_formatters.py`, `tests/mcp/test_server.py`, `tests/mcp/test_tools.py`, `tests/application/test_orchestrator.py` per T040 (missing)
+- [x] T045 Remove orphaned `specmetrics/mcp/tools.py` (superseded by `mcp/tools/` subpackage) per cleanup (unrequested)
+- [x] T046 Add `__init__.py` to `specmetrics/cli/commands/` per convention (missing)

@@ -40,13 +40,13 @@ Release 0.1 validates the core architectural hypothesis:
 
 This document covers:
 
-* system architecture;
-* semantic processing pipeline;
-* plugin architecture;
-* deployment model;
-* technology choices;
-* installation model;
-* project organization.
+- system architecture;
+- semantic processing pipeline;
+- plugin architecture;
+- deployment model;
+- technology choices;
+- installation model;
+- project organization.
 
 Business requirements are intentionally excluded and are defined in the Product Requirements Document.
 
@@ -58,20 +58,20 @@ The architecture is designed around the following drivers.
 
 ## Functional Drivers
 
-* Automatic functional measurement
-* SDD framework independence
-* Deterministic measurement
-* Explainability
-* Traceability
+- Automatic functional measurement
+- SDD framework independence
+- Deterministic measurement
+- Explainability
+- Traceability
 
 ## Quality Drivers
 
-* Extensibility
-* Maintainability
-* Plugin-first
-* AI-native
-* Open Source
-* Local-first
+- Extensibility
+- Maintainability
+- Plugin-first
+- AI-native
+- Open Source
+- Local-first
 
 ---
 
@@ -175,8 +175,8 @@ MeasurementCompleted
 
 Input:
 
-* OpenSpec repository
-* SpecKit repository
+- OpenSpec repository
+- SpecKit repository
 
 Outputs:
 
@@ -188,10 +188,10 @@ Repository abstraction.
 
 Responsibilities
 
-* Discover documents
-* Read Markdown
-* Build semantic reading order
-* Preserve metadata
+- Discover documents
+- Read Markdown
+- Build semantic reading order
+- Preserve metadata
 
 Output
 
@@ -203,10 +203,10 @@ SpecificationDocument collection.
 
 Responsibilities
 
-* Invoke LLM
-* Extract semantic concepts
-* Preserve evidence
-* Generate confidence
+- Invoke LLM
+- Extract semantic concepts
+- Preserve evidence
+- Generate confidence
 
 Output
 
@@ -218,10 +218,10 @@ Evidence Graph.
 
 Responsibilities
 
-* Store semantic facts
-* Store evidence
-* Preserve provenance
-* Resolve references
+- Store semantic facts
+- Store evidence
+- Preserve provenance
+- Resolve references
 
 Output
 
@@ -237,12 +237,12 @@ Normalize all semantic concepts.
 
 Contains:
 
-* Actors
-* Functional Processes
-* Business Rules
-* Data Groups
-* Relationships
-* Operations
+- Actors
+- Functional Processes
+- Business Rules
+- Data Groups
+- Relationships
+- Operations
 
 No framework-specific concepts exist beyond this point.
 
@@ -256,13 +256,13 @@ Apply organizational rules.
 
 Sources:
 
-* YAML
-* Markdown
+- YAML
+- Markdown
 
 Future:
 
-* PDF
-* RAG
+- PDF
+- RAG
 
 ---
 
@@ -274,9 +274,9 @@ Execute deterministic measurements.
 
 Supported plugins:
 
-* APF
-* SPF
-* SNAP
+- FPA
+- SFP
+- SNAP
 
 ---
 
@@ -284,9 +284,9 @@ Supported plugins:
 
 Supported:
 
-* JSON
-* CSV
-* XML
+- JSON
+- CSV
+- XML
 
 ---
 
@@ -294,7 +294,7 @@ Supported:
 
 Supported:
 
-* OpenTelemetry
+- OpenTelemetry
 
 Future releases will add additional publishers.
 
@@ -310,13 +310,13 @@ Instead of invoking pipeline stages directly, it coordinates execution through a
 
 Responsibilities include:
 
-* starting pipeline execution;
-* publishing pipeline events;
-* resolving event handlers;
-* enforcing execution order;
-* collecting execution state;
-* detecting failures;
-* ensuring deterministic execution.
+- starting pipeline execution;
+- publishing pipeline events;
+- resolving event handlers;
+- enforcing execution order;
+- collecting execution state;
+- detecting failures;
+- ensuring deterministic execution.
 
 The Pipeline Engine owns the execution lifecycle of every measurement request.
 
@@ -328,12 +328,12 @@ The Event Bus is an internal Kernel component responsible for dispatching pipeli
 
 Characteristics:
 
-* synchronous;
-* in-process;
-* deterministic;
-* immutable events;
-* ordered delivery;
-* no external dependencies.
+- synchronous;
+- in-process;
+- deterministic;
+- immutable events;
+- ordered delivery;
+- no external dependencies.
 
 The Event Bus is **not** intended as an enterprise messaging infrastructure.
 
@@ -422,14 +422,14 @@ Never framework documents.
 
 The initial model contains
 
-* Functional Process
-* Actor
-* Business Entity
-* Data Group
-* Operation
-* Business Rule
-* Evidence
-* Relationship
+- Functional Process
+- Actor
+- Business Entity
+- Data Group
+- Operation
+- Business Rule
+- Evidence
+- Relationship
 
 ---
 
@@ -532,8 +532,8 @@ No centralized server is required.
 
 Execution modes:
 
-* CLI
-* MCP Server
+- CLI
+- MCP Server
 
 Future releases may introduce REST services.
 
@@ -558,7 +558,7 @@ pip install specmetrics-openspec
 
 pip install specmetrics-speckit
 
-pip install specmetrics-apf
+pip install specmetrics-fpa
 
 pip install specmetrics-otel
 ```
@@ -591,11 +591,11 @@ specmetrics plugins
 
 Available tools
 
-* Measure Specification
-* Validate Specification
-* Explain Measurement
-* Export Measurement
-* Search Evidence
+- Measure Specification
+- Validate Specification
+- Explain Measurement
+- Export Measurement
+- Search Evidence
 
 ---
 
@@ -609,25 +609,20 @@ Example
 
 ```yaml
 adapter:
-
   auto: true
 
 semantic:
-
   provider: llm
 
   model: gpt-5
 
 measurement:
-
-  plugin: apf
+  plugin: fpa
 
 publisher:
-
   - otel
 
 export:
-
   - json
 ```
 
@@ -657,9 +652,9 @@ Only the Semantic Extraction Provider may require communication with external LL
 
 Future releases should support:
 
-* local models;
-* offline execution;
-* encrypted Rule Packs.
+- local models;
+- offline execution;
+- encrypted Rule Packs.
 
 ---
 
@@ -671,13 +666,13 @@ Future releases are expected to evolve by extending existing contracts rather th
 
 Primary evolution paths include:
 
-* new Specification Adapters;
-* additional Semantic Providers;
-* enterprise Rule Packs;
-* new Measurement Engines;
-* additional Exporters;
-* new Publisher Plugins;
-* richer Canonical Functional Model concepts.
+- new Specification Adapters;
+- additional Semantic Providers;
+- enterprise Rule Packs;
+- new Measurement Engines;
+- additional Exporters;
+- new Publisher Plugins;
+- richer Canonical Functional Model concepts.
 
 The Semantic Measurement Pipeline remains the central execution model throughout the platform's lifecycle.
 
@@ -799,20 +794,20 @@ User
 
 ## Output
 
-* Canonical Functional Model
-* Functional Measurement
-* Evidence Graph
-* Exported Files
-* Published Telemetry
+- Canonical Functional Model
+- Functional Measurement
+- Evidence Graph
+- Exported Files
+- Published Telemetry
 
 ---
 
 ## Postconditions
 
-* Measurement completed successfully.
-* Traceability preserved.
-* Export plugins executed.
-* Publisher plugins executed.
+- Measurement completed successfully.
+- Traceability preserved.
+- Export plugins executed.
+- Publisher plugins executed.
 
 ---
 
@@ -866,12 +861,12 @@ Validation Report
 
 The validator shall verify:
 
-* duplicated concepts;
-* unresolved references;
-* orphan evidence;
-* inconsistent relationships;
-* missing business actors;
-* invalid functional processes.
+- duplicated concepts;
+- unresolved references;
+- orphan evidence;
+- inconsistent relationships;
+- missing business actors;
+- invalid functional processes.
 
 ---
 
@@ -928,11 +923,11 @@ Human-readable Explanation
 
 For each measured function:
 
-* originating specification;
-* supporting evidence;
-* applied rules;
-* measurement methodology;
-* final contribution.
+- originating specification;
+- supporting evidence;
+- applied rules;
+- measurement methodology;
+- final contribution.
 
 ---
 
@@ -1190,7 +1185,5 @@ All execution sequences shall satisfy the following invariants.
 | **SI-06 — Explainability**      | Every measurement result shall be explainable through semantic evidence and applied rules.                                       |
 | **SI-07 — Fail Fast**           | Critical validation errors shall interrupt the pipeline before the Measurement Engine is executed.                               |
 | **SI-08 — Idempotence**         | Re-executing the same pipeline with identical inputs shall not introduce side effects beyond regenerating the same outputs.      |
-| **SI-09 — Event Ordering**   | Pipeline events shall always be published in the predefined canonical order. |
-| **SI-10 — Immutable Events** | Published events shall be immutable and may not be modified by subscribers.  |
-
-
+| **SI-09 — Event Ordering**      | Pipeline events shall always be published in the predefined canonical order.                                                     |
+| **SI-10 — Immutable Events**    | Published events shall be immutable and may not be modified by subscribers.                                                      |

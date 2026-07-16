@@ -99,7 +99,7 @@ A quality engineer inspects measurement results and wants to see exactly which R
 
 ### Functional Requirements
 
-- **FR-001**: The Rule Pack Engine MUST load Rule Packs from a well-defined project directory (`.specify/rules/` by default) at the start of each pipeline execution
+- **FR-001**: The Rule Pack Engine MUST load Rule Packs from a well-defined project directory (`.specmetrics/rules/` by default) at the start of each pipeline execution
 - **FR-002**: Rule Packs MUST be authored as external files using a structured format (YAML) — no code, scripting, or programmatic logic in Rule Packs
 - **FR-003**: The Rule Pack Engine MUST support exclusion rules that mark specific function types (ILF, EIF, EI, EO, EQ) as excluded from counting
 - **FR-004**: The Rule Pack Engine MUST support complexity threshold overrides that customize the DET/RET (data functions) and DET/FTR (transactional functions) boundaries for Low/Average/High classification
@@ -135,7 +135,7 @@ A quality engineer inspects measurement results and wants to see exactly which R
 ## Assumptions
 
 - Rule Packs use YAML format, consistent with the project's existing configuration approach (ruamel.yaml)
-- Rule Pack files are stored in `.specify/rules/` directory, one or more `.yml` files per project
+- Rule Pack files are stored in `.specmetrics/rules/` directory, one or more `.yml` files per project
 - The Canonical Functional Model (007) provides a stable, well-defined API for reading function types, DET/RET/FTR counts, and complexity ratings
 - The Plugin Discovery Registry (003) and Kernel Pipeline Engine (002) provide the stage registration and event dispatch infrastructure that the Rule Pack Engine consumes
 - The Measurement Engine (008) consumes the annotated CFM produced by the Rule Pack Engine and respects exclusion markers and custom complexity ratings

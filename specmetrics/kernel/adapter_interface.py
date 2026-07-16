@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +37,22 @@ class Document:
     sections: list[DocumentSection] | None = None
 
 
+@runtime_checkable
 class SpecificationAdapter(Protocol):
     """Structural interface that every SDD framework adapter must implement.
 
     Adapters discover specification documents in a repository, read them,
     and normalize them into framework-agnostic Document objects.
     """
+
+    @property
+    def supported_document_types(self) -> list[str]:
+        """Return the list of canonical document types this adapter can produce.
+
+        Accessible before scanning so the pipeline can determine which adapter
+        to use without first reading the repository.  Returns an empty list
+        when the adapter cannot or does not constrain its output types.
+        """
 
     def scan(self, repository_path: Path) -> list[Document]:
         """Discover all specification documents in the repository.

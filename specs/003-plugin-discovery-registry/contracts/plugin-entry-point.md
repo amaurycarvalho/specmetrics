@@ -64,6 +64,7 @@ See [data-model.md](../data-model.md#PluginMetadata) for full field definitions.
 | `description` | No | `"Adapter for OpenSpec SDD documents"` |
 | `author` | No | `"SpecMetrics Team"` |
 | `version` | No | `"0.1.0"` |
+| `dependencies` | No | `["adapter-plugin", "semantic-provider"]` |
 
 ---
 
@@ -89,6 +90,7 @@ The plugin discovery system handles errors gracefully per FR-005:
 | Entry point references non-existent module | Plugin is SKIPPED, error logged |
 | Metadata has invalid fields | Plugin is REJECTED, validation errors recorded |
 | Duplicate entry point name | Last registration wins, warning logged |
+| Declared dependency not found | Plugin is REJECTED, missing dependency listed |
 
 ---
 

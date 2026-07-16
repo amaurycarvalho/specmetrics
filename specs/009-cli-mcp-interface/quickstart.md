@@ -24,7 +24,7 @@ cat > /tmp/specmetrics-test/specs/my-feature/spec.md << 'EOF'
 EOF
 
 # Initialize specmetrics config
-mkdir -p /tmp/specmetrics-test/.specify
+mkdir -p /tmp/specmetrics-test/.specmetrics
 ```
 
 ### Execution
@@ -132,7 +132,7 @@ specmetrics plugins list
 Plugin List:
   openspec v0.1.0 (adapter) ✓
   speckit  v0.1.0 (adapter) ✓
-  apf      v0.1.0 (measurement) ✓
+  fpa      v0.1.0 (measurement) ✓
 ```
 Exit code: 0
 

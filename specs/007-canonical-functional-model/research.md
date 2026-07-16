@@ -30,7 +30,7 @@ No unresolved unknowns existed in the spec — the project constitution, existin
 
 ### Evidence Graph Data Access
 
-- **Decision**: The CFM Builder receives evidence graph metadata (run_id, node_count, etc.) from `event.context.evidence_graph` and loads the full `EvidenceGraph` model from the persistence layer (GraphStore at `.evidence_graphs/{run_id}.jsonl`)
+- **Decision**: The CFM Builder receives evidence graph metadata (run_id, node_count, etc.) from `event.context.evidence_graph` and loads the full `EvidenceGraph` model from the persistence layer (GraphStore at `.specmetrics/evidence_graphs/{run_id}.jsonl`)
 - **Rationale**: The EvidenceGraphStage persists the full graph to disk. The context only carries summary metadata. Loading from persistence ensures the CFM Builder works with the complete data and avoids duplicating graph data in memory via the context.
 - **Alternative considered**: Store full `EvidenceGraph` in context (would increase memory pressure and couple context to a specific model type)
 - **Alternative considered**: Pass `EvidenceGraph` directly in payload (pipeline engine currently passes empty payloads)

@@ -34,12 +34,14 @@ Declared by each plugin via its factory function. Immutable after creation.
 | `description` | `str` | No | Human-readable description |
 | `author` | `str` | No | Plugin author |
 | `version` | `str` | No | Plugin's own version string |
+| `dependencies` | `list[str]` | No | Plugin IDs this plugin depends on |
 
 **Validation Rules**:
 - `id` must be non-empty, alphanumeric with hyphens
 - `api_version` must be a valid SemVer 2.0.0 string
 - `handled_event_types` may be empty (non-handler plugins like exporters)
 - `handler_factory` is required when `handled_event_types` is non-empty
+- `dependencies` must reference plugin IDs that exist in the discovered set; missing dependencies cause REJECTED status
 
 ---
 

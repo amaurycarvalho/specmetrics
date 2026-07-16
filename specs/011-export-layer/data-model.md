@@ -124,7 +124,7 @@ kernel's CFM; the export layer references it but does not own it.
 | `function_name` | `str` | Human-readable function name |
 | `category` | `str` | Functional category (e.g., `data`, `transaction`, `interface`) |
 | `complexity` | `str` | Complexity rating: `simple`, `medium`, `complex` |
-| `functional_size` | `float` | Measured functional size in APF units |
+| `functional_size` | `float` | Measured functional size in FPA units |
 | `evidence` | `list[EvidenceRef]` | Evidence links back to source specification |
 | `attributes` | `dict[str, Any]` | Extended attributes from Rule Pack application |
 

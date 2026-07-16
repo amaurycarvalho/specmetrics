@@ -141,6 +141,7 @@ class MCPServer:
         self.connections: dict[str, MCPConnection] = {}
         self._mcp_server: MCPServerInstance | None = None
         self._shutdown_event = asyncio.Event()
+        self._active_requests: int = 0
         self._setup_logging()
 
     def _setup_logging(self) -> None:
@@ -157,7 +158,7 @@ class MCPServer:
         if tool_def is None:
             raise ToolError(-32601, f"Unknown tool: {tool_name}")
 
-        schema = tool_def.input_schema
+        schema = tool_def.inputSchema
         required = schema.get("required", [])
         properties = schema.get("properties", {})
 
@@ -213,9 +214,7 @@ class MCPServer:
         )
 
         self._mcp_server = MCPServerInstance("specmetrics")
-        self._register_tools()
-        self._register_resources()
-        self._register_prompts()
+        self.refresh_capabilities()
         self._attach_handlers()
 
         if self.config.transport == TransportType.stdio:
@@ -229,9 +228,49 @@ class MCPServer:
 
     async def stop(self) -> None:
         self.status.state = ServerState.stopping
-        logger.info("mcp_server_stopping")
+        logger.info(
+            "mcp_server_stopping",
+            active_requests=self._active_requests,
+            shutdown_timeout=self.config.shutdown_timeout_seconds,
+        )
+
+        if self._active_requests > 0:
+            waited = 0
+            while waited < self.config.shutdown_timeout_seconds:
+                await asyncio.sleep(0.5)
+                waited += 0.5
+                if self._active_requests == 0:
+                    logger.info("mcp_server_in_flight_requests_completed")
+                    break
+            else:
+                logger.warning(
+                    "mcp_server_shutdown_timeout",
+                    remaining_requests=self._active_requests,
+                )
 
         self.status.stop()
+
+    def refresh_capabilities(self) -> None:
+        """Re-discover and register all tools, resources, and prompts.
+
+        Called at startup to perform initial registration. May be called
+        again at runtime to pick up newly installed plugins without a
+        server restart (FR-012).  Currently registers statically defined
+        capabilities; future versions may poll the Kernel capability
+        registry for dynamic discovery.
+        """
+        self.tool_registry = ToolRegistry()
+        self.resource_registry = ResourceRegistry()
+        self.prompt_registry = PromptRegistry()
+        self._register_tools()
+        self._register_resources()
+        self._register_prompts()
+        logger.info(
+            "mcp_capabilities_refreshed",
+            tools=len(self.tool_registry.list_tools()),
+            resources=len(self.resource_registry.list_templates()),
+            prompts=len(self.prompt_registry.list_prompts()),
+        )
 
     def _register_tools(self) -> None:
         from specmetrics.mcp.tools.explain import (
@@ -291,6 +330,12 @@ class MCPServer:
         self.prompt_registry.register(ANALYZE_SPEC_PROMPT)
         self.prompt_registry.register(EXPORT_RESULTS_PROMPT)
 
+    def _track_request(self) -> None:
+        self._active_requests += 1
+
+    def _finish_request(self) -> None:
+        self._active_requests = max(0, self._active_requests - 1)
+
     def _attach_handlers(self) -> None:
         if self._mcp_server is None:
             return
@@ -299,55 +344,110 @@ class MCPServer:
 
         @mcp.list_tools()
         async def handle_list_tools() -> list:
-            self.status.record_request()
-            return self.tool_registry.list_tools()
+            self._track_request()
+            try:
+                self.status.record_request()
+                return self.tool_registry.list_tools()
+            finally:
+                self._finish_request()
 
         @mcp.call_tool()
         async def handle_call_tool(name: str, arguments: dict | None) -> list:
-            self.status.record_request()
-            params = arguments or {}
-            self._validate_tool_params(name, params)
-            handler = self.tool_registry.get_handler(name)
-            if handler is None:
-                raise ToolError(-32601, f"Unknown tool: {name}")
+            self._track_request()
             try:
-                return handler(params)
-            except ToolError:
-                raise
-            except Exception as exc:
-                self.status.record_error()
-                logger.error("tool_execution_failed", tool_name=name, error=str(exc))
-                raise ToolError(-32000, f"Tool execution failed: {exc}") from exc
+                self.status.record_request()
+                params = arguments or {}
+                self._validate_tool_params(name, params)
+                handler = self.tool_registry.get_handler(name)
+                if handler is None:
+                    raise ToolError(-32601, f"Unknown tool: {name}")
+                try:
+                    return handler(params)
+                except ToolError:
+                    raise
+                except Exception as exc:
+                    self.status.record_error()
+                    logger.error("tool_execution_failed", tool_name=name, error=str(exc))
+                    raise ToolError(-32000, f"Tool execution failed: {exc}") from exc
+            finally:
+                self._finish_request()
 
         @mcp.list_resources()
         async def handle_list_resources() -> list:
-            self.status.record_request()
-            return self.resource_registry.list_templates()
+            self._track_request()
+            try:
+                self.status.record_request()
+                return self.resource_registry.list_templates()
+            finally:
+                self._finish_request()
 
         @mcp.read_resource()
         async def handle_read_resource(uri: str) -> str | bytes:
-            self.status.record_request()
-            handler = self.resource_registry.match_uri(uri)
-            if handler is None:
-                raise ToolError(-32601, f"Resource not found: {uri}")
+            self._track_request()
             try:
-                return handler(uri)
-            except ToolError:
-                raise
-            except Exception as exc:
-                self.status.record_error()
-                logger.error("resource_read_failed", uri=uri, error=str(exc))
-                raise ToolError(-32000, f"Failed to read resource: {exc}") from exc
+                self.status.record_request()
+                handler = self.resource_registry.match_uri(uri)
+                if handler is None:
+                    raise ToolError(-32601, f"Resource not found: {uri}")
+                try:
+                    return handler(uri)
+                except ToolError:
+                    raise
+                except Exception as exc:
+                    self.status.record_error()
+                    logger.error("resource_read_failed", uri=uri, error=str(exc))
+                    raise ToolError(-32000, f"Failed to read resource: {exc}") from exc
+            finally:
+                self._finish_request()
 
         @mcp.list_prompts()
         async def handle_list_prompts() -> list:
-            self.status.record_request()
-            return self.prompt_registry.list_prompts()
+            self._track_request()
+            try:
+                self.status.record_request()
+                return self.prompt_registry.list_prompts()
+            finally:
+                self._finish_request()
 
         @mcp.get_prompt()
         async def handle_get_prompt(name: str, arguments: dict | None) -> dict:
-            self.status.record_request()
-            prompt = self.prompt_registry.get_prompt(name)
-            if prompt is None:
-                raise ToolError(-32601, f"Unknown prompt: {name}")
-            return prompt
+            self._track_request()
+            try:
+                prompt = self.prompt_registry.get_prompt(name)
+                if prompt is None:
+                    raise ToolError(-32601, f"Unknown prompt: {name}")
+                return prompt
+            finally:
+                self._finish_request()
+
+
+def main() -> None:
+    """Standalone entry point for the MCP server.
+
+    Reads configuration from ``specmetrics.yml`` (or uses defaults)
+    and runs the server until interrupted.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="SpecMetrics MCP Server")
+    parser.add_argument("--config", default="specmetrics.yml", help="Path to configuration file")
+    parser.add_argument("--host", default=None, help="Network interface to bind (SSE mode)")
+    parser.add_argument("--port", type=int, default=None, help="TCP port (SSE mode)")
+    parser.add_argument("--transport", default=None, choices=["stdio", "sse"], help="Transport protocol")
+    parser.add_argument("--log-level", default=None, help="Logging verbosity")
+    args = parser.parse_args()
+
+    overrides = {k: v for k, v in {
+        "host": args.host,
+        "port": args.port,
+        "transport": TransportType(args.transport) if args.transport else None,
+        "log_level": args.log_level,
+    }.items() if v is not None}
+
+    config = ServerConfiguration.from_yaml(args.config, overrides)
+    server = MCPServer(config)
+
+    try:
+        asyncio.run(server.start())
+    except KeyboardInterrupt:
+        logger.info("mcp_server_interrupted")

@@ -25,16 +25,31 @@ class PluginRegistry:
         self._plugins: dict[str, PluginDescriptor] = {}
         self._by_event_type: dict[EventType, list[PluginDescriptor]] = {}
         self._by_plugin_type: dict[str, list[PluginDescriptor]] = {}
+        self._by_entry_point: dict[str, PluginDescriptor] = {}
 
     def register(self, descriptor: PluginDescriptor) -> None:
-        existing = self._plugins.get(descriptor.metadata.id)
+        existing = self._by_entry_point.get(descriptor.entry_point_name)
         if existing is not None:
             logger.warning(
-                "duplicate_plugin_id",
+                "duplicate_entry_point_name",
+                entry_point_name=descriptor.entry_point_name,
                 plugin_id=descriptor.metadata.id,
+                previous_plugin_id=existing.metadata.id,
                 previous_status=existing.status.value,
             )
+            old_id = existing.metadata.id
+            if old_id != descriptor.metadata.id:
+                self._plugins.pop(old_id, None)
+                for et in existing.metadata.handled_event_types:
+                    by_event = self._by_event_type.get(et)
+                    if by_event:
+                        self._by_event_type[et] = [d for d in by_event if d.metadata.id != old_id]
+                pt_key = existing.metadata.plugin_type.value
+                by_type = self._by_plugin_type.get(pt_key)
+                if by_type:
+                    self._by_plugin_type[pt_key] = [d for d in by_type if d.metadata.id != old_id]
 
+        self._by_entry_point[descriptor.entry_point_name] = descriptor
         self._plugins[descriptor.metadata.id] = descriptor
 
         for et in descriptor.metadata.handled_event_types:

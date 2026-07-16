@@ -64,8 +64,9 @@ class ExportOrchestrator:
         metadata = ExportMetadata(
             specmetrics_version=self._get_version(),
             run_id=cfm.run_id,
-            export_timestamp=cfm.metadata.build_date if hasattr(cfm.metadata, "build_date") else None,
+            export_timestamp=cfm.metadata.created_at,
             function_count=len(measurements),
+            pipeline_duration_ms=cfm.metadata.build_duration_ms,
         )
 
         selected = [e for e in self.exporters if formats is None or e.format_id() in formats]
@@ -111,8 +112,9 @@ class ExportOrchestrator:
         metadata = ExportMetadata(
             specmetrics_version=self._get_version(),
             run_id=cfm.run_id,
-            export_timestamp=None,
+            export_timestamp=cfm.metadata.created_at,
             function_count=len(measurements),
+            pipeline_duration_ms=cfm.metadata.build_duration_ms,
         )
         exporters = {e.format_id(): e for e in self.exporters}
         exporter = exporters.get(fmt)

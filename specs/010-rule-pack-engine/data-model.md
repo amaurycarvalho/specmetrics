@@ -10,13 +10,13 @@ A self-contained collection of measurement policies loaded from a single YAML fi
 |-------|------|----------|-------------|
 | `id` | `str` | Yes | Unique identifier for the Rule Pack (e.g., `"acme-corp-v1"`) |
 | `description` | `str` | No | Human-readable description of the Rule Pack's purpose |
-| `methodology` | `str` | No | Target measurement methodology (default: `"APF"`) |
+| `methodology` | `str` | No | Target measurement methodology (default: `FPA`) |
 | `rules` | `list[Rule]` | No | The set of measurement policy rules |
 | `glossary_overrides` | `dict[str, str]` | No | Custom labels for function types and complexity levels |
 
 **Validation rules**:
 - `id` must be non-empty and match `^[a-zA-Z0-9_-]+$`
-- If `methodology` is specified, it must be a supported methodology (`"APF"` for v1)
+- If `methodology` is specified, it must be a supported methodology (`FPA` for v1)
 - At least one of `rules` or `glossary_overrides` should be present (empty Rule Packs are allowed but produce a warning)
 
 ### Rule
@@ -161,7 +161,7 @@ Result of loading a single Rule Pack file.
                                               [Annotated CFM output]
 ```
 
-1. **Loading**: Files discovered in `.specify/rules/*.yml`, parsed via ruamel.yaml into `RulePack` objects
+1. **Loading**: Files discovered in `.specmetrics/rules/*.yml`, parsed via ruamel.yaml into `RulePack` objects
 2. **Validation**: Each RulePack and its rules validated against schema; conflicts detected across Rule Packs
 3. **Application**: Valid rules applied to CFM in order: exclusions → complexity overrides → weight overrides → VAF → element exclusions
 4. **Annotation**: Each applied rule recorded as an `AppliedRuleRecord` on affected CFM elements; glossary overrides applied to report labels

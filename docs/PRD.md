@@ -66,16 +66,16 @@ SpecMetrics is intended for software engineering teams and organizations that ad
 
 The primary target audiences include:
 
-* Functional Size Measurement specialists
-* Software Architects
-* Tech Leads
-* Engineering Managers
-* Scrum Masters
-* Agile Coaches
-* Product Managers
-* Software Development Teams
-* Organizations adopting AI-assisted software development
-* Public and private organizations that use Function Point Analysis as part of procurement, governance or productivity management
+- Functional Size Measurement specialists
+- Software Architects
+- Tech Leads
+- Engineering Managers
+- Scrum Masters
+- Agile Coaches
+- Product Managers
+- Software Development Teams
+- Organizations adopting AI-assisted software development
+- Public and private organizations that use Function Point Analysis as part of procurement, governance or productivity management
 
 ---
 
@@ -111,7 +111,7 @@ As a consequence, software specifications are no longer transient project docume
 
 Despite this evolution, today's functional measurement processes remain largely disconnected from these specifications.
 
-Organizations that adopt Function Point Analysis (IFPUG/APF), Simplified Function Point (SPF) or SNAP still rely predominantly on manual interpretation performed after specification review or after implementation. This process is expensive, time-consuming, difficult to audit and often produces inconsistent results between different analysts.
+Organizations that adopt Function Point Analysis (IFPUG/FPA), Simplified Function Point (IFPUG/SFP) or Software Non-Functional Assessment Process (IFPUG/SNAP) still rely predominantly on manual interpretation performed after specification review or after implementation. This process is expensive, time-consuming, difficult to audit and often produces inconsistent results between different analysts.
 
 At the same time, valuable information contained in SDD specifications is discarded after development, even though it could support governance, productivity analysis, engineering observability and AI-assisted software development.
 
@@ -169,14 +169,14 @@ However, functional measurement data usually remains isolated inside spreadsheet
 
 As a consequence, engineering leaders cannot easily correlate:
 
-* Functional size
-* Delivery throughput
-* AI-assisted productivity
-* Sprint performance
-* Code quality
-* Engineering KPIs
-* DORA metrics
-* SPACE metrics
+- Functional size
+- Delivery throughput
+- AI-assisted productivity
+- Sprint performance
+- Code quality
+- Engineering KPIs
+- DORA metrics
+- SPACE metrics
 
 because these datasets are generated independently.
 
@@ -200,11 +200,11 @@ Instead of treating specifications as static documentation, they can become stru
 
 By combining semantic extraction, deterministic measurement and evidence-based traceability, functional measurement becomes:
 
-* Faster
-* More consistent
-* Easier to audit
-* Easier to automate
-* Continuously reusable throughout the software lifecycle
+- Faster
+- More consistent
+- Easier to audit
+- Easier to automate
+- Continuously reusable throughout the software lifecycle
 
 ---
 
@@ -418,33 +418,33 @@ The following personas represent the primary users considered during product des
 
 ### Profile
 
-Professionals responsible for performing or auditing functional size measurements using methodologies such as IFPUG Function Point Analysis (APF), Simplified Function Point (SPF) or SNAP.
+Professionals responsible for performing or auditing functional size measurements using methodologies such as IFPUG Function Point Analysis (FPA), Simplified Function Point (SFP) or Software Non-Functional Assessment Process (SNAP).
 
 These users require high confidence, traceability and deterministic behavior from the measurement process.
 
 ### Goals
 
-* Reduce manual measurement effort.
-* Improve consistency across different measurements.
-* Audit automatically generated measurements.
-* Validate organizational counting policies.
-* Explain measurement decisions to stakeholders.
+- Reduce manual measurement effort.
+- Improve consistency across different measurements.
+- Audit automatically generated measurements.
+- Validate organizational counting policies.
+- Explain measurement decisions to stakeholders.
 
 ### Primary Needs
 
-* Complete traceability.
-* Evidence-based measurements.
-* Rule Pack customization.
-* Deterministic counting.
-* Exportable measurement reports.
+- Complete traceability.
+- Evidence-based measurements.
+- Rule Pack customization.
+- Deterministic counting.
+- Exportable measurement reports.
 
 ### Primary Product Capabilities
 
-* Functional Measurement Engine
-* Evidence Graph
-* Rule Packs
-* Measurement Reports
-* Export Plugins
+- Functional Measurement Engine
+- Evidence Graph
+- Rule Packs
+- Measurement Reports
+- Export Plugins
 
 ---
 
@@ -458,24 +458,24 @@ They use functional measurements to understand system complexity and assess the 
 
 ### Goals
 
-* Estimate functional size before implementation.
-* Understand functional decomposition.
-* Validate architectural boundaries.
-* Evaluate system growth.
+- Estimate functional size before implementation.
+- Understand functional decomposition.
+- Validate architectural boundaries.
+- Evaluate system growth.
 
 ### Primary Needs
 
-* Early measurement.
-* Functional decomposition.
-* Traceability to specifications.
-* Architectural insights.
+- Early measurement.
+- Functional decomposition.
+- Traceability to specifications.
+- Architectural insights.
 
 ### Primary Product Capabilities
 
-* Semantic Extraction
-* Canonical Functional Model
-* Functional Reports
-* Measurement Plugins
+- Semantic Extraction
+- Canonical Functional Model
+- Functional Reports
+- Measurement Plugins
 
 ---
 
@@ -487,24 +487,24 @@ Technical leaders responsible for planning implementation activities, coordinati
 
 ### Goals
 
-* Estimate implementation effort.
-* Monitor functional growth.
-* Understand feature complexity.
-* Compare planned versus delivered functionality.
+- Estimate implementation effort.
+- Monitor functional growth.
+- Understand feature complexity.
+- Compare planned versus delivered functionality.
 
 ### Primary Needs
 
-* Functional metrics.
-* Historical measurements.
-* Engineering dashboards.
-* CI integration.
+- Functional metrics.
+- Historical measurements.
+- Engineering dashboards.
+- CI integration.
 
 ### Primary Product Capabilities
 
-* CLI
-* Publishers
-* Dashboards
-* Historical Measurements
+- CLI
+- Publishers
+- Dashboards
+- Historical Measurements
 
 ---
 
@@ -518,24 +518,24 @@ Unlike technical specialists, these users consume aggregated engineering indicat
 
 ### Goals
 
-* Monitor engineering productivity.
-* Compare teams.
-* Evaluate delivery trends.
-* Measure AI-assisted development impact.
+- Monitor engineering productivity.
+- Compare teams.
+- Evaluate delivery trends.
+- Measure AI-assisted development impact.
 
 ### Primary Needs
 
-* Aggregated metrics.
-* Historical analytics.
-* Executive dashboards.
-* Integration with BI platforms.
+- Aggregated metrics.
+- Historical analytics.
+- Executive dashboards.
+- Integration with BI platforms.
 
 ### Primary Product Capabilities
 
-* Export Plugins
-* Publisher Plugins
-* Engineering Analytics
-* Observability Integrations
+- Export Plugins
+- Publisher Plugins
+- Engineering Analytics
+- Observability Integrations
 
 ---
 
@@ -547,24 +547,24 @@ Professionals responsible for facilitating agile processes and improving deliver
 
 ### Goals
 
-* Correlate functional size with delivery cadence.
-* Improve sprint planning.
-* Analyze throughput.
-* Support continuous improvement initiatives.
+- Correlate functional size with delivery cadence.
+- Improve sprint planning.
+- Analyze throughput.
+- Support continuous improvement initiatives.
 
 ### Primary Needs
 
-* Functional metrics per sprint.
-* Trend analysis.
-* Historical evolution.
-* Delivery analytics.
+- Functional metrics per sprint.
+- Trend analysis.
+- Historical evolution.
+- Delivery analytics.
 
 ### Primary Product Capabilities
 
-* Measurement History
-* Dashboards
-* Export Plugins
-* Publisher Plugins
+- Measurement History
+- Dashboards
+- Export Plugins
+- Publisher Plugins
 
 ---
 
@@ -576,24 +576,24 @@ Professionals responsible for planning product evolution and prioritizing busine
 
 ### Goals
 
-* Estimate functional growth.
-* Evaluate feature scope.
-* Compare planned versus delivered functionality.
-* Improve roadmap forecasting.
+- Estimate functional growth.
+- Evaluate feature scope.
+- Compare planned versus delivered functionality.
+- Improve roadmap forecasting.
 
 ### Primary Needs
 
-* Functional estimates.
-* Historical evolution.
-* Feature-level measurements.
-* Executive reports.
+- Functional estimates.
+- Historical evolution.
+- Feature-level measurements.
+- Executive reports.
 
 ### Primary Product Capabilities
 
-* Measurement Engine
-* Reports
-* Dashboards
-* Export Plugins
+- Measurement Engine
+- Reports
+- Dashboards
+- Export Plugins
 
 ---
 
@@ -607,26 +607,26 @@ For this persona, SpecMetrics is not only a measurement tool but also an enginee
 
 ### Goals
 
-* Validate specifications before implementation.
-* Estimate functional size automatically.
-* Receive measurement explanations.
-* Detect specification ambiguities.
-* Incorporate measurement into development workflows.
+- Validate specifications before implementation.
+- Estimate functional size automatically.
+- Receive measurement explanations.
+- Detect specification ambiguities.
+- Incorporate measurement into development workflows.
 
 ### Primary Needs
 
-* Fast execution.
-* CLI automation.
-* MCP integration.
-* Machine-readable outputs.
+- Fast execution.
+- CLI automation.
+- MCP integration.
+- Machine-readable outputs.
 
 ### Primary Product Capabilities
 
-* CLI
-* MCP Server
-* APIs
-* JSON Export
-* Evidence Graph
+- CLI
+- MCP Server
+- APIs
+- JSON Export
+- Evidence Graph
 
 ---
 
@@ -640,23 +640,23 @@ These users customize SpecMetrics according to corporate standards rather than p
 
 ### Goals
 
-* Maintain organizational Rule Packs.
-* Configure counting policies.
-* Standardize measurements across projects.
-* Update measurement methodologies.
+- Maintain organizational Rule Packs.
+- Configure counting policies.
+- Standardize measurements across projects.
+- Update measurement methodologies.
 
 ### Primary Needs
 
-* Rule Pack management.
-* Configuration.
-* Versioning.
-* Validation.
+- Rule Pack management.
+- Configuration.
+- Versioning.
+- Validation.
 
 ### Primary Product Capabilities
 
-* Rule Packs
-* Configuration
-* Validation Tools
+- Rule Packs
+- Configuration
+- Validation Tools
 
 ---
 
@@ -666,13 +666,13 @@ Although not primary users of the MVP, the architecture considers future support
 
 These include:
 
-* Quality Assurance Engineers
-* DevOps Engineers
-* Platform Engineers
-* Software Governance Teams
-* Procurement and Contract Management Teams
-* Public Sector Organizations using Function Point Analysis for software acquisition
-* Consulting companies specialized in functional measurement
+- Quality Assurance Engineers
+- DevOps Engineers
+- Platform Engineers
+- Software Governance Teams
+- Procurement and Contract Management Teams
+- Public Sector Organizations using Function Point Analysis for software acquisition
+- Consulting companies specialized in functional measurement
 
 ---
 
@@ -691,10 +691,10 @@ These include:
 
 Legend:
 
-* ●●● Primary capability
-* ●● Important capability
-* ● Supporting capability
-* ○ Rare or indirect usage
+- ●●● Primary capability
+- ●● Important capability
+- ● Supporting capability
+- ○ Rare or indirect usage
 
 ---
 
@@ -827,14 +827,14 @@ SpecMetrics is not intended to replace project management or agile planning tool
 
 The platform does not manage:
 
-* Product Backlogs
-* User Stories
-* Epics
-* Tasks
-* Sprint Planning
-* Kanban Boards
-* Release Planning
-* Team Capacity
+- Product Backlogs
+- User Stories
+- Epics
+- Tasks
+- Sprint Planning
+- Kanban Boards
+- Release Planning
+- Team Capacity
 
 Existing platforms such as Jira, Azure DevOps and similar products remain the systems of record for project management.
 
@@ -868,13 +868,13 @@ SpecMetrics does not evaluate software quality.
 
 It does not perform:
 
-* Static Code Analysis
-* Code Smell Detection
-* Security Analysis
-* Test Coverage Analysis
-* Dependency Analysis
-* Vulnerability Detection
-* Performance Profiling
+- Static Code Analysis
+- Code Smell Detection
+- Security Analysis
+- Test Coverage Analysis
+- Dependency Analysis
+- Vulnerability Detection
+- Performance Profiling
 
 These responsibilities belong to specialized software quality platforms.
 
@@ -898,11 +898,11 @@ SpecMetrics produces engineering telemetry but is not responsible for storing, q
 
 Capabilities such as:
 
-* Time-series storage
-* Metrics aggregation
-* Alerting
-* Dashboard authoring
-* Log management
+- Time-series storage
+- Metrics aggregation
+- Alerting
+- Dashboard authoring
+- Log management
 
 remain outside the platform scope.
 
@@ -938,11 +938,11 @@ Although SpecMetrics leverages Large Language Models, it is not intended to beco
 
 The project does not aim to provide:
 
-* General-purpose prompt orchestration
-* Agent frameworks
-* Multi-agent coordination
-* Workflow automation
-* Generic Retrieval-Augmented Generation (RAG) platforms
+- General-purpose prompt orchestration
+- Agent frameworks
+- Multi-agent coordination
+- Workflow automation
+- Generic Retrieval-Augmented Generation (RAG) platforms
 
 Artificial Intelligence is treated as an implementation mechanism rather than the product itself.
 
@@ -954,11 +954,11 @@ SpecMetrics consumes software specifications but is not intended to become a cor
 
 The platform does not replace:
 
-* Wikis
-* Documentation portals
-* Knowledge Bases
-* Enterprise Search Platforms
-* Document Management Systems
+- Wikis
+- Documentation portals
+- Knowledge Bases
+- Enterprise Search Platforms
+- Document Management Systems
 
 Its objective is to extract semantic knowledge required for functional measurement rather than preserve organizational documentation.
 
@@ -1089,9 +1089,9 @@ They are **not** responsible for interpreting business meaning.
 
 ### Examples
 
-* OpenSpec Adapter
-* SpecKit Adapter
-* Future SDD Adapters
+- OpenSpec Adapter
+- SpecKit Adapter
+- Future SDD Adapters
 
 ---
 
@@ -1105,14 +1105,14 @@ This layer performs semantic understanding using one or more Extraction Provider
 
 Its responsibility is identifying:
 
-* business entities
-* functional processes
-* operations
-* business rules
-* relationships
-* actors
-* persistence
-* evidences
+- business entities
+- functional processes
+- operations
+- business rules
+- relationships
+- actors
+- persistence
+- evidences
 
 without performing any functional measurement.
 
@@ -1126,10 +1126,10 @@ The architecture allows multiple extraction strategies.
 
 Examples include:
 
-* LLM-based extraction
-* Hybrid extraction
-* Parser-assisted extraction
-* Fully deterministic extraction
+- LLM-based extraction
+- Hybrid extraction
+- Parser-assisted extraction
+- Fully deterministic extraction
 
 The remainder of the platform remains unaware of which provider generated the semantic information.
 
@@ -1145,11 +1145,11 @@ Each semantic element maintains references to the specification fragments that o
 
 The Evidence Graph provides:
 
-* traceability
-* explainability
-* auditing
-* review support
-* confidence analysis
+- traceability
+- explainability
+- auditing
+- review support
+- confidence analysis
 
 Evidence is treated as a first-class engineering artifact.
 
@@ -1185,9 +1185,9 @@ Each methodology is implemented independently.
 
 Examples include:
 
-* Function Point Analysis (IFPUG/APF)
-* Simplified Function Point (SPF)
-* SNAP
+- Function Point Analysis (IFPUG/PFA)
+- Simplified Function Point (IFPUG/SFP)
+- Software Non-Functional Assessment Process (IFPUG/SNAP)
 
 Additional methodologies may be incorporated without modifying the platform core.
 
@@ -1203,12 +1203,12 @@ Rather than modifying deterministic measurement engines, organizations customize
 
 Rule Packs may define:
 
-* terminology
-* glossary
-* heuristics
-* exclusions
-* weighting
-* interpretation policies
+- terminology
+- glossary
+- heuristics
+- exclusions
+- weighting
+- interpretation policies
 
 The Rule Engine applies these policies while preserving deterministic execution.
 
@@ -1228,10 +1228,10 @@ Generate portable artifacts.
 
 Examples:
 
-* JSON
-* CSV
-* XML
-* Markdown
+- JSON
+- CSV
+- XML
+- Markdown
 
 ---
 
@@ -1241,12 +1241,12 @@ Deliver structured information directly to external platforms.
 
 Examples:
 
-* Jira
-* Azure DevOps
-* SonarQube
-* OpenTelemetry
-* Prometheus
-* Grafana
+- Jira
+- Azure DevOps
+- SonarQube
+- OpenTelemetry
+- Prometheus
+- Grafana
 
 This separation allows the same measurement results to be consumed through multiple channels.
 
@@ -1262,10 +1262,10 @@ SpecMetrics is designed to be consumed equally by humans and AI agents.
 
 Supported interaction models include:
 
-* Command Line Interface (CLI)
-* Public APIs
-* Model Context Protocol (MCP)
-* Future graphical interfaces
+- Command Line Interface (CLI)
+- Public APIs
+- Model Context Protocol (MCP)
+- Future graphical interfaces
 
 Business logic remains independent from interaction mechanisms.
 
@@ -1416,11 +1416,11 @@ The model must support future engineering capabilities without requiring structu
 
 Examples include:
 
-* additional measurement methodologies
-* specification validation
-* engineering analytics
-* AI-assisted workflows
-* semantic quality analysis
+- additional measurement methodologies
+- specification validation
+- engineering analytics
+- AI-assisted workflows
+- semantic quality analysis
 
 ---
 
@@ -1467,10 +1467,10 @@ Represents a unit of observable business behavior.
 
 Examples include:
 
-* Register Customer
-* Cancel Order
-* Generate Invoice
-* Search Products
+- Register Customer
+- Cancel Order
+- Generate Invoice
+- Search Products
 
 Functional Processes become the primary input for deterministic measurement engines.
 
@@ -1482,10 +1482,10 @@ Represents a business object manipulated by the system.
 
 Examples:
 
-* Customer
-* Order
-* Invoice
-* Product
+- Customer
+- Order
+- Invoice
+- Product
 
 Entities describe business concepts rather than database tables.
 
@@ -1497,10 +1497,10 @@ Represents the origin or destination of functional interactions.
 
 Examples:
 
-* Customer
-* Administrator
-* External System
-* Payment Gateway
+- Customer
+- Administrator
+- External System
+- Payment Gateway
 
 Actors define interaction boundaries but do not imply implementation details.
 
@@ -1512,15 +1512,15 @@ Represents an action performed over one or more business entities.
 
 Examples:
 
-* Create
-* Read
-* Update
-* Delete
-* Search
-* Calculate
-* Validate
-* Import
-* Export
+- Create
+- Read
+- Update
+- Delete
+- Search
+- Calculate
+- Validate
+- Import
+- Export
 
 Operations describe business intent rather than technical implementation.
 
@@ -1532,9 +1532,9 @@ Represents functional constraints governing system behavior.
 
 Examples:
 
-* Customer CPF must be unique.
-* Orders cannot be canceled after shipment.
-* Payment requires customer validation.
+- Customer CPF must be unique.
+- Orders cannot be canceled after shipment.
+- Payment requires customer validation.
 
 Business Rules provide semantic context used by measurement methodologies and future engineering analyses.
 
@@ -1586,10 +1586,10 @@ Represents assumptions, limitations or conditions affecting software behavior.
 
 Constraints may originate from:
 
-* business policies
-* regulatory requirements
-* specification assumptions
-* organizational rules
+- business policies
+- regulatory requirements
+- specification assumptions
+- organizational rules
 
 ---
 
@@ -1599,11 +1599,11 @@ Represents the traceable origin of every semantic element.
 
 Each evidence reference preserves:
 
-* originating document
-* section
-* textual fragment
-* extraction confidence
-* extraction provider
+- originating document
+- section
+- textual fragment
+- extraction confidence
+- extraction provider
 
 No semantic concept exists without supporting evidence.
 
@@ -1651,15 +1651,15 @@ The Canonical Functional Model intentionally excludes concepts belonging to down
 
 It does not include:
 
-* Function Points
-* DET counts
-* RET counts
-* FTR counts
-* Complexity calculations
-* SNAP categories
-* Productivity indicators
-* Story Points
-* Sprint metrics
+- Function Points
+- DET counts
+- RET counts
+- FTR counts
+- Complexity calculations
+- SNAP categories
+- Productivity indicators
+- Story Points
+- Sprint metrics
 
 These concepts are produced later by specialized plugins.
 
@@ -1700,10 +1700,10 @@ The Canonical Functional Model is intended to remain stable across platform vers
 
 Future evolution should prioritize:
 
-* adding semantic concepts rather than modifying existing ones;
-* preserving backward compatibility whenever practical;
-* maintaining methodology independence;
-* avoiding coupling to specific SDD frameworks.
+- adding semantic concepts rather than modifying existing ones;
+- preserving backward compatibility whenever practical;
+- maintaining methodology independence;
+- avoiding coupling to specific SDD frameworks.
 
 Major structural revisions should occur only when they increase the expressive power of the model without compromising interoperability.
 
@@ -1751,12 +1751,12 @@ The plugin ecosystem follows the architectural principles defined for SpecMetric
 
 Plugins should:
 
-* extend platform capabilities without modifying the core;
-* communicate through the Canonical Functional Model whenever applicable;
-* remain independently versioned;
-* expose stable contracts;
-* support independent lifecycle management;
-* preserve deterministic behavior.
+- extend platform capabilities without modifying the core;
+- communicate through the Canonical Functional Model whenever applicable;
+- remain independently versioned;
+- expose stable contracts;
+- support independent lifecycle management;
+- preserve deterministic behavior.
 
 The platform core should remain unaware of plugin implementation details.
 
@@ -1805,16 +1805,16 @@ These plugins locate, organize and expose specification artifacts without interp
 
 ### Examples
 
-* OpenSpec
-* SpecKit
-* Future SDD frameworks
+- OpenSpec
+- SpecKit
+- Future SDD frameworks
 
 ### Responsibilities
 
-* Discover specifications.
-* Read project structure.
-* Normalize document metadata.
-* Provide document streams to semantic extraction.
+- Discover specifications.
+- Read project structure.
+- Normalize document metadata.
+- Provide document streams to semantic extraction.
 
 ---
 
@@ -1830,18 +1830,18 @@ The remainder of the platform is independent from the extraction technology empl
 
 ### Possible Providers
 
-* LLM-first extraction
-* Hybrid extraction
-* Parser-assisted extraction
-* Deterministic extraction
+- LLM-first extraction
+- Hybrid extraction
+- Parser-assisted extraction
+- Deterministic extraction
 
 ### Responsibilities
 
-* Semantic interpretation.
-* Entity extraction.
-* Relationship extraction.
-* Evidence generation.
-* Confidence scoring.
+- Semantic interpretation.
+- Entity extraction.
+- Relationship extraction.
+- Evidence generation.
+- Confidence scoring.
 
 ---
 
@@ -1857,13 +1857,13 @@ Rule Packs are expected to evolve independently from methodologies.
 
 ### Typical Contents
 
-* YAML configuration
-* Glossary definitions
-* Organizational terminology
-* Interpretation rules
-* Weight adjustments
-* Counting policies
-* Validation rules
+- YAML configuration
+- Glossary definitions
+- Organizational terminology
+- Interpretation rules
+- Weight adjustments
+- Counting policies
+- Validation rules
 
 ### Future Evolution
 
@@ -1881,16 +1881,16 @@ Each methodology is implemented independently and consumes the Canonical Functio
 
 ### Initial Methodologies
 
-* Function Point Analysis (IFPUG/APF)
-* Simplified Function Point (SPF)
-* SNAP
+- Function Point Analysis (IFPUG/FPA)
+- Simplified Function Point (IFPUG/SFP)
+- Software Non-Functional Assessment Process (IFPUG/SNAP)
 
 ### Possible Future Methodologies
 
-* COSMIC
-* NESMA
-* Mark II
-* Organization-specific methodologies
+- COSMIC
+- NESMA
+- Mark II
+- Organization-specific methodologies
 
 ---
 
@@ -1902,11 +1902,11 @@ Validate semantic consistency before functional measurement.
 
 Validation plugins may analyze:
 
-* missing evidence;
-* inconsistent semantic relationships;
-* duplicated concepts;
-* ambiguous specifications;
-* Rule Pack violations.
+- missing evidence;
+- inconsistent semantic relationships;
+- duplicated concepts;
+- ambiguous specifications;
+- Rule Pack violations.
 
 Validation does not modify the Canonical Functional Model.
 
@@ -1924,17 +1924,17 @@ Export plugins produce files intended for archival, exchange or downstream proce
 
 ### Initial Formats
 
-* JSON
-* CSV
-* XML
-* Markdown
+- JSON
+- CSV
+- XML
+- Markdown
 
 ### Future Formats
 
-* Excel
-* Parquet
-* SQLite
-* PDF Reports
+- Excel
+- Parquet
+- SQLite
+- PDF Reports
 
 ---
 
@@ -1948,19 +1948,19 @@ Unlike Export Plugins, Publishers communicate with external systems.
 
 ### Initial Targets
 
-* Jira
-* SonarQube
-* OpenTelemetry
+- Jira
+- SonarQube
+- OpenTelemetry
 
 ### Future Targets
 
-* Azure DevOps
-* Grafana
-* Prometheus
-* Power BI
-* Elastic
-* Splunk
-* Datadog
+- Azure DevOps
+- Grafana
+- Prometheus
+- Power BI
+- Elastic
+- Splunk
+- Datadog
 
 Publisher plugins allow functional measurements to become engineering telemetry.
 
@@ -1976,15 +1976,15 @@ Business logic remains independent from interaction mechanisms.
 
 ### Initial Interfaces
 
-* CLI
-* MCP Server
+- CLI
+- MCP Server
 
 ### Future Interfaces
 
-* REST API
-* Web Dashboard
-* IDE Extensions
-* Desktop Applications
+- REST API
+- Web Dashboard
+- IDE Extensions
+- Desktop Applications
 
 ---
 
@@ -2082,12 +2082,12 @@ Third-party contributors should be able to develop new plugins without requiring
 
 The project will provide:
 
-* public extension points;
-* versioned plugin contracts;
-* development guidelines;
-* compatibility documentation;
-* reference implementations;
-* testing utilities.
+- public extension points;
+- versioned plugin contracts;
+- development guidelines;
+- compatibility documentation;
+- reference implementations;
+- testing utilities.
 
 Community-developed plugins are considered a first-class extension mechanism rather than optional additions.
 
@@ -2099,16 +2099,16 @@ The SpecMetrics ecosystem is expected to grow primarily through plugins rather t
 
 Future plugin families may include capabilities such as:
 
-* Specification Quality Analysis
-* Semantic Diff
-* AI Review Assistants
-* Engineering Governance
-* Productivity Analytics
-* Functional Estimation
-* Cost Estimation
-* Compliance Analysis
-* Specification Refactoring
-* Architecture Validation
+- Specification Quality Analysis
+- Semantic Diff
+- AI Review Assistants
+- Engineering Governance
+- Productivity Analytics
+- Functional Estimation
+- Cost Estimation
+- Compliance Analysis
+- Specification Refactoring
+- Architecture Validation
 
 Whenever possible, new capabilities should be introduced as plugins instead of becoming core platform responsibilities.
 
@@ -2139,8 +2139,8 @@ This approach allows the platform to remain focused on its primary mission while
 /plugins
     openspec/
     speckit/
-    apf/
-    spf/
+    fpa/
+    sfp/
     snap/
     json/
     jira/
@@ -2193,12 +2193,12 @@ The platform shall preserve metadata associated with every processed specificati
 
 Metadata may include:
 
-* document identifier;
-* location;
-* version;
-* originating framework;
-* creation information;
-* relationship with other documents.
+- document identifier;
+- location;
+- version;
+- originating framework;
+- creation information;
+- relationship with other documents.
 
 ---
 
@@ -2216,15 +2216,15 @@ Extraction shall identify functional concepts independently of document structur
 
 The extraction process shall identify, whenever applicable:
 
-* functional processes;
-* business entities;
-* actors;
-* operations;
-* business rules;
-* constraints;
-* relationships;
-* data structures;
-* business events.
+- functional processes;
+- business entities;
+- actors;
+- operations;
+- business rules;
+- constraints;
+- relationships;
+- data structures;
+- business events.
 
 ---
 
@@ -2456,13 +2456,13 @@ Exporters, Publishers and future engineering integrations shall be implemented a
 
 The architecture shall allow future implementation of capabilities including, but not limited to:
 
-* semantic quality analysis;
-* specification completeness analysis;
-* semantic diff between specification versions;
-* engineering productivity analytics;
-* specification evolution metrics;
-* AI-assisted specification review;
-* engineering governance analysis.
+- semantic quality analysis;
+- specification completeness analysis;
+- semantic diff between specification versions;
+- engineering productivity analytics;
+- specification evolution metrics;
+- AI-assisted specification review;
+- engineering governance analysis.
 
 These capabilities are not part of the MVP but should integrate naturally with the Canonical Functional Model.
 
@@ -2612,10 +2612,10 @@ Measurement execution shall provide meaningful diagnostics whenever processing c
 
 Generated measurements shall preserve:
 
-* platform version;
-* plugin versions;
-* Rule Pack version;
-* Canonical Functional Model version.
+- platform version;
+- plugin versions;
+- Rule Pack version;
+- Canonical Functional Model version.
 
 ---
 
@@ -2797,12 +2797,12 @@ These Non Functional Requirements strongly influence the architecture of SpecMet
 
 In particular, they justify:
 
-* the adoption of a Canonical Functional Model as the stable contract between architectural layers;
-* deterministic measurement engines separated from semantic extraction providers;
-* a plugin-oriented architecture that enables independent evolution of frameworks, methodologies and integrations;
-* end-to-end traceability through the Evidence Graph;
-* machine-consumable interfaces such as CLI and MCP;
-* explicit versioning of platform components and generated measurements.
+- the adoption of a Canonical Functional Model as the stable contract between architectural layers;
+- deterministic measurement engines separated from semantic extraction providers;
+- a plugin-oriented architecture that enables independent evolution of frameworks, methodologies and integrations;
+- end-to-end traceability through the Evidence Graph;
+- machine-consumable interfaces such as CLI and MCP;
+- explicit versioning of platform components and generated measurements.
 
 Compliance with these requirements is considered as important as implementing the corresponding functional capabilities.
 
@@ -2810,13 +2810,13 @@ Compliance with these requirements is considered as important as implementing th
 
 # Quality Gates
 
-| Quality Gate                     | Criterion                                                                                                                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **QG-01 — Determinism**          | Given the same inputs, Rule Pack and plugin versions, the platform **shall always produce identical measurement results**.                                                                 |
-| **QG-02 — Traceability**         | **Every measurement shall be fully traceable** to the specification evidence from which it was derived, with navigable references throughout the processing pipeline.                      |
-| **QG-03 — Explainability**       | **Every measurement decision shall be explainable** through explicit semantic reasoning and supporting evidence. No measurement may exist without a verifiable explanation.                |
-| **QG-04 — Plugin Compatibility** | **Backward-compatible plugins shall not be broken by minor platform releases.** Changes that require plugin modifications shall only occur through explicitly versioned breaking releases. |
-| **QG-05 — Canonical Functional Model Integrity**  | **No component shall modify the Canonical Functional Model directly** outside the public contracts and extension points defined by the platform.                                           |
+| Quality Gate                                     | Criterion                                                                                                                                                                                  |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **QG-01 — Determinism**                          | Given the same inputs, Rule Pack and plugin versions, the platform **shall always produce identical measurement results**.                                                                 |
+| **QG-02 — Traceability**                         | **Every measurement shall be fully traceable** to the specification evidence from which it was derived, with navigable references throughout the processing pipeline.                      |
+| **QG-03 — Explainability**                       | **Every measurement decision shall be explainable** through explicit semantic reasoning and supporting evidence. No measurement may exist without a verifiable explanation.                |
+| **QG-04 — Plugin Compatibility**                 | **Backward-compatible plugins shall not be broken by minor platform releases.** Changes that require plugin modifications shall only occur through explicitly versioned breaking releases. |
+| **QG-05 — Canonical Functional Model Integrity** | **No component shall modify the Canonical Functional Model directly** outside the public contracts and extension points defined by the platform.                                           |
 
 ---
 
@@ -2838,10 +2838,10 @@ Release 0.1 shall demonstrate that the complete measurement pipeline is technica
 
 Specifically, it shall prove that:
 
-* software specifications contain sufficient semantic information for automated functional measurement;
-* LLM-assisted semantic extraction can produce a reliable Canonical Functional Model;
-* deterministic measurement engines can operate exclusively on the Canonical Functional Model;
-* complete traceability can be preserved from specifications to measurement results.
+- software specifications contain sufficient semantic information for automated functional measurement;
+- LLM-assisted semantic extraction can produce a reliable Canonical Functional Model;
+- deterministic measurement engines can operate exclusively on the Canonical Functional Model;
+- complete traceability can be preserved from specifications to measurement results.
 
 ---
 
@@ -2859,8 +2859,8 @@ The MVP focuses on one representative implementation for each architectural exte
 
 Supported:
 
-* OpenSpec
-* SpecKit
+- OpenSpec
+- SpecKit
 
 Only the most common project layouts are required.
 
@@ -2872,15 +2872,15 @@ Support for historical versions and custom layouts is outside the MVP scope.
 
 Supported:
 
-* LLM-first extraction
+- LLM-first extraction
 
 Characteristics:
 
-* Markdown documents only.
-* Complete specification reading.
-* Semantic extraction.
-* Evidence generation.
-* Canonical Functional Model generation.
+- Markdown documents only.
+- Complete specification reading.
+- Semantic extraction.
+- Evidence generation.
+- Canonical Functional Model generation.
 
 Parser-based extraction is intentionally postponed.
 
@@ -2892,14 +2892,14 @@ Release 0.1 includes the first stable version of the Canonical Functional Model.
 
 The model shall support:
 
-* Functional Processes
-* Business Entities
-* Actors
-* Operations
-* Business Rules
-* Relationships
-* Data Structures
-* Evidence References
+- Functional Processes
+- Business Entities
+- Actors
+- Operations
+- Business Rules
+- Relationships
+- Data Structures
+- Evidence References
 
 ---
 
@@ -2907,9 +2907,9 @@ The model shall support:
 
 Supported methodologies:
 
-* Function Point Analysis (IFPUG/APF)
-* Simplified Function Point (SPF)
-* SNAP
+- Function Point Analysis (IFPUG/FPA)
+- Simplified Function Point (IFPUG/SFP)
+- Software Non-Functional Assessment Process (IFPUG/SNAP)
 
 Each methodology shall operate independently.
 
@@ -2919,8 +2919,8 @@ Each methodology shall operate independently.
 
 Supported:
 
-* Markdown knowledge base
-* YAML configuration
+- Markdown knowledge base
+- YAML configuration
 
 Rule Packs shall be local to the project.
 
@@ -2932,8 +2932,8 @@ PDF ingestion is not part of the MVP.
 
 Supported:
 
-* Command Line Interface
-* MCP Server
+- Command Line Interface
+- MCP Server
 
 The CLI serves CI/CD pipelines and automation.
 
@@ -2947,9 +2947,9 @@ No graphical interface will be provided.
 
 Supported formats:
 
-* JSON
-* CSV
-* XML
+- JSON
+- CSV
+- XML
 
 These formats provide sufficient interoperability for initial experimentation.
 
@@ -2959,7 +2959,7 @@ These formats provide sufficient interoperability for initial experimentation.
 
 Supported:
 
-* OpenTelemetry
+- OpenTelemetry
 
 The MVP will publish engineering telemetry through OpenTelemetry as the primary integration mechanism.
 
@@ -2973,10 +2973,10 @@ Direct publishers for Jira, SonarQube and other platforms are intentionally defe
 
 Basic semantic validation shall include:
 
-* missing evidence;
-* duplicated semantic concepts;
-* unresolved references;
-* inconsistent relationships.
+- missing evidence;
+- duplicated semantic concepts;
+- unresolved references;
+- inconsistent relationships.
 
 ---
 
@@ -3102,23 +3102,23 @@ This workflow represents the minimum viable implementation of the platform visio
 
 Release 0.1 shall include:
 
-* SpecMetrics Core
-* OpenSpec Adapter
-* SpecKit Adapter
-* LLM Extraction Provider
-* Canonical Functional Model v1
-* APF Measurement Plugin
-* SPF Measurement Plugin
-* SNAP Measurement Plugin
-* Rule Pack Engine
-* CLI
-* MCP Server
-* JSON Export Plugin
-* CSV Export Plugin
-* XML Export Plugin
-* OpenTelemetry Publisher
-* Plugin SDK
-* Developer Documentation
+- SpecMetrics Core
+- OpenSpec Adapter
+- SpecKit Adapter
+- LLM Extraction Provider
+- Canonical Functional Model v1
+- FPA Measurement Plugin
+- SFP Measurement Plugin
+- SNAP Measurement Plugin
+- Rule Pack Engine
+- CLI
+- MCP Server
+- JSON Export Plugin
+- CSV Export Plugin
+- XML Export Plugin
+- OpenTelemetry Publisher
+- Plugin SDK
+- Developer Documentation
 
 ---
 
@@ -3126,15 +3126,15 @@ Release 0.1 shall include:
 
 Release 0.1 shall be considered complete when all of the following conditions are satisfied.
 
-* A complete OpenSpec project can be measured automatically.
-* A complete SpecKit project can be measured automatically.
-* Every measured function is traceable to specification evidence.
-* Measurement execution is deterministic.
-* Rule Packs influence measurements without modifying measurement plugins.
-* Results can be exported in JSON, CSV and XML.
-* Measurement telemetry can be published through OpenTelemetry.
-* AI agents can execute measurements through MCP.
-* The complete pipeline can be executed from the Command Line Interface.
+- A complete OpenSpec project can be measured automatically.
+- A complete SpecKit project can be measured automatically.
+- Every measured function is traceable to specification evidence.
+- Measurement execution is deterministic.
+- Rule Packs influence measurements without modifying measurement plugins.
+- Results can be exported in JSON, CSV and XML.
+- Measurement telemetry can be published through OpenTelemetry.
+- AI agents can execute measurements through MCP.
+- The complete pipeline can be executed from the Command Line Interface.
 
 ---
 
@@ -3142,14 +3142,14 @@ Release 0.1 shall be considered complete when all of the following conditions ar
 
 Release 0.1 does **not** attempt to validate:
 
-* parser-based semantic extraction;
-* enterprise governance;
-* organizational dashboards;
-* advanced engineering analytics;
-* specification authoring;
-* code generation;
-* IDE experiences;
-* large-scale optimization.
+- parser-based semantic extraction;
+- enterprise governance;
+- organizational dashboards;
+- advanced engineering analytics;
+- specification authoring;
+- code generation;
+- IDE experiences;
+- large-scale optimization.
 
 These concerns are intentionally deferred until the core measurement pipeline has been validated.
 
@@ -3177,7 +3177,7 @@ Each architectural layer is represented by at least one production-ready impleme
 | Semantic Extraction      | LLM-first Extraction Provider            |
 | Canonical Representation | Canonical Functional Model v1            |
 | Rule Engine              | Markdown Rule Packs + YAML Configuration |
-| Measurement Engine       | APF, SPF and SNAP Plugins                |
+| Measurement Engine       | FPA, SFP and SNAP Plugins                |
 | Export Layer             | JSON, CSV and XML Export Plugins         |
 | Publication Layer        | OpenTelemetry Publisher                  |
 | Interaction Layer        | CLI and MCP Server                       |
@@ -3186,12 +3186,12 @@ By validating one complete implementation for every architectural extension poin
 
 Future releases are expected to evolve primarily through **horizontal expansion**, including:
 
-* additional Specification Adapter plugins;
-* new Semantic Extraction Providers;
-* new functional measurement methodologies;
-* enterprise Rule Packs;
-* additional Export and Publisher plugins;
-* new interaction mechanisms.
+- additional Specification Adapter plugins;
+- new Semantic Extraction Providers;
+- new functional measurement methodologies;
+- enterprise Rule Packs;
+- additional Export and Publisher plugins;
+- new interaction mechanisms.
 
 This strategy minimizes implementation risk while establishing a stable architectural foundation upon which the remainder of the ecosystem can evolve independently.
 
@@ -3219,22 +3219,22 @@ Validate the core architectural hypothesis.
 
 ### Primary Deliverables
 
-* Platform Core
-* Canonical Functional Model v1
-* OpenSpec Adapter
-* SpecKit Adapter
-* LLM-first Semantic Extraction
-* APF Plugin
-* SPF Plugin
-* SNAP Plugin
-* Rule Packs
-* CLI
-* MCP Server
-* JSON Export
-* CSV Export
-* XML Export
-* OpenTelemetry Publisher
-* Plugin SDK
+- Platform Core
+- Canonical Functional Model v1
+- OpenSpec Adapter
+- SpecKit Adapter
+- LLM-first Semantic Extraction
+- FPA Plugin
+- SFP Plugin
+- SNAP Plugin
+- Rule Packs
+- CLI
+- MCP Server
+- JSON Export
+- CSV Export
+- XML Export
+- OpenTelemetry Publisher
+- Plugin SDK
 
 ### Expected Outcome
 
@@ -3250,14 +3250,14 @@ Expand the plugin ecosystem.
 
 ### Planned Capabilities
 
-* Additional Specification Adapter plugins
-* Additional Measurement Plugins
-* Additional Publisher Plugins
-* Additional Export Plugins
-* Plugin Registry
-* Plugin Installation Manager
-* Plugin Templates
-* Plugin Validation Tools
+- Additional Specification Adapter plugins
+- Additional Measurement Plugins
+- Additional Publisher Plugins
+- Additional Export Plugins
+- Plugin Registry
+- Plugin Installation Manager
+- Plugin Templates
+- Plugin Validation Tools
 
 ### Expected Outcome
 
@@ -3273,12 +3273,12 @@ Improve support for organizational functional measurement standards.
 
 ### Planned Capabilities
 
-* Enterprise Rule Packs
-* Advanced YAML configuration
-* Rule inheritance
-* Rule validation
-* Organization profiles
-* Shared organizational repositories
+- Enterprise Rule Packs
+- Advanced YAML configuration
+- Rule inheritance
+- Rule validation
+- Organization profiles
+- Shared organizational repositories
 
 ### Expected Outcome
 
@@ -3294,12 +3294,12 @@ Expand the Canonical Functional Model beyond functional measurement.
 
 ### Planned Capabilities
 
-* Semantic validation
-* Specification completeness analysis
-* Semantic consistency checking
-* Semantic diff
-* Specification quality metrics
-* Specification evolution analysis
+- Semantic validation
+- Specification completeness analysis
+- Semantic consistency checking
+- Semantic diff
+- Specification quality metrics
+- Specification evolution analysis
 
 ### Expected Outcome
 
@@ -3315,13 +3315,13 @@ Transform functional measurements into engineering telemetry.
 
 ### Planned Capabilities
 
-* Historical measurements
-* Trend analysis
-* Functional growth metrics
-* Engineering KPIs
-* DORA correlations
-* SPACE correlations
-* Advanced OpenTelemetry support
+- Historical measurements
+- Trend analysis
+- Functional growth metrics
+- Engineering KPIs
+- DORA correlations
+- SPACE correlations
+- Advanced OpenTelemetry support
 
 ### Expected Outcome
 
@@ -3337,11 +3337,11 @@ Strengthen SpecMetrics as an engineering service for AI agents.
 
 ### Planned Capabilities
 
-* Advanced MCP Skills
-* Interactive semantic queries
-* Measurement explanation services
-* Specification exploration
-* AI-friendly semantic APIs
+- Advanced MCP Skills
+- Interactive semantic queries
+- Measurement explanation services
+- Specification exploration
+- AI-friendly semantic APIs
 
 ### Expected Outcome
 
@@ -3357,13 +3357,13 @@ Expand integration with engineering ecosystems.
 
 ### Planned Capabilities
 
-* Jira Publisher
-* Azure DevOps Publisher
-* SonarQube Publisher
-* Grafana integration
-* Power BI integration
-* Prometheus integration
-* Elastic integration
+- Jira Publisher
+- Azure DevOps Publisher
+- SonarQube Publisher
+- Grafana integration
+- Power BI integration
+- Prometheus integration
+- Elastic integration
 
 ### Expected Outcome
 
@@ -3379,11 +3379,11 @@ Support richer organizational knowledge sources.
 
 ### Planned Capabilities
 
-* PDF Rule Packs
-* Document ingestion
-* Organizational knowledge repositories
-* Semantic indexing
-* Versioned knowledge bases
+- PDF Rule Packs
+- Document ingestion
+- Organizational knowledge repositories
+- Semantic indexing
+- Versioned knowledge bases
 
 ### Expected Outcome
 
@@ -3399,12 +3399,12 @@ Deliver the first stable public platform.
 
 ### Expected Characteristics
 
-* Stable Canonical Functional Model
-* Stable Plugin SDK
-* Stable Plugin Contracts
-* Mature ecosystem
-* Comprehensive documentation
-* Long-term compatibility guarantees
+- Stable Canonical Functional Model
+- Stable Plugin SDK
+- Stable Plugin Contracts
+- Mature ecosystem
+- Comprehensive documentation
+- Long-term compatibility guarantees
 
 ### Expected Outcome
 
@@ -3418,16 +3418,16 @@ Beyond Release 1.0, SpecMetrics gradually evolves toward a broader Semantic Engi
 
 Potential future capabilities include:
 
-* Engineering Governance
-* AI-assisted Specification Review
-* Specification Refactoring
-* Functional Cost Estimation
-* Engineering Intelligence
-* Architecture Analysis
-* Compliance Analysis
-* Semantic Knowledge Graphs
-* Cross-project Analytics
-* Engineering Digital Twins
+- Engineering Governance
+- AI-assisted Specification Review
+- Specification Refactoring
+- Functional Cost Estimation
+- Engineering Intelligence
+- Architecture Analysis
+- Compliance Analysis
+- Semantic Knowledge Graphs
+- Cross-project Analytics
+- Engineering Digital Twins
 
 These capabilities are expected to reuse the Canonical Functional Model rather than replace it.
 
@@ -3443,11 +3443,11 @@ Adding new plugins.
 
 Examples:
 
-* SDD Frameworks
-* Measurement methodologies
-* Publishers
-* Exporters
-* Interfaces
+- SDD Frameworks
+- Measurement methodologies
+- Publishers
+- Exporters
+- Interfaces
 
 ---
 
@@ -3457,9 +3457,9 @@ Increasing the expressive power of the Canonical Functional Model.
 
 Examples:
 
-* additional semantic concepts;
-* richer relationships;
-* engineering knowledge.
+- additional semantic concepts;
+- richer relationships;
+- engineering knowledge.
 
 ---
 
@@ -3469,9 +3469,9 @@ Supporting increasingly sophisticated enterprise measurement policies.
 
 Examples:
 
-* Rule Packs;
-* enterprise governance;
-* shared repositories.
+- Rule Packs;
+- enterprise governance;
+- shared repositories.
 
 ---
 
@@ -3481,9 +3481,9 @@ Encouraging independent community contributions.
 
 Examples:
 
-* community plugins;
-* reference implementations;
-* integration libraries.
+- community plugins;
+- reference implementations;
+- integration libraries.
 
 ---
 
@@ -3770,15 +3770,15 @@ The maturity of SpecMetrics evolves through progressive achievement of measurabl
 
 Release 0.1 will be considered successful when all of the following objectives are achieved:
 
-* successful automated measurement of OpenSpec projects;
-* successful automated measurement of SpecKit projects;
-* deterministic measurement execution;
-* complete evidence traceability;
-* explainable measurement decisions;
-* successful CLI execution;
-* successful MCP execution;
-* structured export in supported formats;
-* successful OpenTelemetry publication.
+- successful automated measurement of OpenSpec projects;
+- successful automated measurement of SpecKit projects;
+- deterministic measurement execution;
+- complete evidence traceability;
+- explainable measurement decisions;
+- successful CLI execution;
+- successful MCP execution;
+- structured export in supported formats;
+- successful OpenTelemetry publication.
 
 ---
 
@@ -3786,12 +3786,12 @@ Release 0.1 will be considered successful when all of the following objectives a
 
 The long-term success of SpecMetrics is expected to be reflected through:
 
-* increasing community participation;
-* growing plugin ecosystem;
-* adoption by engineering organizations;
-* support for additional functional measurement methodologies;
-* reuse of the Canonical Functional Model by external projects;
-* emergence of complementary engineering tools built upon the platform.
+- increasing community participation;
+- growing plugin ecosystem;
+- adoption by engineering organizations;
+- support for additional functional measurement methodologies;
+- reuse of the Canonical Functional Model by external projects;
+- emergence of complementary engineering tools built upon the platform.
 
 These indicators demonstrate ecosystem maturity rather than simply product popularity.
 
@@ -3846,11 +3846,11 @@ High
 
 ### Mitigation
 
-* LLM-first architecture with deterministic downstream processing.
-* Canonical Functional Model normalization.
-* Explicit evidence preservation.
-* Explainable measurement pipeline.
-* Future support for multiple extraction providers.
+- LLM-first architecture with deterministic downstream processing.
+- Canonical Functional Model normalization.
+- Explicit evidence preservation.
+- Explainable measurement pipeline.
+- Future support for multiple extraction providers.
 
 ---
 
@@ -3866,9 +3866,9 @@ Medium
 
 ### Mitigation
 
-* Specification Adapter plugins.
-* Complete document reading instead of hardcoded parsers.
-* Framework-independent Canonical Functional Model.
+- Specification Adapter plugins.
+- Complete document reading instead of hardcoded parsers.
+- Framework-independent Canonical Functional Model.
 
 ---
 
@@ -3884,10 +3884,10 @@ High
 
 ### Mitigation
 
-* Evidence-based extraction.
-* Semantic validation.
-* Explicit confidence indicators.
-* Future Specification Quality Metrics.
+- Evidence-based extraction.
+- Semantic validation.
+- Explicit confidence indicators.
+- Future Specification Quality Metrics.
 
 ---
 
@@ -3905,11 +3905,11 @@ High
 
 ### Mitigation
 
-* Deterministic measurement engines.
-* End-to-end traceability.
-* Human-verifiable evidence.
-* Rule Packs.
-* Explainable measurement decisions.
+- Deterministic measurement engines.
+- End-to-end traceability.
+- Human-verifiable evidence.
+- Rule Packs.
+- Explainable measurement decisions.
 
 ---
 
@@ -3925,10 +3925,10 @@ High
 
 ### Mitigation
 
-* Rule Pack architecture.
-* External YAML configuration.
-* Organization-specific knowledge bases.
-* Future document-driven Rule Packs.
+- Rule Pack architecture.
+- External YAML configuration.
+- Organization-specific knowledge bases.
+- Future document-driven Rule Packs.
 
 ---
 
@@ -3946,11 +3946,11 @@ Medium
 
 ### Mitigation
 
-* Stable plugin contracts.
-* Plugin SDK.
-* Compatibility validation.
-* Versioned APIs.
-* Reference implementations.
+- Stable plugin contracts.
+- Plugin SDK.
+- Compatibility validation.
+- Versioned APIs.
+- Reference implementations.
 
 ---
 
@@ -3966,10 +3966,10 @@ High
 
 ### Mitigation
 
-* Versioned Canonical Functional Model.
-* Backward compatibility policy.
-* Public specification.
-* Controlled evolution process.
+- Versioned Canonical Functional Model.
+- Backward compatibility policy.
+- Public specification.
+- Controlled evolution process.
 
 ---
 
@@ -3987,11 +3987,11 @@ Medium
 
 ### Mitigation
 
-* Deterministic downstream processing.
-* Complete evidence traceability.
-* Explainability.
-* Transparent extraction providers.
-* Human-auditable results.
+- Deterministic downstream processing.
+- Complete evidence traceability.
+- Explainability.
+- Transparent extraction providers.
+- Human-auditable results.
 
 ---
 
@@ -4007,11 +4007,11 @@ Medium
 
 ### Mitigation
 
-* Plugin-first architecture.
-* Public SDK.
-* Comprehensive documentation.
-* Reference plugins.
-* Low contribution barrier.
+- Plugin-first architecture.
+- Public SDK.
+- Comprehensive documentation.
+- Reference plugins.
+- Low contribution barrier.
 
 ---
 
@@ -4029,10 +4029,10 @@ Medium
 
 ### Mitigation
 
-* Publisher Plugins.
-* Independent integration lifecycle.
-* Stable internal contracts.
-* Decoupled platform core.
+- Publisher Plugins.
+- Independent integration lifecycle.
+- Stable internal contracts.
+- Decoupled platform core.
 
 ---
 
@@ -4050,10 +4050,10 @@ Medium
 
 ### Mitigation
 
-* Incremental processing.
-* Cached semantic extraction.
-* Parallel document processing.
-* Future optimization strategies.
+- Incremental processing.
+- Cached semantic extraction.
+- Parallel document processing.
+- Future optimization strategies.
 
 ---
 
@@ -4071,11 +4071,11 @@ High
 
 ### Mitigation
 
-* Product Principles.
-* Plugin-oriented architecture.
-* Stable Canonical Functional Model.
-* Clearly defined Non Goals.
-* Architecture review before expanding the platform core.
+- Product Principles.
+- Plugin-oriented architecture.
+- Stable Canonical Functional Model.
+- Clearly defined Non Goals.
+- Architecture review before expanding the platform core.
 
 ---
 
@@ -4093,11 +4093,11 @@ Medium
 
 ### Mitigation
 
-* Modular architecture.
-* Independent plugin development.
-* Public roadmap.
-* Contributor documentation.
-* Automated testing.
+- Modular architecture.
+- Independent plugin development.
+- Public roadmap.
+- Contributor documentation.
+- Automated testing.
 
 ---
 
@@ -4127,12 +4127,12 @@ SpecMetrics intentionally adopts several architectural decisions that reduce lon
 
 These include:
 
-* a Canonical Functional Model that isolates semantic knowledge from measurement methodologies;
-* deterministic measurement engines separated from AI-assisted semantic extraction;
-* stable plugin contracts enabling independent ecosystem evolution;
-* Rule Packs for organizational customization without modifying core logic;
-* end-to-end traceability through evidence preservation;
-* versioned public specifications for long-term compatibility.
+- a Canonical Functional Model that isolates semantic knowledge from measurement methodologies;
+- deterministic measurement engines separated from AI-assisted semantic extraction;
+- stable plugin contracts enabling independent ecosystem evolution;
+- Rule Packs for organizational customization without modifying core logic;
+- end-to-end traceability through evidence preservation;
+- versioned public specifications for long-term compatibility.
 
 Rather than eliminating risk entirely, these decisions aim to localize change, preserve architectural stability and enable continuous evolution of the platform.
 
@@ -4142,12 +4142,12 @@ Rather than eliminating risk entirely, these decisions aim to localize change, p
 
 As the platform evolves, additional risks should be periodically assessed, including:
 
-* emerging Specification Driven Development frameworks;
-* new functional measurement methodologies;
-* advances in LLM capabilities;
-* enterprise governance requirements;
-* regulatory changes affecting software measurement;
-* ecosystem health and community participation.
+- emerging Specification Driven Development frameworks;
+- new functional measurement methodologies;
+- advances in LLM capabilities;
+- enterprise governance requirements;
+- regulatory changes affecting software measurement;
+- ecosystem health and community participation.
 
 Risk assessment is expected to become part of the project's regular architectural review process.
 
@@ -4199,14 +4199,14 @@ An LLM-first strategy allows the platform to reason about specifications semanti
 
 **Positive**
 
-* Framework evolution becomes easier to support.
-* New SDD frameworks require minimal adaptation.
-* Semantic understanding is resilient to document structure changes.
+- Framework evolution becomes easier to support.
+- New SDD frameworks require minimal adaptation.
+- Semantic understanding is resilient to document structure changes.
 
 **Negative**
 
-* AI providers introduce probabilistic behavior.
-* Semantic extraction quality depends on model capability.
+- AI providers introduce probabilistic behavior.
+- Semantic extraction quality depends on model capability.
 
 ---
 
@@ -4226,13 +4226,13 @@ Engineering measurements must remain reproducible, auditable and explainable.
 
 **Positive**
 
-* Reproducibility.
-* Regulatory suitability.
-* Easier testing.
+- Reproducibility.
+- Regulatory suitability.
+- Easier testing.
 
 **Negative**
 
-* Additional architectural layer between extraction and measurement.
+- Additional architectural layer between extraction and measurement.
 
 ---
 
@@ -4252,13 +4252,13 @@ It represents the stable engineering contract of the platform.
 
 **Positive**
 
-* Loose coupling.
-* Independent evolution.
-* Framework agnosticism.
+- Loose coupling.
+- Independent evolution.
+- Framework agnosticism.
 
 **Negative**
 
-* Initial investment in semantic modeling.
+- Initial investment in semantic modeling.
 
 ---
 
@@ -4276,13 +4276,13 @@ The long-term success of SpecMetrics depends on supporting new Specification Dri
 
 **Positive**
 
-* Ecosystem growth.
-* Independent evolution.
-* Community contributions.
+- Ecosystem growth.
+- Independent evolution.
+- Community contributions.
 
 **Negative**
 
-* Increased emphasis on API governance.
+- Increased emphasis on API governance.
 
 ---
 
@@ -4302,13 +4302,13 @@ Evidence is considered a first-class architectural artifact.
 
 **Positive**
 
-* Complete traceability.
-* Human verification.
-* Explainability.
+- Complete traceability.
+- Human verification.
+- Explainability.
 
 **Negative**
 
-* Larger internal data structures.
+- Larger internal data structures.
 
 ---
 
@@ -4328,13 +4328,13 @@ Customizations must not require modifications to deterministic measurement engin
 
 **Positive**
 
-* Organizational flexibility.
-* Engine stability.
-* Simplified maintenance.
+- Organizational flexibility.
+- Engine stability.
+- Simplified maintenance.
 
 **Negative**
 
-* Rule Pack governance becomes important.
+- Rule Pack governance becomes important.
 
 ---
 
@@ -4354,13 +4354,13 @@ SpecMetrics should behave as an engineering service rather than a standalone app
 
 **Positive**
 
-* Native AI integration.
-* IDE interoperability.
-* Agent-oriented workflows.
+- Native AI integration.
+- IDE interoperability.
+- Agent-oriented workflows.
 
 **Negative**
 
-* Additional interface maintenance.
+- Additional interface maintenance.
 
 ---
 
@@ -4380,9 +4380,9 @@ The CLI provides deterministic execution independently of AI tooling.
 
 **Positive**
 
-* CI/CD compatibility.
-* Automation.
-* Batch execution.
+- CI/CD compatibility.
+- Automation.
+- Batch execution.
 
 ---
 
@@ -4400,13 +4400,13 @@ Rather than creating direct integrations for every engineering platform, SpecMet
 
 **Positive**
 
-* Broad interoperability.
-* Vendor neutrality.
-* Reduced integration effort.
+- Broad interoperability.
+- Vendor neutrality.
+- Reduced integration effort.
 
 **Negative**
 
-* Consumers require OpenTelemetry infrastructure.
+- Consumers require OpenTelemetry infrastructure.
 
 ---
 
@@ -4426,12 +4426,12 @@ Local-first processing minimizes privacy and compliance concerns.
 
 **Positive**
 
-* Improved confidentiality.
-* Easier enterprise adoption.
+- Improved confidentiality.
+- Easier enterprise adoption.
 
 **Negative**
 
-* Local AI infrastructure may be required.
+- Local AI infrastructure may be required.
 
 ---
 
@@ -4451,13 +4451,13 @@ Markdown provides simplicity, version control compatibility and ease of experime
 
 **Positive**
 
-* Simple implementation.
-* Git-friendly.
-* Easy customization.
+- Simple implementation.
+- Git-friendly.
+- Easy customization.
 
 **Negative**
 
-* Existing organizational documentation requires manual conversion.
+- Existing organizational documentation requires manual conversion.
 
 ---
 
@@ -4479,13 +4479,13 @@ Additional semantic engineering capabilities can later be built upon the Canonic
 
 **Positive**
 
-* Clear product focus.
-* Reduced scope.
-* Stable foundation.
+- Clear product focus.
+- Reduced scope.
+- Stable foundation.
 
 **Negative**
 
-* Some planned capabilities are intentionally deferred.
+- Some planned capabilities are intentionally deferred.
 
 ---
 
@@ -4514,5 +4514,3 @@ The architectural decisions recorded in this appendix define the identity of Spe
 Future architectural evolution should reinforce these principles rather than contradict them.
 
 Any proposal that significantly alters one or more of these decisions should be treated as a strategic architectural change and reviewed through the project's governance process before implementation.
-
-

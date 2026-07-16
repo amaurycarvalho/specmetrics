@@ -145,9 +145,9 @@ concepts exist beyond this point. All downstream components consume only the CFM
 
 ---
 
-### F07 — Measurement Engine Plugin: APF (Priority: P1)
+### F07 — Measurement Engine Plugin: FPA (Priority: P1)
 
-**Description**: Deterministic IFPUG/APF (Function Point Analysis) measurement
+**Description**: Deterministic IFPUG/FPA (Function Point Analysis) measurement
 plugin. Consumes the Canonical Functional Model together with organizational
 Rule Packs to produce a functional size measurement. Every result is explainable
 through the evidence graph and applied rules.
@@ -310,7 +310,7 @@ F01 Kernel & Pipeline Engine
  │    │    └── F04 Semantic Extraction (LLM)
  │    │         └── F05 Evidence Graph
  │    │              ├── F06 Canonical Functional Model
- │    │              │    ├── F07 Measurement Engine (APF) ← F09 Rule Pack Engine
+ │    │              │    ├── F07 Measurement Engine (FPA) ← F09 Rule Pack Engine
  │    │              │    ├── F10 Export Layer
  │    │              │    └── F11 Publisher (OpenTelemetry)
  │    │              └── F14 Validation Pipeline
@@ -331,7 +331,7 @@ F15 Explain Measurement (depends on F07 + F05)
 F01 → F02 → F03 → F04 → F05 → F06 → F07 → F08
 
 Once complete: end-to-end `specmetrics measure` workflow works with a single
-LLM-based semantic provider and APF measurement.
+LLM-based semantic provider and FPA measurement.
 
 ### Phase 2 — Integration (P2 features)
 
@@ -383,6 +383,6 @@ all 14 principles are addressed across the Release 0.1 scope.
 - Feature numbering follows sequential ordering (001, 002, 003...) under `specs/`
 - Each feature will be refined independently before implementation
 - The release may be descoped if dependency analysis reveals excessive complexity
-- SPF and SNAP measurement plugins are deferred to post-MVP releases
+- SFP and SNAP measurement plugins are deferred to post-MVP releases
 - The SpecKit adapter is deferred to post-MVP (OpenSpec adapter scoped for MVP)
 - REST API services are deferred to post-MVP (CLI + MCP only)

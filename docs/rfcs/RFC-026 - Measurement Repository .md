@@ -130,7 +130,7 @@ Every persisted execution contains enough metadata to reproduce the original mea
 
 ## Methodology Independence
 
-The repository knows nothing about APF, COSMIC or SNAP internals.
+The repository knows nothing about FPA, COSMIC or SNAP internals.
 
 Methodologies are plugins.
 

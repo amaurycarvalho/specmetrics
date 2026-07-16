@@ -6,7 +6,7 @@
 
 ## Summary
 
-The Rule Pack Engine is a deterministic pipeline stage that loads external measurement policies from `.specify/rules/` and applies them to the Canonical Functional Model before the Measurement Engine runs. It supports exclusion rules, complexity threshold overrides, VAF configuration, and glossary overrides — all defined as declarative YAML files. The engine annotates every applied rule on the affected CFM elements, preserving full traceability for downstream explainability.
+The Rule Pack Engine is a deterministic pipeline stage that loads external measurement policies from `.specmetrics/rules/` and applies them to the Canonical Functional Model before the Measurement Engine runs. It supports exclusion rules, complexity threshold overrides, VAF configuration, and glossary overrides — all defined as declarative YAML files. The engine annotates every applied rule on the affected CFM elements, preserving full traceability for downstream explainability.
 
 ## Technical Context
 
@@ -14,7 +14,7 @@ The Rule Pack Engine is a deterministic pipeline stage that loads external measu
 
 **Primary Dependencies**: pydantic v2 (models), ruamel.yaml (Rule Pack parsing), structlog (logging), networkx (CFM graph operations)
 
-**Storage**: File system — Rule Packs are YAML files in `.specify/rules/`
+**Storage**: File system — Rule Packs are YAML files in `.specmetrics/rules/`
 
 **Testing**: pytest (unit + integration), with fixture Rule Packs and mock CFM inputs
 
@@ -72,7 +72,7 @@ specmetrics/
 │       └── model.py              # CanonicalFunctionalModel (existing)
 ├── plugins/
 │   ├── measurement/
-│   │   └── apf/
+│   │   └── fpa/
 │   │       ├── models.py         # Existing RulePack model → to be extracted/shared
 │   │       └── rule_applicator.py # Existing → to be refactored as consumer of engine output
 │   └── rule_pack/                 # NEW: Rule Pack Engine plugin

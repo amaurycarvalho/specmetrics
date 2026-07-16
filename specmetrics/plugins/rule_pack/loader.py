@@ -29,7 +29,7 @@ GSC_KEYS: list[str] = [
 
 
 class RulePackLoader:
-    def __init__(self, rules_dir: str = ".specify/rules") -> None:
+    def __init__(self, rules_dir: str = ".specmetrics/rules") -> None:
         self._rules_dir = Path(rules_dir)
 
     def discover_files(self) -> list[Path]:
@@ -64,7 +64,7 @@ class RulePackLoader:
         rule_pack = RulePack(
             id=pack_id,
             description=raw.get("description", ""),
-            methodology=raw.get("methodology", "APF"),
+            methodology=raw.get("methodology", "FPA"),
             glossary_overrides=raw.get("glossary_overrides", {}),
         )
 

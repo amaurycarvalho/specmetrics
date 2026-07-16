@@ -52,8 +52,10 @@ def _is_sensitive_value(value: Any) -> bool:
 
 
 def _mask_if_sensitive(value: Any, is_sensitive: bool) -> Any:
-    if is_sensitive and isinstance(value, SecretStr):
-        return value.get_secret_value() if False else "**********"
+    if is_sensitive:
+        if isinstance(value, SecretStr):
+            return "**********"
+        return "**********"
     return value
 
 
@@ -64,8 +66,9 @@ def _build_from_model(model: Any) -> list[DumpEntry]:
 
 
 def _walk_model(obj: Any, prefix: str, entries: list[DumpEntry]) -> None:
-    if hasattr(obj, "model_fields"):
-        for field_name, field_info in obj.model_fields.items():
+    cls = obj.__class__ if not isinstance(obj, type) else obj
+    if hasattr(cls, "model_fields"):
+        for field_name, field_info in cls.model_fields.items():
             full_key = f"{prefix}.{field_name}" if prefix else field_name
             value = getattr(obj, field_name)
             is_sensitive = _is_sensitive_value(value)
@@ -82,5 +85,5 @@ def _walk_model(obj: Any, prefix: str, entries: list[DumpEntry]) -> None:
                     is_sensitive=is_sensitive,
                 )
             )
-            if hasattr(value, "model_fields"):
+            if hasattr(value.__class__, "model_fields"):
                 _walk_model(value, full_key, entries)

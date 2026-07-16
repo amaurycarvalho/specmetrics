@@ -226,3 +226,13 @@ With multiple developers:
 - Stop at any checkpoint to validate story independently
 - US2 and US1 are both P1 and form the MVP — they are tightly coupled (US2 enables US1)
 - Phase 7 tests are optional but recommended for CI validation
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close gaps identified by `/speckit.converge` between the specified intent and the current implementation.
+
+- [x] T037 Populate `evidence_refs` in metric conversion — pass measurement evidence chain through to `TelemetryMetric` in `otel_publisher.py:convert_measurements()` per FR-012 (partial)
+- [x] T038 Consolidate duplicate `discover_publishers()` functions from `discovery.py` and `orchestrator.py` into a single implementation per cleanup (unrequested)
+- [x] T039 Fix `retry.py:with_exponential_backoff()` zero-attempt edge case to raise the original caught exception instead of `RuntimeError` per FR-007 (partial)

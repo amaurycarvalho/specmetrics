@@ -9,7 +9,7 @@ This guide provides runnable validation scenarios for the CFM Builder pipeline s
 - Python 3.13+ with `uv` or `pipx`
 - Project dependencies installed (`uv sync` or `pip install -e .`)
 - Evidence Graph stage (F05) implemented and operational
-- Test data: sample evidence graph JSONL files in `.evidence_graphs/`
+- Test data: sample evidence graph JSONL files in `.specmetrics/evidence_graphs/`
 
 ## Validation Scenarios
 
@@ -21,7 +21,7 @@ This guide provides runnable validation scenarios for the CFM Builder pipeline s
 ```bash
 # Generate a test evidence graph with known elements
 python -m specmetrics.tests.fixtures create-evidence-graph \
-  --output .evidence_graphs/test_run_001.jsonl \
+  --output .specmetrics/evidence_graphs/test_run_001.jsonl \
   --elements 10 \
   --include-types fact,entity,relationship,operation
 ```
@@ -43,7 +43,7 @@ python -m specmetrics kernel run --stages evidence_graph,canonical_model
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.graph_persistence import GraphStore
 
-evidence_graph = GraphStore.load(".evidence_graphs/test_run_001.jsonl")
+evidence_graph = GraphStore.load(".specmetrics/evidence_graphs/test_run_001.jsonl")
 cfm = build_canonical_model(evidence_graph)  # from builder module
 
 assert len(cfm.actors()) > 0
