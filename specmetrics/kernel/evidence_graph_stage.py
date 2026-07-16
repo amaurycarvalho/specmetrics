@@ -124,8 +124,9 @@ class EvidenceGraphStage:
         return self._stage_name
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
-        payload = event.payload
-        extraction_data = payload.get("results", {})
+        context = event.context
+        extraction_ctx = getattr(context, "extraction_result", None) or {}
+        extraction_data = extraction_ctx.get("results", {})
         run_id = str(int(event.timestamp.timestamp()))
         docs_covered: set[str] = set()
         node_count = 0
@@ -233,7 +234,6 @@ class EvidenceGraphStage:
         except Exception as exc:
             logger.warning("evidence_graph_save_failed", error=str(exc))
 
-        context = event.context
         return context.with_stage_output(
             field_name="evidence_graph",
             value=payload_out,

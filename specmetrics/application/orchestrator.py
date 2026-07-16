@@ -173,8 +173,11 @@ class PipelineOrchestrator:
             return []
 
         results: list[StageResult] = []
+        valid_stage_names = {s.value for s in StageName}
         for event_type in event_order:
             stage_name = _stage_name_from_event(event_type)
+            if stage_name not in valid_stage_names:
+                continue
             timing = ctx.diagnostics.stage_timings.get(stage_name)
             if timing is None:
                 results.append(

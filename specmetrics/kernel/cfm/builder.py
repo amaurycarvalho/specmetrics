@@ -197,7 +197,7 @@ class CfmBuilderStage:
             context=context,
             timestamp=datetime.now(timezone.utc),
         )
-        context = context.with_stage_output(field_name="canonical_model", value=payload, event=canonical_event)
+        context = context.with_stage_output(field_name="canonical_model", value=cfm, event=canonical_event)
         return context
 
 

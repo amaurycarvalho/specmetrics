@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
+
+import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
+from specmetrics.kernel.events import EventType, PipelineEvent
+from specmetrics.kernel.pipeline_context import PipelineContext
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 from .complexity import UFP_WEIGHTS
 from .counter import APFCounter
 from .explainer import MeasurementExplainer
 from .models import APFMeasurementResult, RulePack
+
+logger = structlog.get_logger(__name__)
 
 
 class APFMeasurementPlugin:
@@ -57,3 +64,59 @@ class APFMeasurementPlugin:
         result.explanations.extend(explainer.build_explanations(result))
 
         return result
+
+
+class APFMeasurementHandler:
+    @property
+    def handled_event_type(self) -> EventType:
+        return EventType.MEASUREMENT_COMPLETED
+
+    @property
+    def handler_id(self) -> str:
+        return "apf_measurement"
+
+    @property
+    def stage_name(self) -> str:
+        return "APF Measurement"
+
+    def handle(self, event: PipelineEvent) -> PipelineContext:
+        ctx = event.context
+        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+
+        if cfm is None:
+            logger.warning("apf_measurement_no_cfm", execution_id=str(ctx.execution_id))
+            return ctx
+
+        logger.info(
+            "apf_measurement_started",
+            execution_id=str(ctx.execution_id),
+        )
+
+        plugin = APFMeasurementPlugin()
+        result = plugin.measure(cfm)
+
+        payload: dict[str, Any] = {
+            "total_function_points": result.summary.total_ufp,
+            "breakdown": {ft: {"count": b.count, "total_ufp": b.total_ufp} for ft, b in result.summary.by_type.items()},
+            "complexity_distribution": [
+                {"function_type": c.function_type, "complexity": c.complexity, "count": c.count, "total_ufp": c.total_ufp}
+                for c in result.summary.complexity_distribution
+            ],
+            "function_counts": result.summary.by_type,
+            "complexity_counts": result.summary.by_complexity,
+        }
+
+        return ctx.with_stage_output("measurement_result", payload)
+
+
+def create_apf_measurement_metadata() -> PluginMetadata:
+    return PluginMetadata(
+        id="apf",
+        api_version="0.1.0",
+        plugin_type=PluginType.MEASUREMENT,
+        handled_event_types=(EventType.MEASUREMENT_COMPLETED,),
+        handler_factory=lambda: APFMeasurementHandler(),
+        name="APF Function Point Analysis",
+        description="IFPUG-approved Albrecht/APF Function Point measurement methodology",
+        version="0.1.0",
+    )

@@ -38,7 +38,9 @@ class ExtractionStage(EventHandler):
         return self._stage_name
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
-        documents = event.payload.get("documents", [])
+        context = event.context
+        docs_data = getattr(context, "adapter_result", None) or {}
+        documents = docs_data.get("documents", [])
         results: dict[str, ExtractionResult] = {}
         total_elements = 0
         documents_processed = 0
@@ -79,7 +81,6 @@ class ExtractionStage(EventHandler):
             "documents_skipped": documents_skipped,
         }
 
-        context = event.context
         return context.with_stage_output(
             field_name="extraction_result",
             value=payload,

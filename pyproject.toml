@@ -28,10 +28,19 @@ specmetrics = "specmetrics.cli.app:app"
 specmetrics-mcp = "specmetrics.mcp.server:main"
 
 [project.entry-points."specmetrics.plugins.measurement"]
-apf = "specmetrics.plugins.measurement.apf.plugin:APFMeasurementPlugin"
+apf = "specmetrics.plugins.measurement.apf.plugin:create_apf_measurement_metadata"
 
 [project.entry-points."specmetrics.plugins.rule_pack"]
-rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:RulePackEnginePlugin"
+rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:create_rule_pack_engine_metadata"
+
+[project.entry-points."specmetrics.plugins.stage"]
+extraction = "specmetrics.plugins.stage.extraction:create_extraction_metadata"
+evidence_graph = "specmetrics.plugins.stage.evidence_graph:create_evidence_graph_metadata"
+cfm_builder = "specmetrics.plugins.stage.cfm_builder:create_cfm_builder_metadata"
+
+[project.entry-points."specmetrics.plugins.adapter"]
+documents_validated = "specmetrics.plugins.adapter.openspec:create_documents_validated_metadata"
+canonical_model_built = "specmetrics.plugins.adapter.openspec:create_canonical_model_built_metadata"
 
 [project.entry-points."specmetrics.exporters"]
 json = "specmetrics.plugins.exporter.json_exporter:JsonExporter"

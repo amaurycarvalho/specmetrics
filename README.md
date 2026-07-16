@@ -69,6 +69,12 @@ specmetrics plugins list --help
 
 ## 👨‍🔧 For Developers
 
+### How to Get the Source Code
+
+```bash
+git clone https://github.com/amaurycarvalho/specmetrics.git
+```
+
 ### How to Build
 
 ```bash
@@ -86,6 +92,8 @@ make lint test
 ```bash
 .venv/bin/specmetrics --help
 ```
+
+---
 
 ### Know More
 

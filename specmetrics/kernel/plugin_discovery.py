@@ -35,13 +35,27 @@ class PluginDiscovery:
         return descriptors
 
 
+PLUGIN_GROUPS = [
+    "specmetrics.plugins",
+    "specmetrics.plugins.measurement",
+    "specmetrics.plugins.rule_pack",
+    "specmetrics.plugins.stage",
+    "specmetrics.plugins.adapter",
+    "specmetrics.plugins.semantic",
+]
+
+
 def load_plugins(
     registry: PluginRegistry,
     validator: PluginValidator | None = None,
-    group: str = "specmetrics.plugins",
+    group: str | None = None,
 ) -> PluginRegistry:
     discovery = PluginDiscovery()
-    descriptors = discovery.scan(group=group)
+    descriptors: list[PluginDescriptor] = []
+
+    groups = [group] if group else PLUGIN_GROUPS
+    for g in groups:
+        descriptors.extend(discovery.scan(group=g))
 
     if validator is None:
         validator = PluginValidator()

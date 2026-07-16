@@ -253,3 +253,5 @@ __pycache__/
 
 # Specmetrics
 .evidence_graphs/
+specmetrics-output.text
+

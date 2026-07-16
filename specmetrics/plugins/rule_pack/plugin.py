@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 
+from typing import Callable
+
 import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.cfm.models import RulePack, RuleValidationReport, ValidationError
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 from .annotator import RuleAnnotator
 from .applicator import RuleApplicator
@@ -130,3 +133,16 @@ class RulePackEnginePlugin:
         if not packs:
             return cfm
         return self._applicator.apply(cfm, packs)
+
+
+def create_rule_pack_engine_metadata() -> PluginMetadata:
+    return PluginMetadata(
+        id="rule_pack_engine",
+        api_version="0.1.0",
+        plugin_type=PluginType.MEASUREMENT,
+        handled_event_types=(EventType.RULE_PACK_APPLIED,),
+        handler_factory=lambda: RulePackEnginePlugin(),
+        name="Rule Pack Engine",
+        description="Loads, validates, and applies Rule Pack rules to the Canonical Functional Model",
+        version="0.1.0",
+    )
