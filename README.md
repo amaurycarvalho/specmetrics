@@ -75,14 +75,19 @@ specmetrics plugins list --help
 make build
 ```
 
-### How to Test
+#### Linting and Unit Testing
 
 ```bash
-make lint
-make test
+make lint test
 ```
 
-### Know more
+### How to Test (e2e)
+
+```bash
+.venv/bin/specmetrics --help
+```
+
+### Know More
 
 You can find more information [here](docs/PRD.md) and [here](docs/system%20designs/Foundation.md).
 
