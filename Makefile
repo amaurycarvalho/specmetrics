@@ -6,18 +6,18 @@ PIP = $(VENV)/bin/pip
 
 $(VENV):
 	python3 -m venv $(VENV)
-	$(PIP) install --upgrade pip
+	$(PIP) install -q --upgrade pip
 
 venv: $(VENV)
 
 test: $(VENV)
-	$(PIP) install -e .[dev]
+	$(PIP) install -q -e .[dev]
 	$(PYTHON) -m pytest --tb=short
 
 build: $(VENV)
-	$(PIP) install build
+	$(PIP) install -q build
 	$(PYTHON) -m build
 
 lint: $(VENV)
-	$(PIP) install ruff
+	$(PIP) install -q ruff
 	$(VENV)/bin/ruff check .

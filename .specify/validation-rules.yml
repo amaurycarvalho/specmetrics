@@ -1,0 +1,21 @@
+rules:
+  file-readable:
+    enabled: true
+  file-not-empty:
+    enabled: true
+  parseable-markdown:
+    enabled: true
+  mandatory-sections-exist:
+    enabled: true
+    sections:
+      - "User Scenarios & Testing"
+      - "Constitution Check"
+      - "Requirements"
+      - "Success Criteria"
+      - "Assumptions"
+  no-unknown-sections:
+    enabled: true
+  constitution-engaged:
+    enabled: true
+  constitution-compliance-notes:
+    enabled: true

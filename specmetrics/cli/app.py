@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 
+from .commands.validate import validate_cli
 from .config_commands import config_app
 from .export_commands import export_app
 from .measure import run_measure
@@ -19,6 +20,7 @@ app = typer.Typer(
 app.add_typer(plugins_app)
 app.add_typer(export_app)
 app.add_typer(config_app)
+app.add_typer(validate_cli)
 
 
 @app.command()

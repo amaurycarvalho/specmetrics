@@ -11,6 +11,7 @@ from .pipeline_context import PipelineContext
 class EventType(enum.Enum):
     REPOSITORY_LOADED = "repository_loaded"
     DOCUMENTS_DISCOVERED = "documents_discovered"
+    DOCUMENTS_VALIDATED = "documents_validated"
     SEMANTIC_EXTRACTION_COMPLETED = "semantic_extraction_completed"
     EVIDENCE_GRAPH_BUILT = "evidence_graph_built"
     CANONICAL_MODEL_BUILT = "canonical_model_built"

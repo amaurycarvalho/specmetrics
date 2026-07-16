@@ -16,6 +16,7 @@ logger = structlog.get_logger(__name__)
 CANONICAL_EVENT_ORDER: list[EventType] = [
     EventType.REPOSITORY_LOADED,
     EventType.DOCUMENTS_DISCOVERED,
+    EventType.DOCUMENTS_VALIDATED,
     EventType.SEMANTIC_EXTRACTION_COMPLETED,
     EventType.EVIDENCE_GRAPH_BUILT,
     EventType.CANONICAL_MODEL_BUILT,
