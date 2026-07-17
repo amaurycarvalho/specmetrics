@@ -23,8 +23,8 @@
 
 **Purpose**: Create package directories for the new plugin and tests
 
-- [ ] T001 Create `specmetrics/plugins/measurement/cognitive_points/` package with `__init__.py`
-- [ ] T002 Create test package directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
+- [X] T001 Create `specmetrics/plugins/measurement/cognitive_points/` package with `__init__.py`
+- [X] T002 Create test package directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
 
 ---
 
@@ -34,23 +34,23 @@
 
 ### Models & Classifier
 
-- [ ] T003 [P] Create all measurement models (`CognitivePointsMeasurement`, `SpecificationReviewEffort`, `FunctionalValidationEffort`, `CognitiveContribution`, `FibonacciNormalizationResult`, `MeasurementMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/cognitive_points/models.py`
-- [ ] T004 [P] Create Bloom classifier with default element-type-to-level mapping from FR-014a in `specmetrics/plugins/measurement/cognitive_points/bloom_classifier.py`
-- [ ] T005 [P] Create Fibonacci normalizer with configurable threshold table and default scale (1, 3, 5, 8, 13, 20, 40, 100) in `specmetrics/plugins/measurement/cognitive_points/fibonacci_normalizer.py`
+- [X] T003 [P] Create all measurement models (`CognitivePointsMeasurement`, `SpecificationReviewEffort`, `FunctionalValidationEffort`, `CognitiveContribution`, `FibonacciNormalizationResult`, `MeasurementMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/cognitive_points/models.py`
+- [X] T004 [P] Create Bloom classifier with default element-type-to-level mapping from FR-014a in `specmetrics/plugins/measurement/cognitive_points/bloom_classifier.py`
+- [X] T005 [P] Create Fibonacci normalizer with configurable threshold table and default scale (1, 3, 5, 8, 13, 20, 40, 100) in `specmetrics/plugins/measurement/cognitive_points/fibonacci_normalizer.py`
 
 ### Calibration
 
-- [ ] T006 [P] Create `CognitiveCalibrationProfile`, `BloomClassification`, `FibonacciNormalizationProfile` models with built-in defaults in `specmetrics/plugins/measurement/cognitive_points/calibration.py`
-- [ ] T007 Create calibration YAML loader in `specmetrics/plugins/measurement/cognitive_points/calibration.py` — parse with ruamel.yaml, merge overrides onto built-in defaults
+- [X] T006 [P] Create `CognitiveCalibrationProfile`, `BloomClassification`, `FibonacciNormalizationProfile` models with built-in defaults in `specmetrics/plugins/measurement/cognitive_points/calibration.py`
+- [X] T007 Create calibration YAML loader in `specmetrics/plugins/measurement/cognitive_points/calibration.py` — parse with ruamel.yaml, merge overrides onto built-in defaults
 
 ### Calculator & Explainer
 
-- [ ] T008 Create core three-stage calculator in `specmetrics/plugins/measurement/cognitive_points/calculator.py` — `calculate(cfm, csm, calibration) -> CognitivePointsMeasurement`: (1) classify each element via Bloom classifier, apply Bloom weight, sum per component, (2) add components for raw score, (3) normalize via Fibonacci normalizer
-- [ ] T009 Create explainer in `specmetrics/plugins/measurement/cognitive_points/explainer.py` — build ranked contribution list, bloom_breakdown per component, identify top contributors per FR-023
+- [X] T008 Create core three-stage calculator in `specmetrics/plugins/measurement/cognitive_points/calculator.py` — `calculate(cfm, csm, calibration) -> CognitivePointsMeasurement`: (1) classify each element via Bloom classifier, apply Bloom weight, sum per component, (2) add components for raw score, (3) normalize via Fibonacci normalizer
+- [X] T009 Create explainer in `specmetrics/plugins/measurement/cognitive_points/explainer.py` — build ranked contribution list, bloom_breakdown per component, identify top contributors per FR-023
 
 ### Package Wiring
 
-- [ ] T010 Wire up `specmetrics/plugins/measurement/cognitive_points/__init__.py` to export `CognitivePointsMeasurement`, `CognitivePointsPlugin`, `create_cognitive_points_measurement_metadata`
+- [X] T010 Wire up `specmetrics/plugins/measurement/cognitive_points/__init__.py` to export `CognitivePointsMeasurement`, `CognitivePointsPlugin`, `create_cognitive_points_measurement_metadata`
 
 **Parallel opportunities**: T003, T004, T005, T006 are independent. T008 depends on T003–T007. T009 depends on T003.
 
@@ -66,18 +66,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Unit test for measurement model construction, serialization, and validation rules in `tests/unit/test_cognitive_points_models.py`
-- [ ] T012 [P] [US1] Unit test for Bloom classifier — each element type maps to correct level, unknown types use default, custom overrides in `tests/unit/test_cognitive_points_bloom.py`
-- [ ] T013 [P] [US1] Unit test for Fibonacci normalizer — raw scores map to correct output values, boundary conditions, max clamping in `tests/unit/test_cognitive_points_normalizer.py`
-- [ ] T014 [P] [US1] Unit test for calculator — known CFM + CSM produces expected Cognitive Points via three-stage formula in `tests/unit/test_cognitive_points_calculator.py`
-- [ ] T015 [P] [US1] Unit test for determinism — identical inputs produce identical results in `tests/unit/test_cognitive_points_calculator.py`
-- [ ] T016 [P] [US1] Unit test for graceful degradation — missing CSM produces 0 specification review effort + warning in `tests/unit/test_cognitive_points_calculator.py`
-- [ ] T017 [P] [US1] Unit test for calibration loading — default weights loaded, YAML overrides specific keys in `tests/unit/test_cognitive_points_calibration.py`
+- [X] T011 [P] [US1] Unit test for measurement model construction, serialization, and validation rules in `tests/unit/test_cognitive_points_models.py`
+- [X] T012 [P] [US1] Unit test for Bloom classifier — each element type maps to correct level, unknown types use default, custom overrides in `tests/unit/test_cognitive_points_bloom.py`
+- [X] T013 [P] [US1] Unit test for Fibonacci normalizer — raw scores map to correct output values, boundary conditions, max clamping in `tests/unit/test_cognitive_points_normalizer.py`
+- [X] T014 [P] [US1] Unit test for calculator — known CFM + CSM produces expected Cognitive Points via three-stage formula in `tests/unit/test_cognitive_points_calculator.py`
+- [X] T015 [P] [US1] Unit test for determinism — identical inputs produce identical results in `tests/unit/test_cognitive_points_calculator.py`
+- [X] T016 [P] [US1] Unit test for graceful degradation — missing CSM produces 0 specification review effort + warning in `tests/unit/test_cognitive_points_calculator.py`
+- [X] T017 [P] [US1] Unit test for calibration loading — default weights loaded, YAML overrides specific keys in `tests/unit/test_cognitive_points_calibration.py`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Create Cognitive Points plugin (`CognitivePointsPlugin`, `CognitivePointsHandler`, `create_cognitive_points_measurement_metadata`) in `specmetrics/plugins/measurement/cognitive_points/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM and CSM from context, invokes calculator, stores result payload
-- [ ] T019 [US1] Register Cognitive Points entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
+- [X] T018 [US1] Create Cognitive Points plugin (`CognitivePointsPlugin`, `CognitivePointsHandler`, `create_cognitive_points_measurement_metadata`) in `specmetrics/plugins/measurement/cognitive_points/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM and CSM from context, invokes calculator, stores result payload
+- [X] T019 [US1] Register Cognitive Points entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
 
 **Checkpoint**: US1 is fully functional — the pipeline can produce deterministic Cognitive Points with Bloom classification and Fibonacci normalization.
 
@@ -91,13 +91,13 @@
 
 ### Tests for User Story 2
 
-- [ ] T020 [P] [US2] Unit test for explainer — ranked contribution list, bloom_breakdown per component, top contributors identified in `tests/unit/test_cognitive_points_calculator.py`
-- [ ] T021 [P] [US2] Unit test for every contribution preserving evidence reference and Bloom level in `tests/unit/test_cognitive_points_models.py`
-- [ ] T022 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema, report structure per FR-023 in `tests/contract/test_cognitive_points_measurement.py`
+- [X] T020 [P] [US2] Unit test for explainer — ranked contribution list, bloom_breakdown per component, top contributors identified in `tests/unit/test_cognitive_points_calculator.py`
+- [X] T021 [P] [US2] Unit test for every contribution preserving evidence reference and Bloom level in `tests/unit/test_cognitive_points_models.py`
+- [X] T022 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema, report structure per FR-023 in `tests/contract/test_cognitive_points_measurement.py`
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement `top_contributors` method in explainer and `bloom_breakdown` aggregation in `specmetrics/plugins/measurement/cognitive_points/explainer.py`
+- [X] T023 [US2] Implement `top_contributors` method in explainer and `bloom_breakdown` aggregation in `specmetrics/plugins/measurement/cognitive_points/explainer.py`
 
 **Checkpoint**: US2 is fully functional — the report includes per-element Bloom classification, cognitive weights, and ranked top contributors.
 
@@ -111,12 +111,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Unit test for aggregation — summing multiple CognitivePointsMeasurement produces correct totals in `tests/unit/test_cognitive_points_calculator.py`
-- [ ] T025 [US3] Integration test for pipeline — CFM + CSM → Cognitive Points stored in `ctx.measurement_result` with correct payload format in `tests/integration/test_cognitive_points_pipeline.py`
+- [X] T024 [P] [US3] Unit test for aggregation — summing multiple CognitivePointsMeasurement produces correct totals in `tests/unit/test_cognitive_points_calculator.py`
+- [X] T025 [US3] Integration test for pipeline — CFM + CSM → Cognitive Points stored in `ctx.measurement_result` with correct payload format in `tests/integration/test_cognitive_points_pipeline.py`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Implement `aggregate(measurements: list[CognitivePointsMeasurement]) -> CognitivePointsMeasurement` helper in `specmetrics/plugins/measurement/cognitive_points/models.py`
+- [X] T026 [US3] Implement `aggregate(measurements: list[CognitivePointsMeasurement]) -> CognitivePointsMeasurement` helper in `specmetrics/plugins/measurement/cognitive_points/models.py`
 
 **Checkpoint**: US3 is fully functional — Cognitive Points measurements can be aggregated across multiple specifications for backlog-level capacity forecasting.
 
@@ -126,10 +126,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T027 [P] Run full test suite — verify `pytest tests/unit/test_cognitive_points_*.py tests/contract/test_cognitive_points_measurement.py tests/integration/test_cognitive_points_pipeline.py` all pass
-- [ ] T028 [P] Run performance benchmark — verify SC-006 (500 elements in under 2 seconds) with `pytest tests/unit/test_cognitive_points_calculator.py -k test_performance_500_elements --benchmark-only`
-- [ ] T029 [P] Run quickstart validation scenarios from `specs/023-measurement-engine-cognitive-points/quickstart.md`
-- [ ] T030 Code cleanup — remove unused imports, verify `ruff check` passes
+- [X] T027 [P] Run full test suite — verify `pytest tests/unit/test_cognitive_points_*.py tests/contract/test_cognitive_points_measurement.py tests/integration/test_cognitive_points_pipeline.py` all pass
+- [X] T028 [P] Run performance benchmark — verify SC-006 (500 elements in under 2 seconds) with `pytest tests/unit/test_cognitive_points_calculator.py -k test_performance_500_elements --benchmark-only`
+- [X] T029 [P] Run quickstart validation scenarios from `specs/023-measurement-engine-cognitive-points/quickstart.md`
+- [X] T030 Code cleanup — remove unused imports, verify `ruff check` passes
 
 ---
 
@@ -167,6 +167,14 @@ pytest tests/unit/test_cognitive_points_models.py tests/unit/test_cognitive_poin
 # While those run, start the plugin implementation:
 # (tasks T018, T019)
 ```
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close remaining gaps identified during convergence assessment.
+
+- [X] T031 Fix `_resolve_calibration` in `specmetrics/plugins/measurement/cognitive_points/plugin.py` — use `isinstance(metadata, CognitiveCalibrationProfile)` instead of bare `if metadata is not None` guard, matching the Token Points handler pattern per FR-019 (partial, CRITICAL)
 
 ---
 

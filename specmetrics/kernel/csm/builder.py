@@ -243,7 +243,7 @@ def _find_linked(
 
 class CsmBuilderStage:
     def __init__(self) -> None:
-        self._handled_event_type = EventType.EVIDENCE_GRAPH_BUILT
+        self._handled_event_type = EventType.CANONICAL_SPECIFICATION_MODEL_BUILT
         self._handler_id = "csm_builder_stage"
         self._stage_name = "canonical_spec_model"
 

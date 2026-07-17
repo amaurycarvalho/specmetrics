@@ -136,7 +136,7 @@ class TestFingerprintNode:
     def test_fingerprint_handles_none_section(self) -> None:
         fp = fingerprint_node("doc1", None, "text", "fact")
         assert isinstance(fp, str)
-        assert len(fp) == 64
+        assert len(fp) == 36
 
 
 class TestGraphNodeModel:

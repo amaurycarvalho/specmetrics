@@ -107,6 +107,11 @@ class GraphBackend(Protocol):
 
 def fingerprint_node(document_id: str, section_id: str | None, text: str, semantic_type: str | None) -> str:
     import hashlib
+    import uuid
 
     raw = f"{document_id}|{section_id or ''}|{text}|{semantic_type or ''}"
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    full_hash = hashlib.sha256(raw.encode("utf-8")).digest()
+    b = bytearray(full_hash[:16])
+    b[6] = (b[6] & 0x0f) | 0x40
+    b[8] = (b[8] & 0x3f) | 0x80
+    return str(uuid.UUID(bytes=bytes(b)))
