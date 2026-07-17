@@ -54,6 +54,26 @@ from .plugin_discovery import PluginDiscovery, load_plugins
 from .plugin_metadata import PluginMetadata, PluginStatus, PluginType
 from .plugin_registry import PluginDescriptor, PluginRegistry
 from .plugin_validation import PluginValidator, ValidationResult
+from .semantic_extraction_engine import (
+    SemanticEngineFactory,
+    SemanticExtractionEngine,
+)
+from .deterministic_engine import DeterministicSemanticEngine
+from .litellm_engine import ExtractionError, LiteLLMSemanticEngine
+from .engine_rule import ExtractionRule, RulePackLoader
+from .engine_patterns import PatternLibrary
+from .engine_visitors import (
+    CodeBlockVisitor,
+    EmphasisVisitor,
+    ExtractionState,
+    HeadingVisitor,
+    LinkVisitor,
+    ListVisitor,
+    Observation,
+    ParagraphVisitor,
+    QuoteVisitor,
+    TableVisitor,
+)
 
 __all__ = [
     "Actor",
@@ -123,6 +143,24 @@ __all__ = [
     "StageErrorRecord",
     "StageStatus",
     "StageTiming",
+    "CodeBlockVisitor",
+    "DeterministicSemanticEngine",
+    "EmphasisVisitor",
+    "ExtractionError",
+    "ExtractionRule",
+    "ExtractionState",
+    "HeadingVisitor",
+    "LiteLLMSemanticEngine",
+    "LinkVisitor",
+    "ListVisitor",
+    "Observation",
+    "ParagraphVisitor",
+    "PatternLibrary",
+    "QuoteVisitor",
+    "RulePackLoader",
+    "SemanticEngineFactory",
+    "SemanticExtractionEngine",
+    "TableVisitor",
     "ValidationResult",
     "load_plugins",
 ]

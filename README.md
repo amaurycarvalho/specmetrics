@@ -79,6 +79,9 @@ specmetrics config llm set openai --model gpt-4o --api-key sk-...
 
 # Or use environment variables
 export SPECMETRICS_LLM_API_KEY=sk-...
+
+# Or use a deterministic semantic engine (default)
+specmetrics config llm set none
 ```
 
 > **Note**: LLM configuration is stored in `~/.config/specmetrics/config.yml`, outside your project directory. If no API key is configured, the pipeline falls back to structural extraction.

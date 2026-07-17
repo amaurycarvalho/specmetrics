@@ -1,0 +1,100 @@
+rules:
+  - id: "user-story-keywords"
+    name: "User Story"
+    pattern:
+      keywords: ["As a", "I want", "So that"]
+      min_matches: 2
+    type: "entity"
+    confidence: 0.95
+    priority: 80
+
+  - id: "user-story-section"
+    name: "User Story Section"
+    pattern:
+      heading: "User Story"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "gwt"
+    name: "Given/When/Then"
+    pattern:
+      keywords: ["Given", "When", "Then"]
+      min_matches: 2
+    type: "fact"
+    confidence: 0.85
+    priority: 70
+
+  - id: "requirement-shall"
+    name: "Requirement Statement"
+    pattern:
+      keywords: ["Must", "Shall", "Should", "Will"]
+      min_matches: 1
+    type: "fact"
+    confidence: 0.70
+    priority: 60
+
+  - id: "business-rule"
+    name: "Business Rule"
+    pattern:
+      keywords: ["If", "Then"]
+      min_matches: 2
+    type: "fact"
+    confidence: 0.70
+    priority: 60
+
+  - id: "actors-section"
+    name: "Actors Section"
+    pattern:
+      heading: "Actors"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "business-rules-section"
+    name: "Business Rules Section"
+    pattern:
+      heading: "Business Rules"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "constraints-section"
+    name: "Constraints Section"
+    pattern:
+      heading: "Constraints"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "assumptions-section"
+    name: "Assumptions Section"
+    pattern:
+      heading: "Assumptions"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "decisions-section"
+    name: "Decisions Section"
+    pattern:
+      heading: "Decisions"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "glossary-section"
+    name: "Glossary Terms"
+    pattern:
+      heading: "Glossary"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
+
+  - id: "acceptance-criteria-section"
+    name: "Acceptance Criteria Section"
+    pattern:
+      heading: "Acceptance Criteria"
+    type: "entity"
+    confidence: 1.00
+    priority: 90
