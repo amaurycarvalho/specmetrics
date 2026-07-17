@@ -152,10 +152,15 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
 
         elements: list[ExtractedElement] = []
         for obs in state.observations:
-            heading_text = obs.context.get("section_type", "")
+            section_type = obs.context.get("section_type", "")
+            heading_text = obs.content
             content = obs.content
             doc_id = doc.id
             section_id = obs.location[1]
+
+            candidates: list[str] = [section_type, heading_text]
+            if section_type != heading_text:
+                candidates.append(heading_text)
 
             matched_rule = None
             for rule in rules:
@@ -163,16 +168,16 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
 
                 heading_match = pat.get("heading", "")
                 if heading_match:
-                    if isinstance(heading_match, str) and heading_match.lower() == heading_text.lower():
-                        matched_rule = rule
-                        break
-                    if isinstance(heading_match, list):
-                        for h in heading_match:
-                            if isinstance(h, str) and h.lower() == heading_text.lower():
+                    match_values = [heading_match] if isinstance(heading_match, str) else heading_match
+                    for h_candidate in candidates:
+                        for m in match_values:
+                            if isinstance(m, str) and m.lower() == h_candidate.lower():
                                 matched_rule = rule
                                 break
                         if matched_rule:
                             break
+                    if matched_rule:
+                        break
                     continue
 
                 keywords = pat.get("keywords", [])
@@ -195,6 +200,7 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
                     document_id=doc_id,
                     section_id=section_id,
                     text=content,
+                    rule_id=matched_rule.id,
                 )
                 element = ExtractedElement(
                     id=elem_id,
@@ -206,6 +212,26 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
                 elements.append(element)
 
         return elements, 0
+
+    def _load_framework_packs(self, documents: list[Document]) -> list[str]:
+        detected: set[str] = set()
+        rules_dir = Path(__file__).parent / "rules"
+        for doc in documents:
+            dt = (doc.document_type or "").lower()
+            if "openspec" in dt or dt in ("use_case", "actor", "requirement"):
+                detected.add("openspec")
+            if "speckit" in dt or dt in ("feature", "scenario", "background"):
+                detected.add("speckit")
+        packs: list[str] = []
+        if "openspec" in detected:
+            osp = str(rules_dir / "openspec_rules.yaml")
+            if Path(osp).exists():
+                packs.append(osp)
+        if "speckit" in detected:
+            skp = str(rules_dir / "speckit_rules.yaml")
+            if Path(skp).exists():
+                packs.append(skp)
+        return packs
 
     def extract(self, documents: list[Document]) -> ExtractionResult:
         if not documents:
@@ -222,6 +248,7 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
             )
 
         start = time.monotonic()
+        self._extra_rule_packs.extend(self._load_framework_packs(documents))
         rules = self._load_rules()
 
         all_elements: list[ExtractedElement] = []

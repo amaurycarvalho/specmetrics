@@ -13,6 +13,7 @@ class EvidenceReference(BaseModel):
     document_id: str = Field(min_length=1)
     section_id: Optional[str] = None
     text: str = Field(min_length=1)
+    rule_id: str = ""
 
 
 class ExtractedElement(BaseModel):

@@ -1,0 +1,32 @@
+rules:
+  - id: "openspec-use-case"
+    name: "OpenSpec Use Case"
+    pattern:
+      heading: "Use Case"
+    type: "entity"
+    confidence: 1.00
+    priority: 95
+
+  - id: "openspec-actor"
+    name: "OpenSpec Actor"
+    pattern:
+      heading: "Actor"
+    type: "entity"
+    confidence: 1.00
+    priority: 95
+
+  - id: "openspec-requirement"
+    name: "OpenSpec Requirement"
+    pattern:
+      heading: "Requirement"
+    type: "entity"
+    confidence: 1.00
+    priority: 95
+
+  - id: "openspec-precondition"
+    name: "OpenSpec Precondition"
+    pattern:
+      heading: "Precondition"
+    type: "fact"
+    confidence: 1.00
+    priority: 95

@@ -1,0 +1,24 @@
+rules:
+  - id: "speckit-feature"
+    name: "SpecKit Feature"
+    pattern:
+      heading: "Feature"
+    type: "entity"
+    confidence: 1.00
+    priority: 95
+
+  - id: "speckit-scenario"
+    name: "SpecKit Scenario"
+    pattern:
+      heading: "Scenario"
+    type: "entity"
+    confidence: 1.00
+    priority: 95
+
+  - id: "speckit-background"
+    name: "SpecKit Background"
+    pattern:
+      heading: "Background"
+    type: "entity"
+    confidence: 1.00
+    priority: 95

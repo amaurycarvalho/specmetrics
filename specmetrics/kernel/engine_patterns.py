@@ -40,10 +40,14 @@ class PatternLibrary:
     def match(self, observations: list[Observation]) -> list[ExtractedElement]:
         elements: list[ExtractedElement] = []
         for obs in observations:
-            heading_text = obs.context.get("section_type", "")
+            section_type = obs.context.get("section_type", "")
             content = obs.content
             doc_id = obs.location[0] if obs.location else ""
             section_id = obs.location[1] if obs.location else None
+
+            candidates: list[str] = [section_type, content]
+            if section_type != content:
+                candidates.append(content)
 
             matched_rule: ExtractionRule | None = None
             for rule in self._rules:
@@ -51,16 +55,16 @@ class PatternLibrary:
 
                 heading_match = pat.get("heading", "")
                 if heading_match:
-                    if isinstance(heading_match, str) and heading_match.lower() == heading_text.lower():
-                        matched_rule = rule
-                        break
-                    if isinstance(heading_match, list):
-                        for h in heading_match:
-                            if isinstance(h, str) and h.lower() == heading_text.lower():
+                    match_values = [heading_match] if isinstance(heading_match, str) else heading_match
+                    for h_candidate in candidates:
+                        for m in match_values:
+                            if isinstance(m, str) and m.lower() == h_candidate.lower():
                                 matched_rule = rule
                                 break
                         if matched_rule:
                             break
+                    if matched_rule:
+                        break
                     continue
 
                 keywords = pat.get("keywords", [])
