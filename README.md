@@ -27,9 +27,14 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 
 - [Function Point Analysis (IFPUG/FPA)](https://ifpug.org/ifpug-standards/fpa);
 - [Simplified Function Point (IFPUG/SFP)](https://ifpug.org/ifpug-standards/sfp);
-- [Software Non-Functional Assessment Process (IFPUG/SNAP)](https://ifpug.org/ifpug-standards/snap).
+- [Software Non-Functional Assessment Process (IFPUG/SNAP)](https://ifpug.org/ifpug-standards/snap);
+- [Business Complexity Points (CI&T/Itaú/BCP)](https://ciandt.com/us/en-us/complexitypoints)
+- [Story Points (Modified Fibonacci)](https://framework.scaledagile.com/blog/glossary_term/modified-fibonacci-sequence);
+- [T-shirt Sizing](https://asana.com/pt/resources/t-shirt-sizing);
+- Token Points;
+- Cognitive Points.
 
-> **Note:** The current implementations of **FPA**, **SFP**, and **SNAP** are **draft prototypes** intended solely for demonstration and validation purposes. They provide a highly simplified approximation of their respective measurement methodologies and **do not constitute complete or standards-compliant implementations**. Full conformance with the official specifications requires additional counting rules, validation logic, and methodological details beyond the scope of these prototype implementations.
+> **Note:** The current implementations of **BCP**, **FPA**, **SFP**, and **SNAP** are **draft prototypes** intended solely for demonstration and validation purposes. They provide a highly simplified approximation of their respective measurement methodologies and **do not constitute complete or standards-compliant implementations**. Full conformance with the official specifications requires additional counting rules, validation logic, and methodological details beyond the scope of these prototype implementations.
 
 ### Output Formats
 

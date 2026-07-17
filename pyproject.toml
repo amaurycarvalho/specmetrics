@@ -29,6 +29,7 @@ specmetrics-mcp = "specmetrics.mcp.server:main"
 
 [project.entry-points."specmetrics.plugins.measurement"]
 fpa = "specmetrics.plugins.measurement.fpa.plugin:create_fpa_measurement_metadata"
+sfp = "specmetrics.plugins.measurement.sfp.plugin:create_sfp_measurement_metadata"
 
 [project.entry-points."specmetrics.plugins.rule_pack"]
 rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:create_rule_pack_engine_metadata"
@@ -55,3 +56,6 @@ include = ["specmetrics*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (e.g., performance benchmarks); deselected by default",
+]
