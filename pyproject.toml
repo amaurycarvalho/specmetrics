@@ -34,6 +34,7 @@ snap = "specmetrics.plugins.measurement.snap.plugin:create_snap_measurement_meta
 token_points = "specmetrics.plugins.measurement.token_points.plugin:create_token_points_measurement_metadata"
 cognitive_points = "specmetrics.plugins.measurement.cognitive_points.plugin:create_cognitive_points_measurement_metadata"
 storypoints = "specmetrics.plugins.measurement.storypoints.plugin:create_storypoints_measurement_metadata"
+tshirt = "specmetrics.plugins.measurement.tshirt.plugin:create_tshirt_measurement_metadata"
 
 [project.entry-points."specmetrics.plugins.rule_pack"]
 rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:create_rule_pack_engine_metadata"

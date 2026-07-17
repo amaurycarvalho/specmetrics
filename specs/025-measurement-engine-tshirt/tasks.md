@@ -23,9 +23,9 @@
 
 **Purpose**: Create package directories for the new plugin
 
-- [ ] T001 Create `specmetrics/plugins/measurement/tshirt/` package with `__init__.py`
-- [ ] T002 [P] Add `TSHIRT_CLASSIFICATION_COMPLETED` to `EventType` enum in `specmetrics/kernel/events.py`
-- [ ] T003 [P] Add `TSHIRT_CLASSIFICATION_COMPLETED` to `CANONICAL_EVENT_ORDER` after `MEASUREMENT_COMPLETED` in `specmetrics/kernel/pipeline_engine.py`
+- [X] T001 Create `specmetrics/plugins/measurement/tshirt/` package with `__init__.py`
+- [X] T002 [P] Add `TSHIRT_CLASSIFICATION_COMPLETED` to `EventType` enum in `specmetrics/kernel/events.py`
+- [X] T003 [P] Add `TSHIRT_CLASSIFICATION_COMPLETED` to `CANONICAL_EVENT_ORDER` after `MEASUREMENT_COMPLETED` in `specmetrics/kernel/pipeline_engine.py`
 
 **Parallel opportunities**: T002 and T003 are independent.
 
@@ -35,10 +35,10 @@
 
 **Purpose**: Core models, classifier, explainer — MUST complete before any user story
 
-- [ ] T004 [P] Create all measurement models (`TShirtMeasurementResult`, `FunctionalWorkItem`, `TShirtSize`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/tshirt/models.py`
-- [ ] T005 Create classifier with default mapping table (FR-015) and validation rules (no gaps, no overlaps, non-empty ranges) in `specmetrics/plugins/measurement/tshirt/classifier.py`
-- [ ] T006 Create explainer in `specmetrics/plugins/measurement/tshirt/explainer.py` — per-item evidence_refs assembly, distribution aggregation, mapping_rule traceability
-- [ ] T007 Wire up `specmetrics/plugins/measurement/tshirt/__init__.py` to export `TShirtMeasurementResult`, `TShirtPlugin`, `create_tshirt_measurement_metadata`
+- [X] T004 [P] Create all measurement models (`TShirtMeasurementResult`, `FunctionalWorkItem`, `TShirtSize`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/tshirt/models.py`
+- [X] T005 Create classifier with default mapping table (FR-015) and validation rules (no gaps, no overlaps, non-empty ranges) in `specmetrics/plugins/measurement/tshirt/classifier.py`
+- [X] T006 Create explainer in `specmetrics/plugins/measurement/tshirt/explainer.py` — per-item evidence_refs assembly, distribution aggregation, mapping_rule traceability
+- [X] T007 Wire up `specmetrics/plugins/measurement/tshirt/__init__.py` to export `TShirtMeasurementResult`, `TShirtPlugin`, `create_tshirt_measurement_metadata`
 
 **Parallel opportunities**: T004 and T005 are independent. T006 depends on T004.
 
@@ -54,17 +54,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Unit test for model construction and serialization in `tests/unit/test_tshirt_models.py`
-- [ ] T009 [P] [US1] Unit test for classifier — default mapping produces correct sizes for all SP values (1→XS, 2→S, 3→S, 5→M, 8→M, 13→L, 20→XL, 40→XXL, 100→XXL) in `tests/unit/test_tshirt_classifier.py`
-- [ ] T010 [P] [US1] Unit test for classifier validation — overlapping ranges rejected, incomplete mapping rejected in `tests/unit/test_tshirt_classifier.py`
-- [ ] T011 [P] [US1] Unit test for determinism — identical SP input produces identical classifications in `tests/unit/test_tshirt_classifier.py`
-- [ ] T012 [P] [US1] Unit test for missing SP result — returns empty result with warnings in `tests/unit/test_tshirt_classifier.py`
-- [ ] T013 [P] [US1] Unit test for empty SP result — zero items, empty distribution, no errors in `tests/unit/test_tshirt_classifier.py`
+- [X] T008 [P] [US1] Unit test for model construction and serialization in `tests/unit/test_tshirt_models.py`
+- [X] T009 [P] [US1] Unit test for classifier — default mapping produces correct sizes for all SP values (1→XS, 2→S, 3→S, 5→M, 8→M, 13→L, 20→XL, 40→XXL, 100→XXL) in `tests/unit/test_tshirt_classifier.py`
+- [X] T010 [P] [US1] Unit test for classifier validation — overlapping ranges rejected, incomplete mapping rejected in `tests/unit/test_tshirt_classifier.py`
+- [X] T011 [P] [US1] Unit test for determinism — identical SP input produces identical classifications in `tests/unit/test_tshirt_classifier.py`
+- [X] T012 [P] [US1] Unit test for missing SP result — returns empty result with warnings in `tests/unit/test_tshirt_classifier.py`
+- [X] T013 [P] [US1] Unit test for empty SP result — zero items, empty distribution, no errors in `tests/unit/test_tshirt_classifier.py`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Create T-Shirt plugin (`TShirtPlugin`, `TShirtHandler`, `create_tshirt_measurement_metadata`) in `specmetrics/plugins/measurement/tshirt/plugin.py` — handler subscribes to `TSHIRT_CLASSIFICATION_COMPLETED`, reads `ctx.measurement_result`, invokes classifier, stores result payload
-- [ ] T015 [US1] Register T-Shirt entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
+- [X] T014 [US1] Create T-Shirt plugin (`TShirtPlugin`, `TShirtHandler`, `create_tshirt_measurement_metadata`) in `specmetrics/plugins/measurement/tshirt/plugin.py` — handler subscribes to `TSHIRT_CLASSIFICATION_COMPLETED`, reads `ctx.measurement_result`, invokes classifier, stores result payload
+- [X] T015 [US1] Register T-Shirt entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
 
 **Checkpoint**: US1 is fully functional — the pipeline classifies every work item into a T-Shirt Size.
 
@@ -78,12 +78,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Unit test for explainer — per-item mapping_rule, evidence_refs, distribution aggregation in `tests/unit/test_tshirt_classifier.py`
-- [ ] T017 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema per FR-025 in `tests/contract/test_tshirt_measurement.py`
+- [X] T016 [P] [US2] Unit test for explainer — per-item mapping_rule, evidence_refs, distribution aggregation in `tests/unit/test_tshirt_classifier.py`
+- [X] T017 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema per FR-025 in `tests/contract/test_tshirt_measurement.py`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implement explainer detail per FR-025 — mapping_rule, story_point_value, evidence_refs, distribution in `specmetrics/plugins/measurement/tshirt/explainer.py`
+- [X] T018 [US2] Implement explainer detail per FR-025 — mapping_rule, story_point_value, evidence_refs, distribution in `specmetrics/plugins/measurement/tshirt/explainer.py`
 
 **Checkpoint**: US2 is fully functional — every classification includes originating SP value, applied mapping rule, and evidence references.
 
@@ -97,12 +97,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Unit test for custom mapping override — 5-level scale (XS–XL) with custom SP ranges in `tests/unit/test_tshirt_classifier.py`
-- [ ] T020 [P] [US3] Unit test for invalid override — rejected overlapping ranges, rejected incomplete mapping in `tests/unit/test_tshirt_classifier.py`
+- [X] T019 [P] [US3] Unit test for custom mapping override — 5-level scale (XS–XL) with custom SP ranges in `tests/unit/test_tshirt_classifier.py`
+- [X] T020 [P] [US3] Unit test for invalid override — rejected overlapping ranges, rejected incomplete mapping in `tests/unit/test_tshirt_classifier.py`
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Implement Rule Pack override integration in classifier — accept optional mapping override from CFM annotations, validate before applying in `specmetrics/plugins/measurement/tshirt/classifier.py`
+- [X] T021 [US3] Implement Rule Pack override integration in classifier — accept optional mapping override from CFM annotations, validate before applying in `specmetrics/plugins/measurement/tshirt/classifier.py`
 
 **Checkpoint**: US3 is fully functional — organizations can replace the mapping table via Rule Packs without code changes.
 
@@ -116,11 +116,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T022 [US4] Integration test for pipeline — CFM → Story Points → T-Shirt Sizing, `ctx.measurement_result` contains T-Shirt output, plugin auto-discovered via entry point in `tests/integration/test_tshirt_pipeline.py`
+- [X] T022 [US4] Integration test for pipeline — CFM → Story Points → T-Shirt Sizing, `ctx.measurement_result` contains T-Shirt output, plugin auto-discovered via entry point in `tests/integration/test_tshirt_pipeline.py`
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] Implement OpenTelemetry metrics — classification duration histogram, classified items gauge, distribution histogram following SFP pattern in `specmetrics/plugins/measurement/tshirt/plugin.py`
+- [X] T023 [US4] Implement OpenTelemetry metrics — classification duration histogram, classified items gauge, distribution histogram following SFP pattern in `specmetrics/plugins/measurement/tshirt/plugin.py`
 
 **Checkpoint**: US4 is fully functional — plugin auto-discovers, executes after Story Points, and emits observability metrics.
 
@@ -130,10 +130,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T024 [P] Run full test suite — verify `pytest tests/unit/test_tshirt_*.py tests/contract/test_tshirt_measurement.py tests/integration/test_tshirt_pipeline.py` all pass
-- [ ] T025 [P] Run performance benchmark — verify SC-003 (500 FPs in under 1 second) with `pytest tests/unit/test_tshirt_classifier.py -k test_performance_500_fps --benchmark-only`
-- [ ] T026 [P] Run quickstart validation scenarios from `specs/025-measurement-engine-tshirt/quickstart.md`
-- [ ] T027 Code cleanup — remove unused imports, verify `ruff check` passes
+- [X] T024 [P] Run full test suite — verify `pytest tests/unit/test_tshirt_*.py tests/contract/test_tshirt_measurement.py tests/integration/test_tshirt_pipeline.py` all pass
+- [X] T025 [P] Run performance benchmark — verify SC-003 (500 FPs in under 1 second) with `pytest tests/unit/test_tshirt_classifier.py -k test_performance_500_fps --benchmark-only`
+- [X] T026 [P] Run quickstart validation scenarios from `specs/025-measurement-engine-tshirt/quickstart.md`
+- [X] T027 Code cleanup — remove unused imports, verify `ruff check` passes
 
 ---
 
