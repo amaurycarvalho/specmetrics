@@ -30,9 +30,9 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 **Purpose**: Create directory structure and scaffolding for the SNAP measurement plugin.
 
-- [ ] T001 Create `specmetrics/plugins/measurement/snap/` package with `__init__.py`
-- [ ] T002 [P] Create `tests/unit/measurement/snap/` directory structure
-- [ ] T003 [P] Create `tests/integration/measurement/snap/` directory structure
+- [X] T001 Create `specmetrics/plugins/measurement/snap/` package with `__init__.py`
+- [X] T002 [P] Create `tests/unit/measurement/snap/` directory structure
+- [X] T003 [P] Create `tests/integration/measurement/snap/` directory structure
 
 ---
 
@@ -42,9 +42,9 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 [P] Define SNAP assessment Pydantic models in `specmetrics/plugins/measurement/snap/models.py` — `SNAPMeasurementResult`, `CategoryAssessment`, `AssessedItem`, `AssessmentSummary`, `CategoryBreakdown`, `AssessmentExplanation`, `AssessmentWarning`, `AssessmentError`, `EvidenceRef` per `data-model.md`
-- [ ] T005 [P] Implement `MeasurementPlugin` Protocol class in `specmetrics/plugins/measurement/snap/plugin.py` with `plugin_id()`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)` methods per contract in `contracts/measurement-plugin-interface.md`
-- [ ] T006 [P] Implement default assessment category registry in `specmetrics/plugins/measurement/snap/models.py` — define the four default SNAP categories (Presentation, Data Operations, Operational Capabilities, Technical Interaction) with SemVer version strings, category IDs, and fixed contribution value slots. Covers FR-011, FR-012, FR-013, FR-015.
+- [X] T004 [P] Define SNAP assessment Pydantic models in `specmetrics/plugins/measurement/snap/models.py` — `SNAPMeasurementResult`, `CategoryAssessment`, `AssessedItem`, `AssessmentSummary`, `CategoryBreakdown`, `AssessmentExplanation`, `AssessmentWarning`, `AssessmentError`, `EvidenceRef` per `data-model.md`
+- [X] T005 [P] Implement `MeasurementPlugin` Protocol class in `specmetrics/plugins/measurement/snap/plugin.py` with `plugin_id()`, `supported_methodology()`, `supported_function_types()`, and `measure(cfm, rule_pack)` methods per contract in `contracts/measurement-plugin-interface.md`
+- [X] T006 [P] Implement default assessment category registry in `specmetrics/plugins/measurement/snap/models.py` — define the four default SNAP categories (Presentation, Data Operations, Operational Capabilities, Technical Interaction) with SemVer version strings, category IDs, and fixed contribution value slots. Covers FR-011, FR-012, FR-013, FR-015.
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -58,21 +58,21 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 ### Tests for User Story 1
 
-- [ ] T007 [P] [US1] Unit test for assessment candidate identification from semantic metadata markers in `tests/unit/measurement/snap/test_assessor.py` — verify CFM nodes with markers like `presentation_interface` and `data_operation` are identified. Covers FR-016.
-- [ ] T008 [P] [US1] Unit test for candidate-to-category classification in `tests/unit/measurement/snap/test_assessor.py` — verify each semantic marker maps to the correct assessment category per data-model.md classification mapping. Covers FR-011.
-- [ ] T009 [P] [US1] Unit test for fixed contribution value assignment per category in `tests/unit/measurement/snap/test_assessor.py` — verify each assessed item gets the correct contribution value for its category. Covers FR-020.
-- [ ] T010 [P] [US1] Unit test for empty CFM returning zero counts in `tests/unit/measurement/snap/test_assessor.py` — covers Edge Cases: Empty CFM.
-- [ ] T011 [P] [US1] Unit test for duplicate candidate merging in `tests/unit/measurement/snap/test_assessor.py` — verify duplicate CFM elements (matching node ID + content fingerprint) are merged into a single AssessedItem with warning. Covers FR-017.
-- [ ] T012 [P] [US1] Unit test for deterministic output (byte-identical on repeated execution) in `tests/unit/measurement/snap/test_assessor.py` — covers SC-001.
-- [ ] T013 [P] [US1] Unit test for single-category item assignment in `tests/unit/measurement/snap/test_assessor.py` — verify each item belongs to exactly one category. Covers FR-012.
-- [ ] T014 [P] [US1] Unit test for missing semantic metadata handling in `tests/unit/measurement/snap/test_assessor.py` — verify items missing required metadata produce reports as unresolved warnings. Covers FR-024, Edge Cases: Missing presentation/operational metadata.
+- [X] T007 [P] [US1] Unit test for assessment candidate identification from semantic metadata markers in `tests/unit/measurement/snap/test_assessor.py` — verify CFM nodes with markers like `presentation_interface` and `data_operation` are identified. Covers FR-016.
+- [X] T008 [P] [US1] Unit test for candidate-to-category classification in `tests/unit/measurement/snap/test_assessor.py` — verify each semantic marker maps to the correct assessment category per data-model.md classification mapping. Covers FR-011.
+- [X] T009 [P] [US1] Unit test for fixed contribution value assignment per category in `tests/unit/measurement/snap/test_assessor.py` — verify each assessed item gets the correct contribution value for its category. Covers FR-020.
+- [X] T010 [P] [US1] Unit test for empty CFM returning zero counts in `tests/unit/measurement/snap/test_assessor.py` — covers Edge Cases: Empty CFM.
+- [X] T011 [P] [US1] Unit test for duplicate candidate merging in `tests/unit/measurement/snap/test_assessor.py` — verify duplicate CFM elements (matching node ID + content fingerprint) are merged into a single AssessedItem with warning. Covers FR-017.
+- [X] T012 [P] [US1] Unit test for deterministic output (byte-identical on repeated execution) in `tests/unit/measurement/snap/test_assessor.py` — covers SC-001.
+- [X] T013 [P] [US1] Unit test for single-category item assignment in `tests/unit/measurement/snap/test_assessor.py` — verify each item belongs to exactly one category. Covers FR-012.
+- [X] T014 [P] [US1] Unit test for missing semantic metadata handling in `tests/unit/measurement/snap/test_assessor.py` — verify items missing required metadata produce reports as unresolved warnings. Covers FR-024, Edge Cases: Missing presentation/operational metadata.
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] Implement `SNAPAssessor` class in `specmetrics/plugins/measurement/snap/assessor.py` — scans CFM nodes for semantic metadata markers; maps each marker to an assessment category using the classification table; assigns fixed contribution values per category; creates `AssessedItem` entries with evidence refs; merges duplicates by CFM node ID + content fingerprint (SHA-256). Covers FR-011, FR-012, FR-013, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-024.
-- [ ] T016 [US1] Wire basic assessment flow in `specmetrics/plugins/measurement/snap/plugin.py` — `measure()` method creates `SNAPAssessor`, invokes it against the CFM, populates `SNAPMeasurementResult` with `CategoryAssessment` groups, `AssessedItem` entries, and `AssessmentSummary`, returns the result. Covers FR-001, FR-002, FR-003, FR-004, FR-006, FR-010.
-- [ ] T017 [US1] Handle edge cases in `specmetrics/plugins/measurement/snap/assessor.py` — zero-count result for empty CFM; missing presentation/operational metadata produce warnings; unsupported interaction types produce unresolved warnings. Covers Edge Cases.
-- [ ] T018 [US1] Integration test: full assessment with a synthetic CFM in `tests/integration/measurement/snap/test_full_assessment.py` — create a CFM with known semantic metadata markers, run assessment, verify category breakdowns, item counts, total SNAP, and evidence presence.
+- [X] T015 [US1] Implement `SNAPAssessor` class in `specmetrics/plugins/measurement/snap/assessor.py` — scans CFM nodes for semantic metadata markers; maps each marker to an assessment category using the classification table; assigns fixed contribution values per category; creates `AssessedItem` entries with evidence refs; merges duplicates by CFM node ID + content fingerprint (SHA-256). Covers FR-011, FR-012, FR-013, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-024.
+- [X] T016 [US1] Wire basic assessment flow in `specmetrics/plugins/measurement/snap/plugin.py` — `measure()` method creates `SNAPAssessor`, invokes it against the CFM, populates `SNAPMeasurementResult` with `CategoryAssessment` groups, `AssessedItem` entries, and `AssessmentSummary`, returns the result. Covers FR-001, FR-002, FR-003, FR-004, FR-006, FR-010.
+- [X] T017 [US1] Handle edge cases in `specmetrics/plugins/measurement/snap/assessor.py` — zero-count result for empty CFM; missing presentation/operational metadata produce warnings; unsupported interaction types produce unresolved warnings. Covers Edge Cases.
+- [X] T018 [US1] Integration test: full assessment with a synthetic CFM in `tests/integration/measurement/snap/test_full_assessment.py` — create a CFM with known semantic metadata markers, run assessment, verify category breakdowns, item counts, total SNAP, and evidence presence.
 
 **Checkpoint**: US1 complete — basic SNAP assessment works end-to-end with default category definitions and contribution values.
 
@@ -86,16 +86,16 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Unit test for evidence trail preservation in `tests/unit/measurement/snap/test_assessor.py` — verify each `AssessedItem.evidence_refs` contains the originating CFM element's evidence. Covers FR-030, FR-031.
-- [ ] T020 [P] [US2] Unit test for category-specific evidence in `tests/unit/measurement/snap/test_assessor.py` — verify evidence refs include the category context. Covers FR-022.
-- [ ] T021 [P] [US2] Unit test for assessment explanation completeness in `tests/unit/measurement/snap/test_plugin.py` — verify each `AssessmentExplanation` includes `identification_reason`, `contribution_reason`, and `evidence_chain`. Covers FR-030.
+- [X] T019 [P] [US2] Unit test for evidence trail preservation in `tests/unit/measurement/snap/test_assessor.py` — verify each `AssessedItem.evidence_refs` contains the originating CFM element's evidence. Covers FR-030, FR-031.
+- [X] T020 [P] [US2] Unit test for category-specific evidence in `tests/unit/measurement/snap/test_assessor.py` — verify evidence refs include the category context. Covers FR-022.
+- [X] T021 [P] [US2] Unit test for assessment explanation completeness in `tests/unit/measurement/snap/test_plugin.py` — verify each `AssessmentExplanation` includes `identification_reason`, `contribution_reason`, and `evidence_chain`. Covers FR-030.
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Implement `AssessmentExplainer` class in `specmetrics/plugins/measurement/snap/explainer.py` — builds `AssessmentExplanation` for each `AssessedItem` with `identification_reason` (why CFM semantic marker maps to this category), `contribution_reason` (default value or Rule Pack override), `rule_exceptions` (if any), and `evidence_chain` tracing: spec section → evidence graph → CFM element → assessed item. Covers FR-030, FR-031, FR-032, FR-022.
-- [ ] T023 [US2] Integrate explainer into `plugin.py` — after assessor runs, invoke `AssessmentExplainer` to populate `SNAPMeasurementResult.explanations`. Covers FR-030.
-- [ ] T024 [US2] Integrate evidence reference propagation into `assessor.py` — each `AssessedItem` copies `EvidenceRef` from the originating CFM element's evidence field. Covers FR-030.
-- [ ] T025 [US2] Integration test: verify evidence trail completeness in `tests/integration/measurement/snap/test_full_assessment.py` — assess a CFM with known evidence refs, verify every item has non-empty evidence chain.
+- [X] T022 [P] [US2] Implement `AssessmentExplainer` class in `specmetrics/plugins/measurement/snap/explainer.py` — builds `AssessmentExplanation` for each `AssessedItem` with `identification_reason` (why CFM semantic marker maps to this category), `contribution_reason` (default value or Rule Pack override), `rule_exceptions` (if any), and `evidence_chain` tracing: spec section → evidence graph → CFM element → assessed item. Covers FR-030, FR-031, FR-032, FR-022.
+- [X] T023 [US2] Integrate explainer into `plugin.py` — after assessor runs, invoke `AssessmentExplainer` to populate `SNAPMeasurementResult.explanations`. Covers FR-030.
+- [X] T024 [US2] Integrate evidence reference propagation into `assessor.py` — each `AssessedItem` copies `EvidenceRef` from the originating CFM element's evidence field. Covers FR-030.
+- [X] T025 [US2] Integration test: verify evidence trail completeness in `tests/integration/measurement/snap/test_full_assessment.py` — assess a CFM with known evidence refs, verify every item has non-empty evidence chain.
 
 **Checkpoint**: US2 complete — all assessed items are explainable with evidence trails.
 
@@ -109,20 +109,20 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 ### Tests for User Story 3
 
-- [ ] T026 [P] [US3] Unit test for Rule Pack exclusion of entire assessment category in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-025.
-- [ ] T027 [P] [US3] Unit test for Rule Pack exclusion of individual items by CFM element ID in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-026.
-- [ ] T028 [P] [US3] Unit test for Rule Pack redefinition of inclusion policies (custom semantic marker → category mapping) in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-027.
-- [ ] T029 [P] [US3] Unit test for contribution value override per category in `tests/unit/measurement/snap/test_rule_applicator.py` — verify Rule Pack can change the fixed value per category.
-- [ ] T030 [P] [US3] Unit test that Rule Pack cannot modify the deterministic algorithm in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-028.
-- [ ] T031 [P] [US3] Unit test that all Rule Pack adjustments are reported in output in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-029.
-- [ ] T032 [P] [US3] Unit test for FR-023: excluded assessment candidates reported in output in `tests/unit/measurement/snap/test_rule_applicator.py`.
-- [ ] T033 [P] [US3] Unit test for SC-006: Invalid Rule Pack generates warnings, does not prevent assessment in `tests/unit/measurement/snap/test_rule_applicator.py`.
+- [X] T026 [P] [US3] Unit test for Rule Pack exclusion of entire assessment category in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-025.
+- [X] T027 [P] [US3] Unit test for Rule Pack exclusion of individual items by CFM element ID in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-026.
+- [X] T028 [P] [US3] Unit test for Rule Pack redefinition of inclusion policies (custom semantic marker → category mapping) in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-027.
+- [X] T029 [P] [US3] Unit test for contribution value override per category in `tests/unit/measurement/snap/test_rule_applicator.py` — verify Rule Pack can change the fixed value per category.
+- [X] T030 [P] [US3] Unit test that Rule Pack cannot modify the deterministic algorithm in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-028.
+- [X] T031 [P] [US3] Unit test that all Rule Pack adjustments are reported in output in `tests/unit/measurement/snap/test_rule_applicator.py` — covers FR-029.
+- [X] T032 [P] [US3] Unit test for FR-023: excluded assessment candidates reported in output in `tests/unit/measurement/snap/test_rule_applicator.py`.
+- [X] T033 [P] [US3] Unit test for SC-006: Invalid Rule Pack generates warnings, does not prevent assessment in `tests/unit/measurement/snap/test_rule_applicator.py`.
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Implement `RulePackApplicator` class in `specmetrics/plugins/measurement/snap/rule_applicator.py` — loads and validates Rule Pack YAML; applies category exclusions, item exclusions (by ID or name pattern), inclusion policy redefinitions (custom marker→category mapping), and contribution value overrides. Excluded items marked as `excluded=True` with zero contribution but preserved in output. Invalid Rule Packs generate warnings without aborting. Covers FR-025, FR-026, FR-027, FR-028, FR-029, FR-023.
-- [ ] T035 [US3] Integrate RulePackApplicator into `plugin.py` — `measure()` loads the Rule Pack (if provided), passes it to `SNAPAssessor` via `RulePackApplicator`, applies rules after candidate identification, and populates `rule_applied` and warnings in the output. Covers FR-005.
-- [ ] T036 [US3] Integration test: full assessment with Rule Pack in `tests/integration/measurement/snap/test_full_assessment.py` — apply a Rule Pack that excludes a category and overrides values, verify output reflects all adjustments.
+- [X] T034 [US3] Implement `RulePackApplicator` class in `specmetrics/plugins/measurement/snap/rule_applicator.py` — loads and validates Rule Pack YAML; applies category exclusions, item exclusions (by ID or name pattern), inclusion policy redefinitions (custom marker→category mapping), and contribution value overrides. Excluded items marked as `excluded=True` with zero contribution but preserved in output. Invalid Rule Packs generate warnings without aborting. Covers FR-025, FR-026, FR-027, FR-028, FR-029, FR-023.
+- [X] T035 [US3] Integrate RulePackApplicator into `plugin.py` — `measure()` loads the Rule Pack (if provided), passes it to `SNAPAssessor` via `RulePackApplicator`, applies rules after candidate identification, and populates `rule_applied` and warnings in the output. Covers FR-005.
+- [X] T036 [US3] Integration test: full assessment with Rule Pack in `tests/integration/measurement/snap/test_full_assessment.py` — apply a Rule Pack that excludes a category and overrides values, verify output reflects all adjustments.
 
 **Checkpoint**: US3 complete — organizational policies can customize SNAP assessment via external Rule Packs.
 
@@ -136,17 +136,17 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 ### Tests for User Story 4
 
-- [ ] T037 [P] [US4] Unit test for plugin discovery via `specmetrics.plugins.measurement` entry point in `tests/unit/measurement/snap/test_plugin.py` — covers FR-007. Verifies SC-005.
-- [ ] T038 [P] [US4] Unit test for `MeasurementCompleted` event emission in `tests/unit/measurement/snap/test_plugin.py` — verify the plugin emits the measurement event with `SNAPMeasurementResult` payload. Covers FR-034.
-- [ ] T039 [P] [US4] Unit test for incremental recomputation — only modified candidates recalculated in `tests/unit/measurement/snap/test_assessor.py` — covers FR-036, FR-037. Verifies SC-004.
+- [X] T037 [P] [US4] Unit test for plugin discovery via `specmetrics.plugins.measurement` entry point in `tests/unit/measurement/snap/test_plugin.py` — covers FR-007. Verifies SC-005.
+- [X] T038 [P] [US4] Unit test for `MeasurementCompleted` event emission in `tests/unit/measurement/snap/test_plugin.py` — verify the plugin emits the measurement event with `SNAPMeasurementResult` payload. Covers FR-034.
+- [X] T039 [P] [US4] Unit test for incremental recomputation — only modified candidates recalculated in `tests/unit/measurement/snap/test_assessor.py` — covers FR-036, FR-037. Verifies SC-004.
 
 ### Implementation for User Story 4
 
-- [ ] T040 [US4] Register `pyproject.toml` entry point for SNAP plugin — add `[project.entry-points."specmetrics.plugins.measurement"] snap = "specmetrics.plugins.measurement.snap:SNAPMeasurementPlugin"`. Covers FR-007.
-- [ ] T041 [US4] Implement event emission in `plugin.py` — `measure()` emits `MeasurementCompleted` event with `SNAPMeasurementResult` payload. Covers FR-034.
-- [ ] T042 [US4] Implement asynchronous execution support in `plugin.py` — the measure method signature accepts an async execution flag and returns a future/coroutine. Covers FR-035.
-- [ ] T043 [US4] Implement incremental recomputation in `assessor.py` — accept a previous assessment result and a list of modified CFM element IDs; only recalculate those candidates. Covers FR-036, FR-037. Verifies SC-004.
-- [ ] T044 [US4] Integration test: full pipeline execution with SNAP plugin in `tests/integration/measurement/snap/test_full_assessment.py` — verify SNAP assessment is automatically invoked during pipeline execution.
+- [X] T040 [US4] Register `pyproject.toml` entry point for SNAP plugin — add `[project.entry-points."specmetrics.plugins.measurement"] snap = "specmetrics.plugins.measurement.snap.plugin:create_snap_measurement_metadata"`. Covers FR-007.
+- [X] T041 [US4] Implement event emission in `plugin.py` — `measure()` emits `MeasurementCompleted` event with `SNAPMeasurementResult` payload. Covers FR-034.
+- [X] T042 [US4] Implement asynchronous execution support in `plugin.py` — the measure method signature accepts an async execution flag and returns a future/coroutine. Covers FR-035.
+- [X] T043 [US4] Implement incremental recomputation in `assessor.py` — accept a previous assessment result and a list of modified CFM element IDs; only recalculate those candidates. Covers FR-036, FR-037. Verifies SC-004.
+- [X] T044 [US4] Integration test: full pipeline execution with SNAP plugin in `tests/integration/measurement/snap/test_full_assessment.py` — verify SNAP assessment is automatically invoked during pipeline execution.
 
 **Checkpoint**: US4 complete — SNAP plugin is fully integrated into the SpecMetrics pipeline.
 
@@ -156,12 +156,12 @@ description: "Task list for SNAP Measurement Engine implementation"
 
 **Purpose**: Structured logging, OpenTelemetry metrics, and edge case hardening.
 
-- [ ] T045 [P] Implement structured INFO/ERROR logging in `plugin.py` — log assessment start, completion, per-category counts, warnings, and failures via structlog. Covers FR-038.
-- [ ] T046 [P] Implement OpenTelemetry metrics in `plugin.py` — emit histogram for assessment duration and gauges for per-category assessment item counts. Covers FR-039.
-- [ ] T047 [P] Performance benchmark test in `tests/unit/measurement/snap/test_assessor.py` — verify medium-sized CFM (≤500 candidates) completes in under 5 seconds. Covers SC-003.
-- [ ] T048 [P] Scalability verification test in `tests/integration/measurement/snap/test_full_assessment.py` — verify that doubling the CFM size results in ≤15% deviation from linear scaling. Covers SC-007.
-- [ ] T049 [P] Category version validation test in `tests/unit/measurement/snap/test_assessor.py` — verify category SemVer is validated at load time; invalid versions produce errors. Covers FR-015.
-- [ ] T050 [P] Edge case tests for corrupted plugin metadata and unsupported interaction types in `tests/unit/measurement/snap/test_plugin.py`. Covers Edge Cases.
+- [X] T045 [P] Implement structured INFO/ERROR logging in `plugin.py` — log assessment start, completion, per-category counts, warnings, and failures via structlog. Covers FR-038.
+- [X] T046 [P] Implement OpenTelemetry metrics in `plugin.py` — emit histogram for assessment duration and gauges for per-category assessment item counts. Covers FR-039.
+- [X] T047 [P] Performance benchmark test in `tests/unit/measurement/snap/test_assessor.py` — verify medium-sized CFM (≤500 candidates) completes in under 5 seconds. Covers SC-003.
+- [X] T048 [P] Scalability verification test in `tests/unit/measurement/snap/test_assessor.py` — verify that doubling the CFM size results in ≤15% deviation from linear scaling. Covers SC-007.
+- [X] T049 [P] Category version validation test in `tests/unit/measurement/snap/test_assessor.py` — verify category SemVer is validated at load time; invalid versions produce errors. Covers FR-015.
+- [X] T050 [P] Edge case tests for corrupted plugin metadata and unsupported interaction types in `tests/unit/measurement/snap/test_plugin.py` and `tests/unit/measurement/snap/test_assessor.py`. Covers Edge Cases.
 
 ---
 
@@ -226,3 +226,13 @@ Each phase is independently testable and adds production value without breaking 
 | 6 | US4: Pipeline Integration | 8 | P2 |
 | 7 | Observability & Polish | 6 | Cross-cutting |
 | **Total** | | **50** | |
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close immutability and code quality gaps found during convergence assessment.
+
+- [X] T051 Add `model_config = {"frozen": True}` to `EvidenceRef` in `specmetrics/plugins/measurement/snap/models.py` per FR-031 (partial — evidence immutability)
+- [X] T052 Build explanations list before constructing `SNAPMeasurementResult` in `specmetrics/plugins/measurement/snap/plugin.py` instead of mutating via `.extend()` after construction per FR-031, Constitution VI (partial — frozen model mutation)
+- [X] T053 Remove duplicate inner `from .rule_applicator import RulePackApplicator` import at `specmetrics/plugins/measurement/snap/assessor.py:42` per plan: code quality (partial — duplicate import)
