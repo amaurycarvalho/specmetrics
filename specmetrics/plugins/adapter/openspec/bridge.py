@@ -79,6 +79,7 @@ class CanonicalModelBuiltHandler:
 
 def create_documents_validated_metadata():
     from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
+
     return PluginMetadata(
         id="documents_validated_bridge",
         api_version="0.1.0",
@@ -93,6 +94,7 @@ def create_documents_validated_metadata():
 
 def create_canonical_model_built_metadata():
     from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
+
     return PluginMetadata(
         id="canonical_model_built_bridge",
         api_version="0.1.0",
