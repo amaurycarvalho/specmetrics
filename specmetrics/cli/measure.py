@@ -104,6 +104,8 @@ def run_measure(
     )
 
     orchestrator = PipelineOrchestrator()
+    if cfg_system is not None:
+        orchestrator.set_config_system(cfg_system)
     result = orchestrator.execute(request)
 
     if quiet:

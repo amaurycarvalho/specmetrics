@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 
+import dataclasses
+
 from specmetrics.kernel.cfm.builder import CfmBuilderStage
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
@@ -23,8 +25,7 @@ class TestCfmPipelineStage:
             context=context,
         )
         result = stage.handle(event)
-        assert result.canonical_model is not None
-        assert result.canonical_model["element_counts"] == {}
+        assert result.canonical_model is None
 
     def test_handle_returns_context_with_canonical_model_field(self) -> None:
         stage = CfmBuilderStage()
@@ -36,5 +37,5 @@ class TestCfmPipelineStage:
             context=context,
         )
         result = stage.handle(event)
-        assert hasattr(result, "canonical_model")
-        assert "run_id" in result.canonical_model
+        assert "canonical_model" in dataclasses.asdict(result)
+        assert result.canonical_model is None

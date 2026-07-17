@@ -214,6 +214,7 @@ class EvidenceGraphStage:
             "documents_covered": sorted(docs_covered),
         }
 
+        dropped_nodes = 0
         graph_nodes = {}
         for node_data in self._backend.query_nodes({}):
             nid = node_data.get("id", "")
@@ -222,11 +223,14 @@ class EvidenceGraphStage:
                 try:
                     graph_nodes[nid] = GraphNode(id=nid, **attrs)
                 except Exception:
-                    pass
+                    dropped_nodes += 1
+        if dropped_nodes:
+            logger.warning("evidence_graph_dropped_invalid_nodes", count=dropped_nodes)
         serialized = self._backend.to_serializable()
         graph_edges = [
             GraphEdge(source=e["source"], target=e["target"], edge_type=e.get("edge_type", "derived_from"))
             for e in serialized.get("edges", [])
+            if e["source"] in graph_nodes and e["target"] in graph_nodes
         ]
         evidence_graph = EvidenceGraph(
             run_id=run_id,

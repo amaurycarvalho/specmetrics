@@ -125,6 +125,100 @@ A team lead wants to inspect which plugins are installed, verify their versions,
 - **CLI Output Formatter**: Component that formats measurement results and progress information for terminal display, supporting human-readable text and machine-parseable formats (JSON)
 - **MCP Server Process**: The long-running process that maintains the MCP connection, handles JSON-RPC message serialization/deserialization, and manages concurrent requests
 
+## CLI Command Reference
+
+The following commands are registered on the root `specmetrics` app.
+
+### `specmetrics measure`
+
+Execute the full measurement pipeline (discover → extract → graph → cfm → rule → measure → export).
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `project_path` | `Path` | `"."` | Path to the SpecMetrics project |
+| `--output` / `-o` | `str` | — | Output format and optional path: `json`, `csv`, `xml`, `text`, or `json:./path.json` |
+| `--stage` / `-s` | `str` | — | Run only this stage: `discover`, `extract`, `graph`, `cfm`, `rule`, `measure`, `export` |
+| `--from` | `str` | — | Start from this stage (skip earlier stages) |
+| `--verbose` / `-v` | `bool` | `False` | Show detailed per-stage progress |
+| `--quiet` / `-q` | `bool` | `False` | Suppress non-error output |
+| `--log-file` / `-l` | `str` | — | Persist logs to `.specmetrics/logs/<filename>` |
+| `--config` / `-c` | `Path` | — | Path to configuration file (supports `$ENV_VAR` expansion) |
+
+### `specmetrics version`
+
+Print platform version, Python version, and list of discovered plugins.
+
+No arguments or options.
+
+---
+
+### `specmetrics plugins`
+
+Sub-commands for plugin management.
+
+| Command | Description |
+|---------|-------------|
+| `plugins list` | List discovered plugins (filter with `--type adapter\|measurement\|export\|publisher`, detail with `--verbose`) |
+| `plugins verify` | Verify compatibility of all discovered plugins |
+| `plugins list-formats` | List discovered export formats and publishers |
+
+### `specmetrics export`
+
+Sub-commands for result export.
+
+| Command | Description |
+|---------|-------------|
+| `export run` | Export measurement results (`--format json,csv,xml`, `--output-dir`, `--publish`, `--otel-endpoint`) |
+| `export list-formats` | List discovered exporter plugins |
+| `export publisher-status` | Show status of configured telemetry publishers |
+
+### `specmetrics config`
+
+Sub-commands for configuration management.
+
+| Command | Description |
+|---------|-------------|
+| `config dump` | Dump all resolved configuration entries (`--format text\|json`) |
+
+#### `specmetrics config llm`
+
+Nested sub-commands for LLM provider configuration. Config is stored outside the project in `~/.config/specmetrics/config.yml`.
+
+| Command | Description |
+|---------|-------------|
+| `config llm set <provider>` | Set LLM provider preset: `chatgpt`, `gemini`, `copilot`, `claude`, `deepseek`, `ollama`, `custom`. Options: `--model`, `--api-key`, `--api-url` (overrides preset defaults) |
+| `config llm show` | Display current LLM configuration |
+| `config llm set-model <model>` | Change the model identifier only |
+| `config llm set-api-key <key>` | Change the API key only |
+
+### `specmetrics explain`
+
+Sub-commands for measurement explanation.
+
+| Command | Description |
+|---------|-------------|
+| `explain <run_id>` | Explain a measurement run (`--metric`, `--format text\|json`, `--compare <run_id>`, `--run-dir`) |
+
+### `specmetrics mcp`
+
+Sub-commands for the MCP server (Model Context Protocol).
+
+| Command | Description |
+|---------|-------------|
+| `mcp start` | Start the MCP server (`--host`, `--port`, `--transport stdio\|sse`, `--max-connections`, `--log-level`, `--config`) |
+| `mcp stop` | Stop the MCP server (`--timeout <seconds>`) |
+| `mcp status` | Show whether the MCP server is running |
+
+### `specmetrics validate`
+
+Sub-commands for specification validation.
+
+| Command | Description |
+|---------|-------------|
+| `validate <spec_paths...>` | Validate specification files (`--rules`, `--format text\|json\|quiet`, `--batch`, `--constitution-only`, `--structural-only`) |
+
+---
+
 ## Success Criteria
 
 ### Measurable Outcomes

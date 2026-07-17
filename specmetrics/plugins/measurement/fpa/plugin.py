@@ -94,9 +94,9 @@ class FPAMeasurementHandler:
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
         ctx = event.context
-        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+        cfm = ctx.canonical_model
 
-        if cfm is None:
+        if not isinstance(cfm, CanonicalFunctionalModel):
             logger.warning("fpa_measurement_no_cfm", execution_id=str(ctx.execution_id))
             return ctx
 

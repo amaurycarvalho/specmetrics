@@ -63,14 +63,101 @@ or
 pipx install --force specmetrics-<version>-py3-none-any.whl
 ```
 
+### Setting Up
+
+Before running measurements, configure the LLM provider for semantic extraction:
+
+```bash
+# List available providers
+specmetrics config llm show
+
+# Configure a provider (e.g., ChatGPT/OpenAI)
+specmetrics config llm set chatgpt --api-key sk-...
+
+# Use a different model
+specmetrics config llm set openai --model gpt-4o --api-key sk-...
+
+# Or use environment variables
+export SPECMETRICS_LLM_API_KEY=sk-...
+```
+
+> **Note**: LLM configuration is stored in `~/.config/specmetrics/config.yml`, outside your project directory. If no API key is configured, the pipeline falls back to structural extraction.
+
 ### How to Use
 
 ```bash
-specmetrics --help
-specmetrics measure --help
-specmetrics plugins --help
-specmetrics plugins list --help
+# Full pipeline measurement
+specmetrics measure
+
+# Run specific stages
+specmetrics measure --stage extract
+specmetrics measure --from measure
+
+# Output formats
+specmetrics measure --output json
+specmetrics measure --output json:./results.json
+
+# Verbose or quiet mode
+specmetrics measure --verbose
+specmetrics measure --quiet
+
+# Plugin management
+specmetrics plugins list
+specmetrics plugins list --verbose
+specmetrics plugins list --type measurement
+
+# Configuration
+specmetrics config dump
+specmetrics config llm set deepseek --api-key sk-...
+specmetrics config llm show
+
+# Specification validation
+specmetrics validate specs/
+
+# Export results
+specmetrics export run --format json,csv
+
+# Explain a measurement run
+specmetrics explain <run-id>
+
+# MCP server (for AI agent integration)
+specmetrics mcp start
+specmetrics mcp status
+specmetrics mcp stop
 ```
+
+### CLI Parameters
+
+| Command | Description |
+|---------|-------------|
+| `measure [path]` | Execute full measurement pipeline |
+| `version` | Print platform and plugin versions |
+| `plugins list` | List discovered plugins |
+| `plugins verify` | Verify plugin compatibility |
+| `plugins list-formats` | List export formats and publishers |
+| `export run` | Export measurement results |
+| `export list-formats` | List exporter plugins |
+| `export publisher-status` | Show publisher status |
+| `config dump` | Show all resolved configuration |
+| `config llm set <provider>` | Configure LLM provider (chatgpt, gemini, copilot, claude, deepseek, ollama, custom) |
+| `config llm show` | Show current LLM configuration |
+| `config llm set-model <model>` | Change LLM model |
+| `config llm set-api-key <key>` | Change LLM API key |
+| `explain <run-id>` | Explain a measurement result |
+| `mcp start` | Start MCP server for AI agents |
+| `mcp stop` | Stop MCP server |
+| `mcp status` | Check MCP server status |
+| `validate <paths...>` | Validate specification documents |
+
+**Common options across commands:**
+
+| Flag | Description |
+|------|-------------|
+| `--verbose` / `-v` | Detailed progress output |
+| `--quiet` / `-q` | Suppress non-error output |
+| `--help` | Show help for any command |
+
+Run `specmetrics --help` or `specmetrics <command> --help` for detailed options on any command.
 
 ---
 

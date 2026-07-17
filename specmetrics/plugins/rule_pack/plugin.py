@@ -44,10 +44,14 @@ class RulePackEnginePlugin:
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
         ctx = event.context
-        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+        cfm = ctx.canonical_model
 
-        if cfm is None:
-            logger.warning("rule_pack_engine_no_cfm", execution_id=str(ctx.execution_id))
+        if not isinstance(cfm, CanonicalFunctionalModel):
+            logger.warning(
+                "rule_pack_engine_no_cfm",
+                execution_id=str(ctx.execution_id),
+                actual_type=type(cfm).__name__,
+            )
             return ctx
 
         logger.info(

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Any
 
 import litellm
+from pydantic import BaseModel, Field
 
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.extraction_provider import (
@@ -15,6 +17,12 @@ from specmetrics.kernel.extraction_provider import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Suppress LiteLLM's verbose error banners — we handle errors ourselves
+litellm.suppress_debug_info = True
+litellm.set_verbose = False
+logging.getLogger("LiteLLM").setLevel(logging.WARNING)
+logging.getLogger("litellm").setLevel(logging.WARNING)
 
 _DEFAULT_CHUNK_SIZE = 8_000
 
@@ -36,20 +44,84 @@ def _infer_type(document_type: str) -> str:
     return CANONICAL_TYPE_MAP.get(document_type, "unknown")
 
 
+class LLMProviderConfig(BaseModel):
+    api_url: str | None = Field(
+        None,
+        description="Base URL for the LLM API (e.g. https://api.openai.com/v1)",
+    )
+    model: str = Field(
+        "gpt-4o-mini",
+        description="Model identifier (e.g. gpt-4o-mini, claude-3-haiku)",
+    )
+    api_key: str | None = Field(
+        None,
+        description="API key or authentication token",
+        json_schema_extra={"sensitive": True},
+    )
+
+
 class LLMExtractionProvider:
-    def __init__(self, provider_id: str = "llm-provider", chunk_size: int = _DEFAULT_CHUNK_SIZE) -> None:
+    def __init__(
+        self,
+        provider_id: str = "llm-provider",
+        chunk_size: int = _DEFAULT_CHUNK_SIZE,
+        api_url: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+    ) -> None:
         self._provider_id = provider_id
         self._chunk_size = chunk_size
+
+        self._api_url = (
+            api_url
+            or os.environ.get("SPECMETRICS_LLM_API_URL")
+        )
+        self._model = (
+            model
+            or os.environ.get("SPECMETRICS_LLM_MODEL")
+            or "gpt-4o-mini"
+        )
+        self._api_key = (
+            api_key
+            or os.environ.get("SPECMETRICS_LLM_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+        )
+
+    @classmethod
+    def config_schema(cls) -> type[BaseModel]:
+        return LLMProviderConfig
 
     def supports_type(self, document_type: str) -> bool:
         return True
 
-    def _chunk_content(self, content: str) -> list[tuple[str, int]]:
-        """Split content into chunks of at most ``chunk_size`` characters.
+    _config_warned: bool = False
+    _no_key: bool = False
 
-        Returns a list of ``(chunk_text, chunk_index)`` tuples.
-        Splits on paragraph boundaries when possible.
-        """
+    def _check_config(self) -> str | None:
+        if not self._api_key:
+            self.__class__._no_key = True
+            if not self.__class__._config_warned:
+                self.__class__._config_warned = True
+                return (
+                    "LLM extraction disabled: no API key configured.\n"
+                    "  Run:  specmetrics config llm set <provider> --api-key <key>\n"
+                    "  Or set the SPECMETRICS_LLM_API_KEY environment variable.\n"
+                    "  Falling back to structural extraction."
+                )
+            return None
+        return None
+
+    def _build_completion_kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {
+            "model": self._model,
+        }
+        if self._api_url:
+            kwargs["api_base"] = self._api_url
+        if self._api_key:
+            kwargs["api_key"] = self._api_key
+        return kwargs
+
+    def _chunk_content(self, content: str) -> list[tuple[str, int]]:
         if len(content) <= self._chunk_size:
             return [(content, 0)]
 
@@ -77,10 +149,35 @@ class LLMExtractionProvider:
         chunks = self._chunk_content(document.content)
         errors = 0
 
+        config_msg = self._check_config()
+        if config_msg is not None:
+            logger.warning(config_msg)
+
+        if self.__class__._no_key:
+            for chunk_text, chunk_idx in chunks:
+                try:
+                    chunk_elements = self._structural_parse(document, chunk_text, chunk_idx)
+                    all_elements.extend(chunk_elements)
+                except Exception:
+                    errors += 1
+            duration = int((time.monotonic() - started_at) * 1000)
+            return ExtractionResult(
+                provider_id=self._provider_id,
+                elements=all_elements,
+                processing_stats=ProcessingStats(
+                    documents_processed=1,
+                    elements_extracted=len(all_elements),
+                    errors=errors,
+                    duration_ms=duration,
+                ),
+            )
+
+        completion_kwargs = self._build_completion_kwargs()
+
         for chunk_text, chunk_idx in chunks:
             try:
                 response = litellm.completion(
-                    model="gpt-4o-mini",
+                    **completion_kwargs,
                     messages=[
                         {
                             "role": "system",
@@ -96,7 +193,13 @@ class LLMExtractionProvider:
                 chunk_elements = self._parse_response(response, document, chunk_idx)
                 all_elements.extend(chunk_elements)
             except Exception:
-                logger.warning("LLM extraction failed for chunk %d, falling back to structural", chunk_idx)
+                logger.warning(
+                    "LLM API call failed for chunk %d. "
+                    "Run 'specmetrics config llm set <provider> --api-key <key>' to configure credentials, "
+                    "or 'specmetrics config llm show' to review current settings. "
+                    "Falling back to structural extraction for this chunk.",
+                    chunk_idx,
+                )
                 try:
                     chunk_elements = self._structural_parse(document, chunk_text, chunk_idx)
                     all_elements.extend(chunk_elements)
@@ -173,7 +276,7 @@ class LLMExtractionProvider:
             elements.append(
                 ExtractedElement(
                     id=f"{document.id}/full-{chunk_idx}",
-                    type="section",
+                    type="fact",
                     confidence=0.5,
                     evidence=EvidenceReference(
                         document_id=document.id,

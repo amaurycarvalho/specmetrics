@@ -6,6 +6,7 @@ from typing import Any
 
 import structlog
 
+from specmetrics.kernel.adapter_registry import AdapterRegistry
 from specmetrics.kernel.diagnostics import StageStatus as KernelStageStatus
 from specmetrics.kernel.events import EventType
 from specmetrics.kernel.exceptions import PipelineError
@@ -152,7 +153,22 @@ class PipelineOrchestrator:
         event_order = _resolve_event_order(request.stages, request.from_stage)
 
         engine = PipelineEngine(self._handler_registry)
-        context = PipelineContext()
+        adapter_registry = AdapterRegistry(self._registry)
+
+        config_provider = None
+        if self._config_system is not None:
+            try:
+                config_provider = self._config_system.load()
+            except Exception:
+                logger.warning("config_load_failed")
+
+        context = PipelineContext(
+            repository=request.project_path,
+            metadata={
+                "adapter_registry": adapter_registry,
+                "config": config_provider,
+            },
+        )
 
         try:
             result_ctx = engine.run(context)

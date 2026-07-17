@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from typing import Any
 
 import structlog
 
@@ -152,8 +151,7 @@ class CfmBuilderStage:
         graph_data = context.evidence_graph
         if graph_data is None:
             logger.warning("cfm_builder_no_evidence_graph", execution_id=str(event.context.execution_id))
-            payload = _empty_payload(event)
-            return context.with_stage_output(field_name="canonical_model", value=payload)
+            return context.with_stage_output(field_name="canonical_model", value=None)
 
         run_id = graph_data.get("run_id", str(int(event.timestamp.timestamp())))
 
@@ -169,8 +167,7 @@ class CfmBuilderStage:
                 run_id=run_id,
                 execution_id=str(event.context.execution_id),
             )
-            payload = _empty_payload(event)
-            return context.with_stage_output(field_name="canonical_model", value=payload)
+            return context.with_stage_output(field_name="canonical_model", value=None)
 
         cfm = build(evidence_graph)
 
@@ -201,12 +198,4 @@ class CfmBuilderStage:
         return context
 
 
-def _empty_payload(event: PipelineEvent) -> dict[str, Any]:
-    return {
-        "run_id": str(int(event.timestamp.timestamp())),
-        "element_counts": {},
-        "build_duration_ms": 0,
-        "total_input_nodes": 0,
-        "unclassified_count": 0,
-        "conflict_count": 0,
-    }
+

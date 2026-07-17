@@ -81,14 +81,14 @@ tests/
 ├── unit/
 │   └── adapter/
 │       └── speckit/
-│           ├── test_scanner.py
-│           ├── test_normalizer.py
-│           ├── test_metadata.py
-│           └── test_plugin.py
+│           ├── test_speckit_scanner.py
+│           ├── test_speckit_normalizer.py
+│           ├── test_speckit_metadata.py
+│           └── test_speckit_plugin.py
 └── integration/
     └── adapter/
         └── speckit/
-            └── test_full_scan.py
+            └── test_speckit_full_scan.py
 ```
 
 **Structure Decision**: Single adapter under `specmetrics/plugins/adapter/speckit/`, following the OpenSpec adapter pattern. The adapter implements the `SpecificationAdapter` Protocol from F03.

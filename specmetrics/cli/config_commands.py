@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+from pathlib import Path
+from typing import Any
 
+import ruamel.yaml
 import typer
 
 from .measure import get_config_system
@@ -12,6 +16,106 @@ config_app = typer.Typer(
     help="Inspect and manage configuration",
     no_args_is_help=True,
 )
+
+llm_app = typer.Typer(
+    name="llm",
+    help="Configure LLM provider settings",
+    no_args_is_help=True,
+)
+config_app.add_typer(llm_app)
+
+PROVIDER_PRESETS: dict[str, dict[str, str]] = {
+    "chatgpt": {
+        "api_url": "https://api.openai.com/v1",
+        "model": "gpt-4o-mini",
+    },
+    "gemini": {
+        "api_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model": "gemini-2.0-flash",
+    },
+    "copilot": {
+        "api_url": "https://models.inference.ai.azure.com",
+        "model": "gpt-4o",
+    },
+    "claude": {
+        "api_url": "https://api.anthropic.com/v1",
+        "model": "claude-sonnet-4-20250514",
+    },
+    "deepseek": {
+        "api_url": "https://api.deepseek.com/v1",
+        "model": "deepseek-chat",
+    },
+    "ollama": {
+        "api_url": "http://localhost:11434/v1",
+        "model": "llama3.2",
+    },
+}
+
+LLM_NAMESPACE = ("plugins", "extraction_stage", "llm")
+
+
+def _get_user_config_dir() -> Path:
+    xdg_home = os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")
+    return Path(xdg_home) / "specmetrics"
+
+
+def _get_user_config_path() -> Path:
+    for filename in ["config.yml", "config.yaml", "config.json"]:
+        path = _get_user_config_dir() / filename
+        if path.exists():
+            return path
+    return _get_user_config_dir() / "config.yml"
+
+
+def _read_config_yaml(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    yaml = ruamel.yaml.YAML(typ="safe")
+    data = yaml.load(path.read_text(encoding="utf-8"))
+    return data if isinstance(data, dict) else {}
+
+
+def _write_config_yaml(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    yaml = ruamel.yaml.YAML()
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.dump(data, f)
+
+
+def _set_nested(data: dict[str, Any], keys: tuple[str, ...], value: Any) -> None:
+    for key in keys[:-1]:
+        if key not in data or not isinstance(data[key], dict):
+            data[key] = {}
+        data = data[key]
+    data[keys[-1]] = value
+
+
+def _get_nested(data: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        if isinstance(data, dict):
+            data = data.get(key)
+        else:
+            return None
+    return data
+
+
+def _write_llm_config(**kwargs: str | None) -> None:
+    path = _get_user_config_path()
+    data = _read_config_yaml(path)
+    for key, value in kwargs.items():
+        if value is not None:
+            _set_nested(data, LLM_NAMESPACE + (key,), value)
+    _write_config_yaml(path, data)
+    print(f"Updated {path}")
+
+
+def _format_model_list() -> str:
+    lines = []
+    for name, preset in PROVIDER_PRESETS.items():
+        lines.append(f"  {name:<12} {preset['model']:<30} {preset['api_url']}")
+    lines.append(f"  {'custom':<12} {'(user-defined)':<30} {'(user-defined)'}")
+    return "\n".join(lines)
 
 
 @config_app.command(name="dump")
@@ -56,3 +160,97 @@ def config_dump(
         print("\nWarnings:")
         for w in dump.warnings:
             print(f"  - {w.message}")
+
+
+@llm_app.command(name="set")
+def llm_set(
+    provider: str = typer.Argument(
+        ...,
+        help="Provider name",
+    ),
+    model: str = typer.Option(
+        None,
+        "--model",
+        "-m",
+        help="Model identifier (overrides provider default)",
+    ),
+    api_key: str = typer.Option(
+        None,
+        "--api-key",
+        "-k",
+        help="API key or authentication token",
+    ),
+    api_url: str = typer.Option(
+        None,
+        "--api-url",
+        "-u",
+        help="API base URL (overrides provider default)",
+    ),
+) -> None:
+    preset = PROVIDER_PRESETS.get(provider)
+    if preset is None and provider != "custom":
+        print(f"Unknown provider '{provider}'. Available providers:\n{_format_model_list()}", file=sys.stderr)
+        raise typer.Exit(code=1)
+
+    if provider == "custom" and not model:
+        print("Provider 'custom' requires --model.", file=sys.stderr)
+        raise typer.Exit(code=1)
+
+    final_api_url = api_url or (preset["api_url"] if preset else None)
+    final_model = model or (preset["model"] if preset else None)
+
+    _write_llm_config(api_url=final_api_url, model=final_model, api_key=api_key)
+
+    print(f"LLM provider set to '{provider}'")
+    if final_api_url:
+        print(f"  API URL:   {final_api_url}")
+    if final_model:
+        print(f"  Model:     {final_model}")
+    if api_key:
+        print("  API key:   ********")
+
+
+@llm_app.command(name="show")
+def llm_show() -> None:
+    path = _get_user_config_path()
+    data = _read_config_yaml(path)
+    llm_data = _get_nested(data, LLM_NAMESPACE) or {}
+
+    print("Current LLM configuration:")
+    print()
+
+    if llm_data:
+        for key in ("api_url", "model", "api_key"):
+            value = llm_data.get(key)
+            if value is not None:
+                display = "**********" if key == "api_key" else str(value)
+                print(f"  {'.'.join(LLM_NAMESPACE)}.{key:<10} {display}")
+        print()
+        print(f"  Config file: {path}")
+    else:
+        print("  (not configured)")
+        print()
+        print("Set a provider with:  specmetrics config llm set <provider> [--api-key KEY]")
+        print("Available providers:\n" + _format_model_list())
+
+
+@llm_app.command(name="set-model")
+def llm_set_model(
+    model: str = typer.Argument(
+        ...,
+        help="Model identifier (e.g. gpt-4o-mini, claude-sonnet-4-20250514)",
+    ),
+) -> None:
+    _write_llm_config(model=model)
+    print(f"LLM model set to '{model}'")
+
+
+@llm_app.command(name="set-api-key")
+def llm_set_api_key(
+    api_key: str = typer.Argument(
+        ...,
+        help="API key or authentication token",
+    ),
+) -> None:
+    _write_llm_config(api_key=api_key)
+    print("LLM API key updated")

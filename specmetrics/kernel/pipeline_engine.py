@@ -47,6 +47,13 @@ class PipelineEngine:
             execution_id=context.execution_id,
             diagnostics=diagnostics,
             metadata=context.metadata,
+            repository=context.repository,
+            adapter_result=context.adapter_result,
+            extraction_result=context.extraction_result,
+            evidence_graph=context.evidence_graph,
+            canonical_model=context.canonical_model,
+            measurement_result=context.measurement_result,
+            exported_files=context.exported_files,
         )
         logger.info(
             "pipeline_started",
@@ -72,11 +79,20 @@ class PipelineEngine:
             if event_type == EventType.DOCUMENTS_VALIDATED and self._validation_pipeline is not None:
                 from pathlib import Path
                 docs_data = getattr(ctx, "adapter_result", None) or {}
-                doc_paths = [Path(d.get("path")) for d in docs_data.get("documents", []) if d.get("path")]
+                raw_docs = docs_data.get("documents", [])
+                doc_paths = []
+                for d in raw_docs:
+                    if isinstance(d, dict):
+                        p = d.get("path")
+                    else:
+                        p = getattr(d, "path", None)
+                    if p:
+                        doc_paths.append(Path(p))
+                doc_paths = [p for p in doc_paths if p.name == "spec.md"]
                 if doc_paths:
                     report = self._validation_pipeline.run_batch(doc_paths)
-                    if not report.overall_passed:
-                        logger.warning(
+                    if report.failed_documents > 0:
+                        logger.debug(
                             "document_validation_failed",
                             execution_id=str(ctx.execution_id),
                             failed_documents=report.failed_documents,

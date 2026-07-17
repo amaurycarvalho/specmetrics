@@ -36,6 +36,7 @@ snap = "specmetrics.plugins.measurement.snap.plugin:create_snap_measurement_meta
 rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:create_rule_pack_engine_metadata"
 
 [project.entry-points."specmetrics.plugins.stage"]
+discovery = "specmetrics.plugins.stage.discovery:create_adapter_discovery_metadata"
 extraction = "specmetrics.plugins.stage.extraction:create_extraction_metadata"
 evidence_graph = "specmetrics.plugins.stage.evidence_graph:create_evidence_graph_metadata"
 cfm_builder = "specmetrics.plugins.stage.cfm_builder:create_cfm_builder_metadata"
@@ -44,6 +45,7 @@ cfm_builder = "specmetrics.plugins.stage.cfm_builder:create_cfm_builder_metadata
 documents_validated = "specmetrics.plugins.adapter.openspec.bridge:create_documents_validated_metadata"
 canonical_model_built = "specmetrics.plugins.adapter.openspec.bridge:create_canonical_model_built_metadata"
 openspec = "specmetrics.plugins.adapter.openspec.plugin:create_openspec_adapter_metadata"
+speckit = "specmetrics.plugins.adapter.speckit.plugin:create_speckit_adapter_metadata"
 
 [project.entry-points."specmetrics.exporters"]
 json = "specmetrics.plugins.exporter.json_exporter:JsonExporter"

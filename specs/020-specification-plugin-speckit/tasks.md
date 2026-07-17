@@ -30,9 +30,9 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 **Purpose**: Create directory structure and scaffolding for the SpecKit adapter plugin.
 
-- [ ] T001 Create `specmetrics/plugins/adapter/speckit/` package with `__init__.py`
-- [ ] T002 [P] Create `tests/unit/adapter/speckit/` directory structure
-- [ ] T003 [P] Create `tests/integration/adapter/speckit/` directory structure
+- [x] T001 Create `specmetrics/plugins/adapter/speckit/` package with `__init__.py`
+- [x] T002 [P] Create `tests/unit/adapter/speckit/` directory structure
+- [x] T003 [P] Create `tests/integration/adapter/speckit/` directory structure
 
 ---
 
@@ -42,8 +42,8 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 [P] Implement `SpecKitAdapter` skeleton class in `specmetrics/plugins/adapter/speckit/plugin.py` with method stubs for `supports()`, `scan()`, `scan_memory()`, `scan_features()`, `normalize_document()`, and `build_metadata()` per `data-model.md`
-- [ ] T005 [P] Implement `ScanResult`, `ScanError`, and `ScanStats` data classes in `specmetrics/plugins/adapter/speckit/plugin.py` per `data-model.md`
+- [x] T004 [P] Implement `SpecKitAdapter` skeleton class in `specmetrics/plugins/adapter/speckit/plugin.py` with method stubs for `supports()`, `scan()`, `scan_memory()`, `scan_features()`, `normalize_document()`, and `build_metadata()` per `data-model.md`
+- [x] T005 [P] Implement `ScanResult`, `ScanError`, and `ScanStats` data classes in `specmetrics/plugins/adapter/speckit/plugin.py` per `data-model.md`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -57,16 +57,16 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 ### Tests for User Story 4
 
-- [ ] T006 [P] [US4] Unit test for `supports()` returning True when `.specify/` exists in `tests/unit/adapter/speckit/test_plugin.py` — covers FR-001 marker 1.
-- [ ] T007 [P] [US4] Unit test for `supports()` returning True when `.specify/memory/constitution.md` exists in `tests/unit/adapter/speckit/test_plugin.py` — covers FR-001 marker 2.
-- [ ] T008 [P] [US4] Unit test for `supports()` returning True when `specs/` exists in `tests/unit/adapter/speckit/test_plugin.py` — covers FR-001 marker 3.
-- [ ] T009 [P] [US4] Unit test for `supports()` returning False when no SpecKit markers exist in `tests/unit/adapter/speckit/test_plugin.py`.
-- [ ] T010 [P] [US4] Unit test that `supports()` does not perform a full scan (fast path only) in `tests/unit/adapter/speckit/test_plugin.py` — covers FR-002.
+- [x] T006 [P] [US4] Unit test for `supports()` returning True when `.specify/` exists in `tests/unit/adapter/speckit/test_speckit_plugin.py` — covers FR-001 marker 1.
+- [x] T007 [P] [US4] Unit test for `supports()` returning True when `.specify/memory/constitution.md` exists in `tests/unit/adapter/speckit/test_speckit_plugin.py` — covers FR-001 marker 2.
+- [x] T008 [P] [US4] Unit test for `supports()` returning True when `specs/` exists in `tests/unit/adapter/speckit/test_speckit_plugin.py` — covers FR-001 marker 3.
+- [x] T009 [P] [US4] Unit test for `supports()` returning False when no SpecKit markers exist in `tests/unit/adapter/speckit/test_speckit_plugin.py`.
+- [x] T010 [P] [US4] Unit test that `supports()` does not perform a full scan (fast path only) in `tests/unit/adapter/speckit/test_speckit_plugin.py` — covers FR-002.
 
 ### Implementation for User Story 4
 
-- [ ] T011 [US4] Implement `supports()` in `specmetrics/plugins/adapter/speckit/plugin.py` — check for `.specify/`, `.specify/memory/constitution.md`, or `specs/` existence using `Path.exists()`. Return True if any marker is present. Covers FR-001, FR-002.
-- [ ] T012 [US4] Integration test: repository detection with real filesystem fixtures in `tests/integration/adapter/speckit/test_full_scan.py`.
+- [x] T011 [US4] Implement `supports()` in `specmetrics/plugins/adapter/speckit/plugin.py` — check for `.specify/`, `.specify/memory/constitution.md`, or `specs/` existence using `Path.exists()`. Return True if any marker is present. Covers FR-001, FR-002.
+- [x] T012 [US4] Integration test: repository detection with real filesystem fixtures in `tests/integration/adapter/speckit/test_speckit_full_scan.py`.
 
 **Checkpoint**: US4 complete — SpecKit repositories can be automatically detected.
 
@@ -80,18 +80,18 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 ### Tests for User Story 1
 
-- [ ] T013 [P] [US1] Unit test for governance document discovery from `.specify/memory/` in `tests/unit/adapter/speckit/test_scanner.py` — covers FR-003.
-- [ ] T014 [P] [US1] Unit test for missing `.specify/memory/` returning zero governance documents in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
-- [ ] T015 [P] [US1] Unit test for governance metadata in `tests/unit/adapter/speckit/test_metadata.py` — verify `feature: null`, `workspace: .specify/memory`, `kind: governance`. Covers FR-013.
-- [ ] T016 [P] [US1] Unit test that only `.md` files under `.specify/memory/` are included (FR-006) in `tests/unit/adapter/speckit/test_scanner.py` — verify `.py`, `.yml`, `.sh` files under `.specify/` are excluded.
+- [x] T013 [P] [US1] Unit test for governance document discovery from `.specify/memory/` in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers FR-003.
+- [x] T014 [P] [US1] Unit test for missing `.specify/memory/` returning zero governance documents in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
+- [x] T015 [P] [US1] Unit test for governance metadata in `tests/unit/adapter/speckit/test_speckit_metadata.py` — verify `feature: null`, `workspace: .specify/memory`, `kind: governance`. Covers FR-013.
+- [x] T016 [P] [US1] Unit test that only `.md` files under `.specify/memory/` are included (FR-006) in `tests/unit/adapter/speckit/test_speckit_scanner.py` — verify `.py`, `.yml`, `.sh` files under `.specify/` are excluded.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement `scan_memory()` in `specmetrics/plugins/adapter/speckit/scanner.py` — glob for `.specify/memory/**/*.md` to discover all governance documents. Covers FR-003, FR-006.
-- [ ] T018 [US1] Implement `normalize_document()` in `specmetrics/plugins/adapter/speckit/normalizer.py` — read file content as UTF-8 text, parse ATX headings (`#` through `######`) to build `DocumentSection` hierarchy, construct canonical `Document` with raw Markdown content and section list. Covers FR-008, FR-009, FR-010.
-- [ ] T019 [US1] Implement `build_metadata()` for governance documents in `specmetrics/plugins/adapter/speckit/metadata.py` — set `framework: speckit`, `artifact_type: constitution`, `kind: governance`, `feature: null`, `workspace: .specify/memory`. Covers FR-012, FR-013.
-- [ ] T020 [US1] Wire `scan()` method in `plugin.py` — call `scan_memory()`, normalize each file, collect into `ScanResult`, handle empty `.specify/memory/` gracefully.
-- [ ] T021 [US1] Integration test: governance scan with constitution.md in `tests/integration/adapter/speckit/test_full_scan.py`.
+- [x] T017 [US1] Implement `scan_memory()` in `specmetrics/plugins/adapter/speckit/scanner.py` — glob for `.specify/memory/**/*.md` to discover all governance documents. Covers FR-003, FR-006.
+- [x] T018 [US1] Implement `normalize_document()` in `specmetrics/plugins/adapter/speckit/normalizer.py` — read file content as UTF-8 text, parse ATX headings (`#` through `######`) to build `DocumentSection` hierarchy, construct canonical `Document` with raw Markdown content and section list. Covers FR-008, FR-009, FR-010.
+- [x] T019 [US1] Implement `build_metadata()` for governance documents in `specmetrics/plugins/adapter/speckit/metadata.py` — set `framework: speckit`, `artifact_type: constitution`, `kind: governance`, `feature: null`, `workspace: .specify/memory`. Covers FR-012, FR-013.
+- [x] T020 [US1] Wire `scan()` method in `plugin.py` — call `scan_memory()`, normalize each file, collect into `ScanResult`, handle empty `.specify/memory/` gracefully.
+- [x] T021 [US1] Integration test: governance scan with constitution.md in `tests/integration/adapter/speckit/test_speckit_full_scan.py`.
 
 **Checkpoint**: US1 complete — governance documents are discovered and normalized.
 
@@ -105,19 +105,19 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Unit test for feature workspace discovery in `tests/unit/adapter/speckit/test_scanner.py` — verify `specs/<feature>/*.md` discovers all artifacts. Covers FR-004.
-- [ ] T023 [P] [US2] Unit test for recursive checklist discovery `checklists/**/*.md` in `tests/unit/adapter/speckit/test_scanner.py` — covers clarify session decision.
-- [ ] T024 [P] [US2] Unit test for feature containing only `spec.md` returning exactly one document in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
-- [ ] T025 [P] [US2] Unit test for missing optional artifacts (no plan.md, no tasks.md) in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
-- [ ] T026 [P] [US2] Unit test for empty `specs/` returning zero feature documents in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
-- [ ] T027 [P] [US2] Unit test for duplicate feature identifier detection in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
+- [x] T022 [P] [US2] Unit test for feature workspace discovery in `tests/unit/adapter/speckit/test_speckit_scanner.py` — verify `specs/<feature>/*.md` discovers all artifacts. Covers FR-004.
+- [x] T023 [P] [US2] Unit test for recursive checklist discovery `checklists/**/*.md` in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers clarify session decision.
+- [x] T024 [P] [US2] Unit test for feature containing only `spec.md` returning exactly one document in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
+- [x] T025 [P] [US2] Unit test for missing optional artifacts (no plan.md, no tasks.md) in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
+- [x] T026 [P] [US2] Unit test for empty `specs/` returning zero feature documents in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
+- [x] T027 [P] [US2] Unit test for duplicate feature identifier detection in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Implement `scan_features()` in `specmetrics/plugins/adapter/speckit/scanner.py` — list directories under `specs/*/`, discover all `.md` files within each feature directory. Map recognized filenames to artifact types per FR-005 table. Use `checklists/**/*.md` for checklist discovery. Covers FR-004, FR-005.
-- [ ] T029 [US2] Implement `build_metadata()` for feature artifacts in `specmetrics/plugins/adapter/speckit/metadata.py` — derive `feature` from parent directory name, `workspace` from `specs/<feature>`, `kind` from artifact type mapping (specification, architecture, implementation, research, data-model, checklist). Covers FR-014, FR-015, FR-016, FR-017, FR-018, FR-019.
-- [ ] T030 [US2] Wire feature discovery into `scan()` in `plugin.py` — call `scan_features()`, normalize artifacts, merge with governance results into `ScanResult`. Covers FR-003, FR-004.
-- [ ] T031 [US2] Integration test: full scan with multiple features and varied artifacts in `tests/integration/adapter/speckit/test_full_scan.py`.
+- [x] T028 [US2] Implement `scan_features()` in `specmetrics/plugins/adapter/speckit/scanner.py` — list directories under `specs/*/`, discover all `.md` files within each feature directory. Map recognized filenames to artifact types per FR-005 table. Use `checklists/**/*.md` for checklist discovery. Covers FR-004, FR-005.
+- [x] T029 [US2] Implement `build_metadata()` for feature artifacts in `specmetrics/plugins/adapter/speckit/metadata.py` — derive `feature` from parent directory name, `workspace` from `specs/<feature>`, `kind` from artifact type mapping (specification, architecture, implementation, research, data-model, checklist). Covers FR-014, FR-015, FR-016, FR-017, FR-018, FR-019.
+- [x] T030 [US2] Wire feature discovery into `scan()` in `plugin.py` — call `scan_features()`, normalize artifacts, merge with governance results into `ScanResult`. Covers FR-003, FR-004.
+- [x] T031 [US2] Integration test: full scan with multiple features and varied artifacts in `tests/integration/adapter/speckit/test_speckit_full_scan.py`.
 
 **Checkpoint**: US2 complete — all feature workspace artifacts are discovered and normalized.
 
@@ -131,19 +131,19 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Unit test for minimum metadata completeness in `tests/unit/adapter/speckit/test_metadata.py` — verify every Document has `framework`, `artifact_type`, `kind`, `feature`, `workspace`, `relative_path`. Covers FR-012.
-- [ ] T033 [P] [US3] Unit test for feature identifier extraction from parent directory in `tests/unit/adapter/speckit/test_metadata.py`.
-- [ ] T034 [P] [US3] Unit test for artifact type mapping — verify each filename maps to correct `artifact_type` per FR-005 table. Covers FR-005.
-- [ ] T035 [P] [US3] Unit test for unknown file handling in `tests/unit/adapter/speckit/test_metadata.py` — verify unrecognized `.md` files get `artifact_type: unknown` and `kind: unknown`. Covers FR-007.
-- [ ] T036 [P] [US3] Unit test for data-model.md having `kind: data-model` (not `kind: research`) in `tests/unit/adapter/speckit/test_metadata.py` — covers clarify session decision.
-- [ ] T037 [P] [US3] Unit test for governance vs feature distinction in `tests/unit/adapter/speckit/test_metadata.py` — covers SC-004.
+- [x] T032 [P] [US3] Unit test for minimum metadata completeness in `tests/unit/adapter/speckit/test_speckit_metadata.py` — verify every Document has `framework`, `artifact_type`, `kind`, `feature`, `workspace`, `relative_path`. Covers FR-012.
+- [x] T033 [P] [US3] Unit test for feature identifier extraction from parent directory in `tests/unit/adapter/speckit/test_speckit_metadata.py`.
+- [x] T034 [P] [US3] Unit test for artifact type mapping — verify each filename maps to correct `artifact_type` per FR-005 table. Covers FR-005.
+- [x] T035 [P] [US3] Unit test for unknown file handling in `tests/unit/adapter/speckit/test_speckit_metadata.py` — verify unrecognized `.md` files get `artifact_type: unknown` and `kind: unknown`. Covers FR-007.
+- [x] T036 [P] [US3] Unit test for data-model.md having `kind: data-model` (not `kind: research`) in `tests/unit/adapter/speckit/test_speckit_metadata.py` — covers clarify session decision.
+- [x] T037 [P] [US3] Unit test for governance vs feature distinction in `tests/unit/adapter/speckit/test_speckit_metadata.py` — covers SC-004.
 
 ### Implementation for User Story 3
 
-- [ ] T038 [US3] Implement artifact type resolution in `specmetrics/plugins/adapter/speckit/metadata.py` — build filename→type mapping from FR-005 table. Unrecognized filenames map to `unknown`. Covers FR-005, FR-007.
-- [ ] T039 [US3] Implement `build_metadata()` full logic in `specmetrics/plugins/adapter/speckit/metadata.py` — integrate all metadata rules: framework (always `speckit`), artifact_type (from filename mapping), kind (from type-specific rules), feature (parent dir name under `specs/`, null for governance), workspace (`.specify/memory` or `specs/<feature>`), relative_path (relative to repo root). Covers FR-012–FR-019.
-- [ ] T040 [US3] Implement section hierarchy preservation in `specmetrics/plugins/adapter/speckit/normalizer.py` — parse Markdown ATX headings into `DocumentSection` tree; attach non-heading content to preceding section. Covers FR-010.
-- [ ] T041 [US3] Integration test: metadata preservation end-to-end in `tests/integration/adapter/speckit/test_full_scan.py`.
+- [x] T038 [US3] Implement artifact type resolution in `specmetrics/plugins/adapter/speckit/metadata.py` — build filename→type mapping from FR-005 table. Unrecognized filenames map to `unknown`. Covers FR-005, FR-007.
+- [x] T039 [US3] Implement `build_metadata()` full logic in `specmetrics/plugins/adapter/speckit/metadata.py` — integrate all metadata rules: framework (always `speckit`), artifact_type (from filename mapping), kind (from type-specific rules), feature (parent dir name under `specs/`, null for governance), workspace (`.specify/memory` or `specs/<feature>`), relative_path (relative to repo root). Covers FR-012–FR-019.
+- [x] T040 [US3] Implement section hierarchy preservation in `specmetrics/plugins/adapter/speckit/normalizer.py` — parse Markdown ATX headings into `DocumentSection` tree; attach non-heading content to preceding section. Covers FR-010.
+- [x] T041 [US3] Integration test: metadata preservation end-to-end in `tests/integration/adapter/speckit/test_speckit_full_scan.py`.
 
 **Checkpoint**: US3 complete — all documents carry complete, traceable SpecKit metadata.
 
@@ -153,21 +153,21 @@ description: "Task list for SpecKit Specification Adapter implementation"
 
 **Purpose**: Error isolation, malformed file handling, and robustness for production use.
 
-- [ ] T042 [P] Implement per-file try/except in `scanner.py` — wrap each file read in try/except; unreadable files produce `ScanError` with `UNREADABLE` code; scan continues to next file. Covers FR-022, FR-024.
-- [ ] T043 [P] Implement malformed Markdown handling in `normalizer.py` — if heading parsing fails, return document with raw content and empty sections list; do not raise. Covers FR-023.
-- [ ] T044 [P] Implement corrupted UTF-8 handling in `normalizer.py` — catch `UnicodeDecodeError`, produce `ScanError` with `ENCODING_ERROR` code, continue scan. Covers Edge Cases: Corrupted UTF-8 files.
-- [ ] T045 [P] Implement symbolic link resolution in `scanner.py` — follow symlinks during glob discovery; if a symlink is broken, log warning and skip. Covers Edge Cases: Symbolic links.
-- [ ] T046 [P] Unit test for per-file error isolation in `tests/unit/adapter/speckit/test_scanner.py` — verify one unreadable file does not block other files. Covers SC-003.
-- [ ] T047 [P] Unit test for feature-only-minimum (spec.md only) in `tests/unit/adapter/speckit/test_scanner.py` — covers Edge Cases.
+- [x] T042 [P] Implement per-file try/except in `scanner.py` — wrap each file read in try/except; unreadable files produce `ScanError` with `UNREADABLE` code; scan continues to next file. Covers FR-022, FR-024.
+- [x] T043 [P] Implement malformed Markdown handling in `normalizer.py` — if heading parsing fails, return document with raw content and empty sections list; do not raise. Covers FR-023.
+- [x] T044 [P] Implement corrupted UTF-8 handling in `normalizer.py` — catch `UnicodeDecodeError`, produce `ScanError` with `ENCODING_ERROR` code, continue scan. Covers Edge Cases: Corrupted UTF-8 files.
+- [x] T045 [P] Implement symbolic link resolution in `scanner.py` — follow symlinks during glob discovery; if a symlink is broken, log warning and skip. Covers Edge Cases: Symbolic links.
+- [x] T046 [P] Unit test for per-file error isolation in `tests/unit/adapter/speckit/test_speckit_scanner.py` — verify one unreadable file does not block other files. Covers SC-003.
+- [x] T047 [P] Unit test for feature-only-minimum (spec.md only) in `tests/unit/adapter/speckit/test_speckit_scanner.py` — covers Edge Cases.
 
 ---
 
 ## Phase 8: Observability & Polish
 
-- [ ] T048 [P] Implement structured INFO/ERROR logging in `plugin.py` — log scan start, completion, per-file errors, and artifact count summary via structlog. Covers FR-025.
-- [ ] T049 [P] Performance benchmark test in `tests/unit/adapter/speckit/test_scanner.py` — verify 500+ artifacts scanned in under 5 seconds. Covers SC-001.
-- [ ] T050 [P] Register plugin entry point in `pyproject.toml` — add `[project.entry-points."specmetrics.plugins.adapter"] speckit = "specmetrics.plugins.adapter.speckit:SpecKitAdapter"`. Covers FR-020.
-- [ ] T051 [P] Implement plugin metadata in `plugin.py` — expose `plugin_id`, `plugin_version`, `supported_framework`, `supported_artifact_types`. Covers FR-021.
+- [x] T048 [P] Implement structured INFO/ERROR logging in `plugin.py` — log scan start, completion, per-file errors, and artifact count summary via structlog. Covers FR-025.
+- [x] T049 [P] Performance benchmark test in `tests/unit/adapter/speckit/test_speckit_scanner.py` — verify 500+ artifacts scanned in under 5 seconds. Covers SC-001.
+- [x] T050 [P] Register plugin entry point in `pyproject.toml` — add `[project.entry-points."specmetrics.plugins.adapter"] speckit = "specmetrics.plugins.adapter.speckit:SpecKitAdapter"`. Covers FR-020.
+- [x] T051 [P] Implement plugin metadata in `plugin.py` — expose `plugin_id`, `plugin_version`, `supported_framework`, `supported_artifact_types`. Covers FR-021.
 
 ---
 
@@ -234,3 +234,12 @@ Each phase is independently testable and adds production value without breaking 
 | 7 | Error Handling & Edge Cases | 6 | Cross-cutting |
 | 8 | Observability & Polish | 4 | Cross-cutting |
 | **Total** | | **51** | |
+
+---
+
+## Phase 9: Convergence
+
+**Purpose**: Close minor gaps identified by convergence assessment between specification intent and current implementation.
+
+- [x] T052 Add broken symlink warning in `scan_features()` in `specmetrics/plugins/adapter/speckit/scanner.py` — detect broken symlinks during `iterdir()` traversal and log a warning via structlog per T045 (partial)
+- [x] T053 Add per-file error isolation in `scan_memory()` and `scan_features()` public methods in `specmetrics/plugins/adapter/speckit/plugin.py` — wrap `normalize_document()` calls in try/except, collect `ScanError` entries per FR-022, FR-024 (partial)

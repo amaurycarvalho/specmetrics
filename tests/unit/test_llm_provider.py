@@ -22,7 +22,7 @@ class _MockResponse:
 
 class TestLLMProviderValidResponse:
     def setup_method(self) -> None:
-        self.provider = LLMExtractionProvider()
+        self.provider = LLMExtractionProvider(api_key="test-key")
         self.doc = Document(
             id="doc-1",
             path="specs/test.md",
@@ -62,7 +62,7 @@ class TestLLMProviderValidResponse:
 
 class TestLLMProviderGracefulDegradation:
     def setup_method(self) -> None:
-        self.provider = LLMExtractionProvider()
+        self.provider = LLMExtractionProvider(api_key="test-key")
         self.doc = Document(
             id="doc-1",
             path="specs/test.md",
@@ -98,7 +98,7 @@ class TestLLMProviderGracefulDegradation:
         mock_litellm.completion.side_effect = Exception("Unavailable")
         result = self.provider.extract(doc)
         assert len(result.elements) >= 1
-        assert result.elements[0].type == "section"
+        assert result.elements[0].type == "fact"
 
     @patch("specmetrics.plugins.semantic.llm_provider.litellm")
     def test_returns_processing_stats(self, mock_litellm: MagicMock):
@@ -106,3 +106,26 @@ class TestLLMProviderGracefulDegradation:
         result = self.provider.extract(self.doc)
         assert result.processing_stats.documents_processed == 1
         assert result.processing_stats.elements_extracted == len(result.elements)
+
+
+class TestLLMProviderConfigCheck:
+    def setup_method(self) -> None:
+        LLMExtractionProvider._no_key = False
+        LLMExtractionProvider._config_warned = False
+        self.provider = LLMExtractionProvider()
+        self.doc = Document(
+            id="doc-1",
+            path="specs/test.md",
+            document_type="section",
+            content="# Test\nContent here.",
+        )
+
+    def test_skips_llm_and_uses_structural_when_no_key(self):
+        result = self.provider.extract(self.doc)
+        assert result.processing_stats.documents_processed == 1
+        assert result.provider_id == "llm-provider"
+
+    def test_config_schema_returns_llm_provider_config(self):
+        schema = LLMExtractionProvider.config_schema()
+        from specmetrics.plugins.semantic.llm_provider import LLMProviderConfig
+        assert schema is LLMProviderConfig

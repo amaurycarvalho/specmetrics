@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydantic import BaseModel
 
 import structlog
 
@@ -47,6 +48,14 @@ class ExtractionStage(EventHandler):
     @property
     def stage_name(self) -> str:
         return self._stage_name
+
+    @classmethod
+    def config_schema(cls) -> type[BaseModel] | None:
+        try:
+            from specmetrics.plugins.semantic.llm_provider import LLMProviderConfig
+            return LLMProviderConfig
+        except ImportError:
+            return None
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
         context = event.context
