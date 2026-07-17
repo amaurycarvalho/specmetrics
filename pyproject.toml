@@ -40,6 +40,7 @@ discovery = "specmetrics.plugins.stage.discovery:create_adapter_discovery_metada
 extraction = "specmetrics.plugins.stage.extraction:create_extraction_metadata"
 evidence_graph = "specmetrics.plugins.stage.evidence_graph:create_evidence_graph_metadata"
 cfm_builder = "specmetrics.plugins.stage.cfm_builder:create_cfm_builder_metadata"
+csm_builder = "specmetrics.plugins.stage.csm_builder:create_csm_builder_metadata"
 
 [project.entry-points."specmetrics.plugins.adapter"]
 documents_validated = "specmetrics.plugins.adapter.openspec.bridge:create_documents_validated_metadata"
