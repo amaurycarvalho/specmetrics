@@ -2,13 +2,16 @@ VENV = .venv
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
 
-.PHONY: venv test build lint
+.PHONY: venv install test build lint
 
 $(VENV):
 	python3 -m venv $(VENV)
 	$(PIP) install -q --upgrade pip
 
 venv: $(VENV)
+
+install: $(VENV)
+	$(PIP) install -e .
 
 test: $(VENV)
 	$(PIP) install -q -e .[dev]

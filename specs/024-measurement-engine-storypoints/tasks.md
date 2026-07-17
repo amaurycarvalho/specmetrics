@@ -23,8 +23,8 @@
 
 **Purpose**: Create package directories for the new plugin and tests
 
-- [ ] T001 Create `specmetrics/plugins/measurement/storypoints/` package with `__init__.py`
-- [ ] T002 Create test directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
+- [X] T001 Create `specmetrics/plugins/measurement/storypoints/` package with `__init__.py`
+- [X] T002 Create test directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
 
 ---
 
@@ -34,21 +34,21 @@
 
 ### Models
 
-- [ ] T003 [P] Create all measurement models (`StoryPointMeasurementResult`, `FunctionalWorkItem`, `RawEffortScore`, `StoryPointEstimate`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`, `EvidenceRef`) in `specmetrics/plugins/measurement/storypoints/models.py`
+- [X] T003 [P] Create all measurement models (`StoryPointMeasurementResult`, `FunctionalWorkItem`, `RawEffortScore`, `StoryPointEstimate`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`, `EvidenceRef`) in `specmetrics/plugins/measurement/storypoints/models.py`
 
 ### Scorers & Normalizer
 
-- [ ] T004 [P] Create factor scorer with default scoring rules for all 6 factors (business_interactions, logical_information, external_integrations, business_rule_density, workflow_breadth, exception_handling) using CFM element relationships in `specmetrics/plugins/measurement/storypoints/factor_scorer.py`
-- [ ] T005 [P] Create Fibonacci normalizer with configurable threshold table and default scale (1, 2, 3, 5, 8, 13, 20, 40, 100) in `specmetrics/plugins/measurement/storypoints/normalizer.py`
+- [X] T004 [P] Create factor scorer with default scoring rules for all 6 factors (business_interactions, logical_information, external_integrations, business_rule_density, workflow_breadth, exception_handling) using CFM element relationships in `specmetrics/plugins/measurement/storypoints/factor_scorer.py`
+- [X] T005 [P] Create Fibonacci normalizer with configurable threshold table and default scale (1, 2, 3, 5, 8, 13, 20, 40, 100) in `specmetrics/plugins/measurement/storypoints/normalizer.py`
 
 ### Calculator & Explainer
 
-- [ ] T006 Create core calculator in `specmetrics/plugins/measurement/storypoints/calculator.py` — `calculate(cfm) -> StoryPointMeasurementResult`: deduplicate Functional Processes by SHA-256 fingerprint, score each via factor_scorer, apply default coefficients, sum for raw_score, normalize via normalizer, aggregate distribution
-- [ ] T007 Create explainer in `specmetrics/plugins/measurement/storypoints/explainer.py` — per-item factor_breakdown, evidence_refs assembly, top-contributor ranking
+- [X] T006 Create core calculator in `specmetrics/plugins/measurement/storypoints/calculator.py` — `calculate(cfm) -> StoryPointMeasurementResult`: deduplicate Functional Processes by SHA-256 fingerprint, score each via factor_scorer, apply default coefficients, sum for raw_score, normalize via normalizer, aggregate distribution
+- [X] T007 Create explainer in `specmetrics/plugins/measurement/storypoints/explainer.py` — per-item factor_breakdown, evidence_refs assembly, top-contributor ranking
 
 ### Package Wiring
 
-- [ ] T008 Wire up `specmetrics/plugins/measurement/storypoints/__init__.py` to export `StoryPointMeasurementResult`, `StoryPointsPlugin`, `create_storypoints_measurement_metadata`
+- [X] T008 Wire up `specmetrics/plugins/measurement/storypoints/__init__.py` to export `StoryPointMeasurementResult`, `StoryPointsPlugin`, `create_storypoints_measurement_metadata`
 
 **Parallel opportunities**: T003, T004, T005 are independent. T006 depends on T003–T005. T007 depends on T003.
 
@@ -64,18 +64,18 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Unit test for model construction, serialization, and validation rules in `tests/unit/test_storypoints_models.py`
-- [ ] T010 [P] [US1] Unit test for factor scorer — each of 6 factors scores correctly from CFM relationships, zero when no related elements in `tests/unit/test_storypoints_factor_scorer.py`
-- [ ] T011 [P] [US1] Unit test for normalizer — raw scores map to correct Fibonacci values (1,2,3,5,8,13,20,40,100), clamping at bounds in `tests/unit/test_storypoints_normalizer.py`
-- [ ] T012 [P] [US1] Unit test for calculator — known CFM produces expected Story Points with correct distribution in `tests/unit/test_storypoints_calculator.py`
-- [ ] T013 [P] [US1] Unit test for determinism — identical CFM produces identical results in `tests/unit/test_storypoints_calculator.py`
-- [ ] T014 [P] [US1] Unit test for empty CFM — zero items, zero total, no errors in `tests/unit/test_storypoints_calculator.py`
-- [ ] T015 [P] [US1] Unit test for duplicate merging — identical content fingerprints merged, count tracked in metadata in `tests/unit/test_storypoints_calculator.py`
+- [X] T009 [P] [US1] Unit test for model construction, serialization, and validation rules in `tests/unit/test_storypoints_models.py`
+- [X] T010 [P] [US1] Unit test for factor scorer — each of 6 factors scores correctly from CFM relationships, zero when no related elements in `tests/unit/test_storypoints_factor_scorer.py`
+- [X] T011 [P] [US1] Unit test for normalizer — raw scores map to correct Fibonacci values (1,2,3,5,8,13,20,40,100), clamping at bounds in `tests/unit/test_storypoints_normalizer.py`
+- [X] T012 [P] [US1] Unit test for calculator — known CFM produces expected Story Points with correct distribution in `tests/unit/test_storypoints_calculator.py`
+- [X] T013 [P] [US1] Unit test for determinism — identical CFM produces identical results in `tests/unit/test_storypoints_calculator.py`
+- [X] T014 [P] [US1] Unit test for empty CFM — zero items, zero total, no errors in `tests/unit/test_storypoints_calculator.py`
+- [X] T015 [P] [US1] Unit test for duplicate merging — identical content fingerprints merged, count tracked in metadata in `tests/unit/test_storypoints_calculator.py`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Create Story Points plugin (`StoryPointsPlugin`, `StoryPointsHandler`, `create_storypoints_measurement_metadata`) in `specmetrics/plugins/measurement/storypoints/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM from context, invokes calculator, stores result payload
-- [ ] T017 [US1] Register Story Points entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
+- [X] T016 [US1] Create Story Points plugin (`StoryPointsPlugin`, `StoryPointsHandler`, `create_storypoints_measurement_metadata`) in `specmetrics/plugins/measurement/storypoints/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM from context, invokes calculator, stores result payload
+- [X] T017 [US1] Register Story Points entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
 
 **Checkpoint**: US1 is fully functional — the pipeline produces deterministic Story Point estimates from any CFM.
 
@@ -89,13 +89,13 @@
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Unit test for explainer — per-item factor_breakdown, evidence_refs assembly, top-contributor identification in `tests/unit/test_storypoints_calculator.py`
-- [ ] T019 [P] [US2] Unit test for every estimated item preserving evidence reference in `tests/unit/test_storypoints_models.py`
-- [ ] T020 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema, factor_breakdown per FR-027 in `tests/contract/test_storypoints_measurement.py`
+- [X] T018 [P] [US2] Unit test for explainer — per-item factor_breakdown, evidence_refs assembly, top-contributor identification in `tests/unit/test_storypoints_calculator.py`
+- [X] T019 [P] [US2] Unit test for every estimated item preserving evidence reference in `tests/unit/test_storypoints_models.py`
+- [X] T020 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema, factor_breakdown per FR-027 in `tests/contract/test_storypoints_measurement.py`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Implement explainer detail per FR-027 — factor_breakdown, evidence_refs, applied_rules, top contributors sorting in `specmetrics/plugins/measurement/storypoints/explainer.py`
+- [X] T021 [US2] Implement explainer detail per FR-027 — factor_breakdown, evidence_refs, applied_rules, top contributors sorting in `specmetrics/plugins/measurement/storypoints/explainer.py`
 
 **Checkpoint**: US2 is fully functional — every estimate includes originating CFM node, factor breakdown, evidence traceability, and applied rules.
 
@@ -109,12 +109,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T022 [P] [US3] Unit test for factor coefficient overrides via Rule Pack — custom coefficients produce different raw scores in `tests/unit/test_storypoints_calculator.py`
-- [ ] T023 [P] [US3] Unit test for normalization threshold overrides via Rule Pack — custom thresholds produce different Fibonacci mappings in `tests/unit/test_storypoints_normalizer.py`
+- [X] T022 [P] [US3] Unit test for factor coefficient overrides via Rule Pack — custom coefficients produce different raw scores in `tests/unit/test_storypoints_calculator.py`
+- [X] T023 [P] [US3] Unit test for normalization threshold overrides via Rule Pack — custom thresholds produce different Fibonacci mappings in `tests/unit/test_storypoints_normalizer.py`
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implement Rule Pack override integration in calculator — read coefficient overrides and threshold overrides from CFM element metadata annotations in `specmetrics/plugins/measurement/storypoints/calculator.py`
+- [X] T024 [US3] Implement Rule Pack override integration in calculator — read coefficient overrides and threshold overrides from CFM element metadata annotations in `specmetrics/plugins/measurement/storypoints/calculator.py`
 
 **Checkpoint**: US3 is fully functional — organizations can customize factor coefficients and normalization thresholds through Rule Packs without code changes.
 
@@ -128,11 +128,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T025 [US4] Integration test for pipeline — CFM → Story Points stored in `ctx.measurement_result` with correct payload, plugin auto-discovered via entry point in `tests/integration/test_storypoints_pipeline.py`
+- [X] T025 [US4] Integration test for pipeline — CFM → Story Points stored in `ctx.measurement_result` with correct payload, plugin auto-discovered via entry point in `tests/integration/test_storypoints_pipeline.py`
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Implement OpenTelemetry metrics — duration histogram, estimated items gauge, distribution histogram following SFP pattern in `specmetrics/plugins/measurement/storypoints/plugin.py`
+- [X] T026 [US4] Implement OpenTelemetry metrics — duration histogram, estimated items gauge, distribution histogram following SFP pattern in `specmetrics/plugins/measurement/storypoints/plugin.py`
 
 **Checkpoint**: US4 is fully functional — plugin auto-discovers, executes in pipeline, and emits observability metrics.
 
@@ -142,10 +142,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T027 [P] Run full test suite — verify `pytest tests/unit/test_storypoints_*.py tests/contract/test_storypoints_measurement.py tests/integration/test_storypoints_pipeline.py` all pass
-- [ ] T028 [P] Run performance benchmark — verify SC-003 (500 FPs in under 5 seconds) with `pytest tests/unit/test_storypoints_calculator.py -k test_performance_500_fps --benchmark-only`
-- [ ] T029 [P] Run quickstart validation scenarios from `specs/024-measurement-engine-storypoints/quickstart.md`
-- [ ] T030 Code cleanup — remove unused imports, verify `ruff check` passes
+- [X] T027 [P] Run full test suite — verify `pytest tests/unit/test_storypoints_*.py tests/contract/test_storypoints_measurement.py tests/integration/test_storypoints_pipeline.py` all pass
+- [X] T028 [P] Run performance benchmark — verify SC-003 (500 FPs in under 5 seconds) with `pytest tests/unit/test_storypoints_calculator.py -k test_performance_500_fps --benchmark-only`
+- [X] T029 [P] Run quickstart validation scenarios from `specs/024-measurement-engine-storypoints/quickstart.md`
+- [X] T030 Code cleanup — remove unused imports, verify `ruff check` passes
 
 ---
 
@@ -185,6 +185,16 @@ pytest tests/unit/test_storypoints_models.py tests/unit/test_storypoints_factor_
 # While tests run, start plugin implementation:
 # (tasks T016, T017)
 ```
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close remaining gaps identified during convergence assessment.
+
+- [X] T031 Implement OpenTelemetry metrics in `specmetrics/plugins/measurement/storypoints/plugin.py` — duration histogram, estimated items gauge, distribution histogram following SFP pattern per FR-036 (missing, HIGH)
+- [X] T032 Fix incremental execution in `specmetrics/plugins/measurement/storypoints/calculator.py` — carry forward unmodified items with cached estimates instead of dropping them from output per FR-033/FR-034 (partial)
+- [X] T033 Wire Rule Pack override integration in `specmetrics/plugins/measurement/storypoints/plugin.py` — extract coefficient/threshold overrides from CFM element metadata annotations and pass to `calculate()` per FR-005, FR-023, FR-024 (partial)
 
 ---
 

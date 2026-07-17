@@ -20,6 +20,7 @@ class EventType(enum.Enum):
     MEASUREMENT_COMPLETED = "measurement_completed"
     TOKEN_POINTS_MEASURED = "token_points_measured"
     COGNITIVE_POINTS_MEASURED = "cognitive_points_measured"
+    STORY_POINTS_MEASURED = "story_points_measured"
     EXPORT_COMPLETED = "export_completed"
     TELEMETRY_PUBLISHED = "telemetry_published"
     PIPELINE_COMPLETED = "pipeline_completed"
