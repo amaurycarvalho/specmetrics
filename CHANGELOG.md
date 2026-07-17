@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### [021-canonical-specification-model](specs/021-canonical-specification-model) Canonical Specification Model Builder
+
+#### Added
+
+- Specification drafted
+
+### [022-measurement-engine-token-points](specs/022-measurement-engine-token-points) Measurement Engine Plugin — Token Points
+
+#### Added
+
+- Specification drafted
+
+### [023-measurement-engine-cognitive-points](specs/023-measurement-engine-cognitive-points) Measurement Engine Plugin — Cognitive Points
+
+#### Added
+
+- Specification drafted
+
+### [024-measurement-engine-storypoints](specs/024-measurement-engine-storypoints) Measurement Engine Plugin — Story Points (Modified Fibonacci)
+
+#### Added
+
+- Specification drafted
+
+### [025-measurement-engine-tshirt](specs/025-measurement-engine-tshirt) Measurement Engine Plugin — T-Shirt Sizing
+
+#### Added
+
+- Specification drafted
+
+### [026-measurement-engine-bcp](specs/026-measurement-engine-bcp) Measurement Engine Plugin — Business Complexity Points (BCP)
+
+#### Added
+
+- Specification drafted
+
 ## [0.2.0] — 2026-07-16
 
 ### Fixed
