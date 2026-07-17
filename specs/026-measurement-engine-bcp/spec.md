@@ -14,6 +14,9 @@
 - **Q:** Which SDK SHALL be supported? → **A:** The official `bcp-calculator` Python SDK (`BCPClient`).
 - **Q:** Does the plugin perform semantic analysis? → **A:** No. Semantic analysis is delegated to the SDK.
 - **Q:** May organizations replace the SDK? → **A:** Yes, provided an adapter implementing the same integration contract is supplied.
+- **Q:** What format should generated stories use for the BCP SDK? → **A:** Markdown user story narrative text (not JSON). The SDK's `calculate()` method accepts `story_content: str`.
+- **Q:** What attributes should BCPMeasurementResult and SDKResult have? → **A:** BCPMeasurementResult with per-item breakdown, total, provider, SDK version; SDKResult with raw response, status, provider, duration.
+- **Q:** What retry strategy should be used for SDK timeouts and rate limits? → **A:** Retry per-item with exponential backoff (3 attempts), skip on persistent failure, continue batch.
 
 ---
 
@@ -109,8 +112,8 @@ The plugin is automatically discovered and executed after Rule Pack processing.
 - SDK unavailable
 - Invalid provider configuration
 - Authentication failure
-- SDK timeout
-- Rate limiting
+- SDK timeout — retry per-item with exponential backoff (3 attempts), skip item and continue on persistent failure
+- Rate limiting — retry per-item with exponential backoff (3 attempts), skip item and continue on persistent failure
 - Malformed SDK response
 - Missing API credentials
 - Partial batch failures
@@ -227,7 +230,26 @@ Story generation SHALL preserve links to originating CFM nodes.
 
 ### FR-011
 
-Generated stories SHALL include sufficient business context for BCP evaluation.
+Generated stories SHALL include sufficient business context for BCP evaluation, formatted as a markdown user story string with the following sections populated from CFM data:
+
+- **Title**: `# User Story: {Functional Process name}`
+- **Description**: `As a {actor}, I want to {description}, so that...`
+- **Acceptance Criteria**: Bullet list derived from related operations, business rules, data groups, and relationships
+- **Context**: Supporting information about related actors, constraints, data groups, and business rules
+
+Example generated story string:
+
+```markdown
+# User Story: Process Order
+
+As a customer, I want to process an order, so that I can receive purchased items.
+
+## Acceptance Criteria:
+1. System validates order against inventory (business rule: stock_validation)
+2. System notifies shipping department (operation: notify_shipping)
+3. Order record is created in orders database (data group: orders)
+4. Payment is processed through payment gateway (relationship: communicates_with)
+```
 
 ---
 
@@ -241,13 +263,22 @@ The generated story SHALL be preserved as measurement evidence.
 
 ### FR-013
 
-The plugin SHALL instantiate `BCPClient`.
+The plugin SHALL instantiate `BCPClient` with configurable parameters:
+
+```python
+from src.sdk import BCPClient
+
+client = BCPClient(
+    log_level="INFO",    # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    provider="openai",   # "openai" or "claude" — defaults to "openai"
+)
+```
 
 ---
 
 ### FR-014
 
-The plugin SHALL support SDK provider configuration.
+The plugin SHALL support SDK provider configuration via Rule Packs or external configuration.
 
 ---
 
@@ -262,25 +293,35 @@ Supported providers SHALL include:
 
 ### FR-016
 
-The plugin SHALL invoke:
+The plugin SHALL invoke `client.calculate(story_content: str)` for each generated story.
+
+The method accepts a **markdown string** and returns:
 
 ```python
-client.calculate(story_content)
+{
+    "total_bcp": float,        # Total Business Complexity Points
+    "breakdown": {             # Per-component breakdown
+        "component_name": float,
+        ...
+    }
+}
 ```
-
-for each generated story.
 
 ---
 
 ### FR-017
 
-Batch execution MAY invoke:
+For in-memory story generation, the plugin SHALL invoke `client.calculate()` individually for each story in a loop. The SDK's `batch_calculate()` method is designed for file-directory processing (reads `*.md` files from a directory) and MAY be used by optionally writing stories to temporary files first.
+
+SDK signature for reference:
 
 ```python
-client.batch_calculate(...)
+batch_calculate(
+    stories_dir: Union[str, Path],
+    output_path: Optional[Union[str, Path]] = None,
+    file_pattern: str = "*.md"
+) -> Dict[str, Dict[str, Any]]
 ```
-
-when supported by the execution strategy.
 
 ---
 
@@ -289,20 +330,29 @@ when supported by the execution strategy.
 Provider comparison MAY invoke:
 
 ```python
-client.compare_providers(...)
+client.compare_providers(
+    story_content: str,
+    providers: Optional[List[str]] = None   # defaults to ["openai", "claude"]
+)
 ```
 
-when explicitly requested.
+when explicitly requested. The default providers list is `["openai", "claude"]`.
 
 ---
 
 ### FR-019
 
-SDK exceptions SHALL be translated into Measurement Engine errors.
+The plugin SHALL verify that the required API credentials are available before invoking the SDK. Credentials are loaded by the SDK from a `.env` file containing provider API keys (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
 
 ---
 
 ### FR-020
+
+SDK exceptions SHALL be translated into Measurement Engine errors.
+
+---
+
+### FR-021
 
 The plugin SHALL NOT modify SDK scoring results.
 
@@ -310,25 +360,25 @@ The plugin SHALL NOT modify SDK scoring results.
 
 # Rule Packs
 
-### FR-021
+### FR-022
 
 Rule Packs MAY customize story generation.
 
 ---
 
-### FR-022
+### FR-023
 
 Rule Packs MAY customize SDK provider selection.
 
 ---
 
-### FR-023
+### FR-024
 
 Rule Packs SHALL NOT alter SDK calculation results.
 
 ---
 
-### FR-024
+### FR-025
 
 All Rule Pack adjustments SHALL be reported.
 
@@ -336,7 +386,7 @@ All Rule Pack adjustments SHALL be reported.
 
 # Explainability
 
-### FR-025
+### FR-026
 
 Every measured work item SHALL expose:
 
@@ -348,13 +398,13 @@ Every measured work item SHALL expose:
 
 ---
 
-### FR-026
+### FR-027
 
 SDK responses SHALL be preserved as immutable evidence.
 
 ---
 
-### FR-027
+### FR-028
 
 Evidence SHALL survive export.
 
@@ -362,7 +412,7 @@ Evidence SHALL survive export.
 
 # Pipeline
 
-### FR-028
+### FR-029
 
 Pipeline execution order SHALL be:
 
@@ -392,25 +442,25 @@ Export Layer
 
 ---
 
-### FR-029
+### FR-030
 
 The Measurement Engine SHALL emit Measurement Events.
 
 ---
 
-### FR-030
+### FR-031
 
 The plugin SHALL support asynchronous execution.
 
 ---
 
-### FR-031
+### FR-032
 
 The plugin SHALL support incremental execution.
 
 ---
 
-### FR-032
+### FR-033
 
 Only modified Functional Processes SHALL be re-submitted to the SDK.
 
@@ -448,23 +498,60 @@ Execution Statistics
 
 # Key Entities
 
-## BCP Measurement Result
+## BCPMeasurementResult
 
-Complete SDK measurement output.
+Complete SDK measurement output identified by pipeline run ID.
+
+Contains:
+- **method**: "BCP"
+- **provider**: SDK provider used (e.g., "openai", "claude")
+- **sdk_version**: Version of the bcp-calculator SDK
+- **items**: List of per-work-item BCP results
+- **total_bcp**: Sum of all item scores
+- **generated_stories**: List of GeneratedStory objects
+- **applied_rule_pack**: Rule Pack identifier
+- **warnings**: Non-fatal issues
+- **execution_metadata**: Timing, counts, SDK call metrics
 
 ---
 
-## Generated Story
+## GeneratedStory
 
-Story produced from the Canonical Functional Model.
+Story produced from the Canonical Functional Model. Serialized as a markdown user story string for the SDK.
+
+Contains:
+- **content**: The markdown user story string (title, description, acceptance criteria, context)
+- **evidence_ref**: Link to originating CFM node
+
+---
+
+## BCPWorkItem
+
+Per-work-item measurement result from the SDK.
+
+Contains:
+- **element_id**: UUID of the originating Functional Process
+- **element_name**: Functional Process name
+- **generated_story**: The GeneratedStory submitted to the SDK
+- **sdk_response**: Raw SDK response for this item
+- **bcp_score**: Business Complexity Point score
+- **component_breakdown**: SDK-provided breakdown (if available)
+- **evidence_refs**: Traceability links
 
 ---
 
-## SDK Result
+## SDKResult
 
-Business Complexity Point response returned by the official SDK.
+Business Complexity Point response returned by the official SDK. The SDK's `client.calculate()` returns `Dict[str, Any]` with the following structure.
 
----
+Contains:
+- **total_bcp**: Total Business Complexity Points (float)
+- **breakdown**: Per-component breakdown of points (dict of component_name → points)
+- **raw_response**: Complete SDK response payload (dict)
+- **provider**: Provider that processed this request
+- **duration_ms**: SDK execution time
+- **warnings**: SDK-generated warnings
+- **errors**: SDK-generated errors
 
 ## Measurement Evidence
 
@@ -502,12 +589,45 @@ version()
 {
   "method": "BCP",
   "sdk": "bcp-calculator",
+  "sdk_version": "1.0.0",
   "provider": "openai",
-  "measured_items": 24,
-  "total_bcp": 178,
+  "measured_items": 3,
+  "total_bcp": 47.5,
+  "distribution": {},
+  "items": [
+    {
+      "element_id": "fp-001",
+      "element_name": "Process Order",
+      "generated_story": "# User Story: Process Order\n\nAs a customer...",
+      "sdk_response": {
+        "total_bcp": 18.0,
+        "breakdown": {
+          "business_logic": 8.0,
+          "data_complexity": 5.0,
+          "integration": 3.0,
+          "rules": 2.0
+        }
+      },
+      "bcp_score": 18.0,
+      "component_breakdown": {
+        "business_logic": 8.0,
+        "data_complexity": 5.0,
+        "integration": 3.0,
+        "rules": 2.0
+      },
+      "evidence_refs": [
+        {"element_id": "fp-001", "document_id": "spec.md", "story_point_value": 8}
+      ]
+    }
+  ],
   "warnings": [],
   "rule_pack": "default",
-  "explainability": []
+  "execution_metadata": {
+    "duration_ms": 2450,
+    "total_fps_processed": 3,
+    "sdk_call_count": 3,
+    "version": "1.0"
+  }
 }
 ```
 
@@ -515,13 +635,13 @@ version()
 
 # Observability
 
-### FR-033
+### FR-034
 
 The engine SHALL emit structured INFO and ERROR log messages for SDK initialization, story submission, SDK completion and failures.
 
 ---
 
-### FR-034
+### FR-035
 
 The engine SHALL emit OpenTelemetry metrics including:
 
@@ -598,6 +718,88 @@ The plugin does **not**:
 - Rule Packs have been resolved before measurement.
 - Export plugins consume Measurement Results.
 - The BCP SDK remains the authoritative implementation of the Business Complexity Points methodology.
+
+---
+
+# SDK Integration Reference
+
+## Package
+
+```
+pip install bcp-calculator
+```
+
+Import: `from src.sdk import BCPClient`
+
+**Note:** The import path uses `src.sdk` from a local install or `bcp_calculator` from the published package. The plugin MUST handle both import paths or use a discovery mechanism.
+
+## Constructor
+
+```python
+BCPClient(
+    log_level: str = "INFO",    # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    provider: str = "openai",   # "openai" or "claude"
+)
+```
+
+## Methods
+
+| Method | Input | Returns |
+|--------|-------|---------|
+| `calculate(story_content)` | `str` — markdown user story | `Dict[str, Any]` — `{"total_bcp": float, "breakdown": dict}` |
+| `calculate_file(file_path)` | `str` or `Path` — file path | `Dict[str, Any]` — same as `calculate()` |
+| `batch_calculate(stories_dir, output_path, file_pattern)` | Directory path, optional output path, glob pattern `"*.md"` | `Dict[str, Dict[str, Any]]` — filename → result |
+| `compare_providers(story_content, providers)` | Story string, optional provider list (default `["openai", "claude"]`) | `Dict[str, Dict[str, Any]]` — provider → result |
+
+## Return Format (calculate)
+
+```json
+{
+  "total_bcp": 18.0,
+  "breakdown": {
+    "business_logic": 8.0,
+    "data_complexity": 5.0,
+    "integration": 3.0,
+    "rules": 2.0
+  }
+}
+```
+
+## Environment Setup
+
+The SDK loads API credentials from a `.env` file at the project root or working directory:
+
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+## Error Handling
+
+- `calculate()` raises SDK-specific exceptions on API failure, authentication failure, or malformed response
+- `calculate_file()` raises `FileNotFoundError` if the file does not exist
+- `batch_calculate()` raises `NotADirectoryError` if the directory does not exist
+
+## Adapter Contract
+
+Organizations replacing the SDK (per clarification) MUST implement a compatible adapter with:
+
+```python
+class BCPAdapter(Protocol):
+    def calculate(self, story_content: str) -> dict[str, Any]: ...
+    def calculate_file(self, file_path: str | Path) -> dict[str, Any]: ...
+    def batch_calculate(
+        self,
+        stories_dir: str | Path,
+        output_path: str | Path | None = None,
+        file_pattern: str = "*.md",
+    ) -> dict[str, dict[str, Any]]: ...
+    def compare_providers(
+        self,
+        story_content: str,
+        providers: list[str] | None = None,
+    ) -> dict[str, dict[str, Any]]: ...
+```
 
 ---
 

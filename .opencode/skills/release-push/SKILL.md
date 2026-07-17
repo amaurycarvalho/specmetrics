@@ -13,9 +13,11 @@ The version is read automatically from `version` in `pyproject.toml`.
 
 **Steps**
 
-1. **Verify if release's changes are all archived**
+1. **Verify if release's changes are all archived (OpenSpec only)**
 
-   Confirm if all of the changes in this release is archived (see `CHANGELOG.md` for the list). Stop and report the error without proceeding if any of them is not archived yet.
+   Check if the project uses OpenSpec (`openspec/changes/` exists). If it does, confirm all changes in this release are archived (see `CHANGELOG.md` for the list). Stop and report the error without proceeding if any of them is not archived yet.
+
+   If the project uses SpecKit (`specs/` exists and `openspec/changes/` does not), skip this check — SpecKit does not use change archives.
 
 **Output On Success**
 

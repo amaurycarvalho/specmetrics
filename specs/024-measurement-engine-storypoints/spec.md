@@ -14,6 +14,8 @@
 - **Q:** Are Story Points intended to replace Cognitive Points? → **A:** No. Story Points represent relative implementation effort, while Cognitive Points measure cognitive complexity.
 - **Q:** Can organizations customize estimation heuristics? → **A:** Yes, through Rule Packs.
 - **Q:** Does the plugin attempt to emulate Planning Poker? → **A:** No. The plugin performs deterministic estimation based on the Canonical Functional Model.
+- **Q:** How should raw effort scores be calculated per Functional Process? → **A:** Multi-factor weighted sum: each configurable factor (business interactions, data, integrations, rules, workflow, exceptions) scored independently, multiplied by configurable coefficient, then summed per work item.
+- **Q:** What attributes should FunctionalWorkItem, RawEffortScore, StoryPointEstimate, and MeasurementEvidence have? → **A:** Each work item carries element_id, element_name, raw_score, normalized_value, factor_breakdown, evidence_refs, and applied_rules — consistent with 022/023 patterns.
 
 ---
 
@@ -264,16 +266,32 @@ The engine SHALL compute a raw effort score for each Functional Process using de
 
 ### FR-016
 
-The raw effort score MAY consider characteristics such as:
+The raw effort score SHALL be calculated as a multi-factor weighted sum:
 
-- business interactions;
-- logical information manipulated;
-- external integrations;
-- business rule density;
-- workflow breadth;
-- exception handling.
+```
+raw_score = Σ(factor_score × factor_coefficient) over configured factors
+```
+
+Each factor scored independently per Functional Process.
 
 ---
+
+### FR-016a
+
+The engine SHALL provide default factors and coefficients derived from CFM element characteristics. Organizations MAY redefine factors, scores, and coefficients through Rule Packs.
+
+---
+
+### FR-016b
+
+Default factors SHALL include:
+
+- **business interactions**: Count of related actors and external entities
+- **logical information**: Count of related data groups and operations
+- **external integrations**: Count of relationships with external data groups
+- **business rule density**: Count of associated business rules
+- **workflow breadth**: Number of operations and sub-processes
+- **exception handling**: Presence of conditional or branching logic
 
 ### FR-017
 
@@ -461,33 +479,67 @@ Execution Statistics
 
 ## Story Point Measurement Result
 
-Complete estimation output.
+Complete estimation output identified by pipeline run ID.
+
+Contains:
+- **method**: "StoryPoints"
+- **scale**: "ModifiedFibonacci"
+- **estimated_items**: List of FunctionalWorkItem
+- **total_story_points**: Sum of all normalized values
+- **distribution**: Count of work items per Fibonacci value
+- **applied_rule_pack**: Rule Pack identifier
+- **warnings**: List of non-fatal issues
+- **execution_metadata**: Timing, counts, version
 
 ---
 
-## Functional Work Item
+## FunctionalWorkItem
 
 A Functional Process eligible for Story Point estimation.
 
----
-
-## Raw Effort Score
-
-Intermediate deterministic score before normalization.
-
----
-
-## Story Point Estimate
-
-Final Modified Fibonacci value.
+Contains:
+- **element_id**: UUID of the originating Functional Process
+- **element_name**: Human-readable name
+- **raw_score**: Pre-normalization raw effort score (float)
+- **normalized_value**: Final Story Point value from Fibonacci scale
+- **factor_breakdown**: Per-factor scores (dict of factor_name → score)
+- **applied_rules**: Rules and coefficients applied to this item
+- **evidence_refs**: Provenance links to CFM elements
 
 ---
 
-## Measurement Evidence
+## RawEffortScore
+
+Intermediate deterministic score before normalization. Calculated as multi-factor weighted sum per FR-016.
+
+Contains:
+- **value**: Total raw effort score (float)
+- **factor_breakdown**: Per-factor scores with coefficients applied
+
+---
+
+## StoryPointEstimate
+
+Final Modified Fibonacci value assigned to a FunctionalWorkItem.
+
+Contains:
+- **value**: Integer from the configured Fibonacci scale
+- **raw_score**: The raw effort score that produced this estimate
+- **normalization_rule**: Threshold or rounding rule applied
+
+---
+
+## MeasurementEvidence
 
 References explaining the estimate.
 
----
+Contains:
+- **element_id**: CFM node ID
+- **document_id**: Originating document
+- **section_id**: Originating section
+- **applied_rule**: Rule applied at this step
+- **text**: Supporting text excerpt
+
 
 ## Rule Pack
 

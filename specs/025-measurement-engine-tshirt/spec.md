@@ -14,6 +14,9 @@
 - **Q:** Does the plugin implement an independent estimation algorithm? → **A:** No. It derives T-Shirt Sizes from the deterministic Story Point estimation.
 - **Q:** Can organizations customize the mapping between Story Points and T-Shirt Sizes? → **A:** Yes, through Rule Packs.
 - **Q:** Is T-Shirt Sizing intended to replace Story Points? → **A:** No. It provides a higher-level, lower-resolution representation of the same relative effort estimate.
+- **Q:** How does the plugin access Story Points results in the pipeline? → **A:** Via a separate `TSHIRT_CLASSIFICATION_COMPLETED` pipeline event sequenced after `MEASUREMENT_COMPLETED`. Reads `ctx.measurement_result` (set by Story Points) before classifying.
+- **Q:** What attributes should FunctionalWorkItem, TShirtSize, and MeasurementEvidence have? → **A:** Each item carries element_id, element_name, story_point_value, tshirt_size, mapping_rule, evidence_refs, applied_rule_pack — consistent with 024.
+- **Q:** What happens when Story Points measurement results are unavailable? → **A:** Return empty result with warnings; pipeline continues.
 
 ---
 
@@ -102,7 +105,7 @@ The plugin is automatically discovered and executed after Story Point estimation
 # Edge Cases
 
 - Empty CFM
-- Missing Story Point measurement
+- Missing Story Point measurement — engine returns empty result with warnings; pipeline continues
 - Invalid mapping table
 - Duplicate work items
 - Corrupted Rule Pack
@@ -392,7 +395,13 @@ Export Layer
 
 ### FR-029
 
-The Measurement Engine SHALL emit Measurement Events.
+The engine SHALL subscribe to a dedicated `TSHIRT_CLASSIFICATION_COMPLETED` pipeline event sequenced after `MEASUREMENT_COMPLETED` in CANONICAL_EVENT_ORDER, reading Story Points results from the pipeline context.
+
+---
+
+### FR-029a
+
+The engine SHALL emit `TShirtClassificationCompleted` pipeline events.
 
 ---
 
@@ -444,35 +453,67 @@ Execution Statistics
 
 # Key Entities
 
-## T-Shirt Measurement Result
+## TShirtMeasurementResult
 
-Complete classification output.
+Complete classification output identified by pipeline run ID.
+
+Contains:
+- **method**: "TShirtSizing"
+- **scale**: Size labels used (default: XS, S, M, L, XL, XXL)
+- **items**: List of classified FunctionalWorkItem
+- **distribution**: Count of items per T-Shirt size
+- **applied_rule_pack**: Rule Pack identifier
+- **warnings**: Non-fatal issues
+- **execution_metadata**: Timing, counts, version
 
 ---
 
-## Functional Work Item
+## FunctionalWorkItem
 
 A Functional Process classified by relative effort.
 
+Contains:
+- **element_id**: UUID of the originating Functional Process
+- **element_name**: Human-readable name
+- **story_point_value**: The Story Point estimate consumed
+- **tshirt_size**: Assigned T-Shirt Size (e.g., "M", "XL")
+- **mapping_rule**: The rule that produced this classification
+- **evidence_refs**: Provenance links to SP result and CFM
+- **applied_rule_pack**: Rule Pack identifier used
+
 ---
 
-## Story Point Estimate
+## StoryPointEstimate
 
 The deterministic estimate consumed by the plugin.
 
+Contains:
+- **value**: The Story Point value (integer from Fibonacci scale)
+- **source_run_id**: Run ID of the Story Points measurement
+
 ---
 
-## T-Shirt Size
+## TShirtSize
 
 Categorical representation of implementation effort.
 
+Contains:
+- **label**: Size label (e.g., "XS", "M", "XXL")
+- **story_point_range**: The SP range that maps to this size
+- **ordinal**: Position for sorting (1-based)
+
 ---
 
-## Measurement Evidence
+## MeasurementEvidence
 
 References explaining the classification.
 
----
+Contains:
+- **element_id**: CFM node ID
+- **story_point_value**: Originating SP estimate
+- **mapping_rule**: Rule applied for this classification
+- **document_id**: Originating document
+- **section_id**: Originating section
 
 ## Rule Pack
 

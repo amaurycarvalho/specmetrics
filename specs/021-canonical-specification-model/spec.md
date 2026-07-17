@@ -8,6 +8,16 @@
 
 **Input**: User description: "Canonical Specification Model (CSM)"
 
+## Clarifications
+
+### Session 2026-07-17
+
+- Q: How should core CSM entities (Decision, Assumption, Constraint, Risk, OpenQuestion, AcceptanceCriterion, GlossaryTerm) be structured? → A: Entities inherit from a common CsmElement base (id, description, evidence_references), each adding type-specific fields.
+- Q: How should CSM elements be uniquely identified? → A: UUID v4 assigned at creation.
+- Q: What form should the CSM query interface take? → A: Category-based query methods (e.g., `get_elements(category)` and `get_by_evidence(ref)`).
+- Q: Should non-SpecificationActivity entities have status/lifecycle fields? → A: Yes, all entities share a common `status` field (Active, Superseded) defined in CsmElement base.
+- Q: What serialization format should the CSM use for inspection/debugging? → A: JSON via Pydantic model_dump_json.
+
 ---
 
 # User Scenarios & Testing _(mandatory)_
@@ -141,7 +151,7 @@ The CanonicalSpecificationModel MUST organize specification knowledge into the f
 
 ### Query Interface
 
-- **FR-018**: The CSM MUST expose a documented interface allowing downstream engines to enumerate categories, query by evidence reference and traverse semantic relationships.
+- **FR-018**: The CSM MUST expose a documented category-based query interface (e.g., `get_elements(category)`, `get_by_evidence(reference)`) allowing downstream engines to enumerate categories, query by evidence reference and traverse semantic relationships.
 
 ---
 
@@ -179,51 +189,83 @@ Examples:
 
 ---
 
+## CsmElement (Base)
+
+Shared base inherited by all canonical entities. Contains:
+
+- **id**: UUID v4 unique identifier within the model
+- **description**: Semantic content of the element
+- **evidence_references**: Provenance links to originating specification fragments
+- **status**: Lifecycle state (Active, Superseded)
+
+---
+
 ## Decision
 
-A documented architectural, business or specification decision.
+A documented architectural, business or specification decision. Inherits CsmElement.
+
+Additional attributes:
+- **rationale**: Justification for the decision
+- **alternatives**: Considered options
+- **timestamp**: When the decision was documented
 
 ---
 
 ## Assumption
 
-A statement accepted as true during specification but not yet validated.
+A statement accepted as true during specification but not yet validated. Inherits CsmElement.
+
+Additional attributes:
+- **validated_date**: When the assumption was confirmed, if applicable
 
 ---
 
 ## Constraint
 
-A limitation imposed on the solution.
+A limitation imposed on the solution. Inherits CsmElement.
 
-Examples:
-
-- Regulatory
-- Technical
-- Organizational
+Additional attributes:
+- **constraint_type**: Category (Regulatory, Technical, Organizational)
+- **source**: Origin of the constraint
 
 ---
 
 ## Risk
 
-A documented uncertainty that may impact implementation or specification quality.
+A documented uncertainty that may impact implementation or specification quality. Inherits CsmElement.
+
+Additional attributes:
+- **probability**: Likelihood assessment
+- **impact**: Potential consequence
+- **mitigation**: Planned or applied countermeasure
 
 ---
 
 ## OpenQuestion
 
-A question intentionally left unresolved during specification.
+A question intentionally left unresolved during specification. Inherits CsmElement.
+
+Additional attributes:
+- **resolved**: Whether the question has been answered
+- **resolution**: Answer details if resolved
 
 ---
 
 ## AcceptanceCriterion
 
-A verifiable condition describing expected system behavior.
+A verifiable condition describing expected system behavior. Inherits CsmElement.
+
+Additional attributes:
+- **verification_method**: How the criterion is verified (Test, Review, Inspection)
 
 ---
 
 ## GlossaryTerm
 
-A domain concept with an agreed semantic definition.
+A domain concept with an agreed semantic definition. Inherits CsmElement.
+
+Additional attributes:
+- **aliases**: Alternative names for the concept
 
 ---
 
@@ -260,7 +302,7 @@ Diagnostic information including:
 
 - The Semantic Extraction stage identifies specification-process semantics (questions, decisions, assumptions, constraints, risks, glossary terms, acceptance criteria and refinement activities) in addition to functional semantics.
 - OpenSpec, SpecKit and future specification frameworks expose sufficient evidence for deterministic normalization into the Canonical Specification Model.
-- The CSM is an immutable in-memory model with serialization support for inspection and debugging.
+- The CSM is an immutable in-memory model with JSON serialization (via Pydantic model_dump_json) for inspection and debugging.
 - The primary downstream consumers of the CSM are Token Points, Cognitive Points and future specification-quality measurement engines.
 - The CSM is independent of the Canonical Functional Model, although both originate from the same Evidence Graph and may be consumed jointly by downstream measurement engines.
 

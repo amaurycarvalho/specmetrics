@@ -8,6 +8,16 @@
 
 **Input**: User description: "Token Points"
 
+## Clarifications
+
+### Session 2026-07-17
+
+- Q: What format should calibration profiles use? → A: YAML (via ruamel.yaml).
+- Q: How should weights be structured in the CalibrationProfile? → A: Hierarchical — nested by cost component (specification_cost, code_generation_cost) with per-type weights.
+- Q: What attributes should SpecificationCost and CodeGenerationCost have? → A: Total cost value + list of TokenContributions.
+- Q: How should a measurement be uniquely identified? → A: Run ID inherited from pipeline execution.
+- Q: How should individual weighted contributions be aggregated? → A: Simple sum of weighted element counts (Σ weight × 1.0 per element).
+
 ---
 
 # User Scenarios & Testing _(mandatory)_
@@ -126,6 +136,8 @@ Aggregate Token Points from multiple specifications and verify deterministic pro
 Token Points = Specification Cost + Code Generation Cost
 ```
 
+Where each component is the simple sum of weighted element contributions: Σ(weight × 1.0) per canonical element in the respective model.
+
 ---
 
 ### Specification Cost
@@ -148,7 +160,7 @@ Token Points = Specification Cost + Code Generation Cost
 
 ### Calibration
 
-- **FR-012**: All weighting factors MUST be externally configurable.
+- **FR-012**: All weighting factors MUST be externally configurable via YAML files.
 
 - **FR-013**: Built-in default calibration MUST be provided.
 
@@ -188,7 +200,7 @@ Token Points = Specification Cost + Code Generation Cost
 
 ## TokenPointsMeasurement
 
-Represents the complete Token Points result.
+Represents the complete Token Points result. Identified by pipeline run ID.
 
 Contains:
 
@@ -207,6 +219,10 @@ Represents the estimated computational effort required to create, clarify, refin
 
 Derived exclusively from the CSM.
 
+Contains:
+- **total**: Aggregate specification cost score
+- **contributions**: List of TokenContribution elements
+
 ---
 
 ## CodeGenerationCost
@@ -214,6 +230,10 @@ Derived exclusively from the CSM.
 Represents the estimated computational effort required to generate software artifacts from the specification.
 
 Derived exclusively from the CFM.
+
+Contains:
+- **total**: Aggregate code generation cost score
+- **contributions**: List of TokenContribution elements
 
 ---
 
@@ -233,7 +253,11 @@ Contains:
 
 ## CalibrationProfile
 
-Defines all configurable weights used by the engine.
+Defines all configurable weights used by the engine. Serialized as YAML with hierarchical structure.
+
+Top-level sections:
+- **specification_cost**: per-type weights for CSM entities (activities, decisions, assumptions, constraints, risks, open questions, acceptance criteria, glossary terms)
+- **code_generation_cost**: per-type weights for CFM entities (functional_processes, business_rules, operations, data_groups, relationships, actors)
 
 Supports:
 

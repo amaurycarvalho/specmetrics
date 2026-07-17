@@ -8,6 +8,16 @@
 
 **Input**: User description: "Cognitive Points"
 
+## Clarifications
+
+### Session 2026-07-17
+
+- Q: How should canonical elements be mapped to Bloom cognitive levels by default? → A: Element-type-based mapping (e.g., Clarification→Analyze, Review→Evaluate, decisions→Evaluate, business rules→Apply, functional processes→Create), overridable through calibration.
+- Q: How do Bloom level weights, element contributions, and Fibonacci normalization interact in the formula? → A: Three stages: (1) sum bloom_weight × 1.0 per element per component, (2) add components for raw score, (3) normalize raw score via Fibonacci table.
+- Q: What is the default Fibonacci normalization scale? → A: Modified planning scale: 1, 3, 5, 8, 13, 20, 40, 100.
+- Q: What attributes should SpecificationReviewEffort and FunctionalValidationEffort have? → A: Total raw score + list of CognitiveContributions + Bloom level breakdown counts.
+- Q: How should a measurement be uniquely identified? → A: Run ID inherited from pipeline execution (consistent with Token Points).
+
 ---
 
 # User Scenarios & Testing _(mandatory)_
@@ -121,13 +131,18 @@ Aggregate Cognitive Points across multiple specifications and verify determinist
   - Specification Review Effort
   - Functional Validation Effort
 
-- **FR-006**: The engine MUST calculate:
+- **FR-006**: The engine MUST calculate in three stages:
 
 ```text
-Cognitive Points =
-Specification Review Effort
-+
-Functional Validation Effort
+Stage 1 — Per-component raw score:
+  Specification Review Effort = Σ(bloom_weight × 1.0) over CSM elements
+  Functional Validation Effort = Σ(bloom_weight × 1.0) over CFM elements
+
+Stage 2 — Total raw score:
+  Raw Cognitive Points = Specification Review Effort + Functional Validation Effort
+
+Stage 3 — Normalization:
+  Cognitive Points = fibonacci_normalize(Raw Cognitive Points)
 ```
 
 ---
@@ -164,7 +179,14 @@ Functional Validation Effort
   - Evaluate
   - Create
 
-- **FR-015**: Each Bloom level MUST have an externally configurable cognitive weight.
+- **FR-014a**: The default element-to-Bloom mapping SHALL be type-based:
+  - Specification Activities: Exploration→Understand, Clarification→Analyze, Refinement→Apply, Review→Evaluate, Validation→Evaluate
+  - Decisions→Evaluate, Assumptions→Understand, Constraints→Apply, Risks→Analyze
+  - Open Questions→Analyze, Acceptance Criteria→Apply, Glossary Terms→Remember
+  - Functional Processes→Create, Business Rules→Apply, Operations→Apply
+  - Data Groups→Understand, Relationships→Understand, Actors→Remember
+
+- **FR-015**: Each Bloom level MUST have an externally configurable cognitive weight. All mappings SHALL be overridable through calibration.
 
 ---
 
@@ -219,11 +241,11 @@ Functional Validation Effort
 
 ## CognitivePointsMeasurement
 
-Represents the complete Cognitive Points result.
+Represents the complete Cognitive Points result. Identified by pipeline run ID.
 
 Contains:
 
-- total Cognitive Points
+- total Cognitive Points (normalized)
 - Specification Review Effort
 - Functional Validation Effort
 - normalized score
@@ -239,6 +261,11 @@ Represents the estimated human cognitive effort required to analyze, refine, rev
 
 Derived exclusively from the CSM.
 
+Contains:
+- **total_raw**: Aggregate raw score before normalization
+- **contributions**: List of CognitiveContribution elements
+- **bloom_breakdown**: Count of elements per Bloom level
+
 ---
 
 ## FunctionalValidationEffort
@@ -246,6 +273,11 @@ Derived exclusively from the CSM.
 Represents the estimated human cognitive effort required to review and validate the generated implementation.
 
 Derived exclusively from the CFM.
+
+Contains:
+- **total_raw**: Aggregate raw score before normalization
+- **contributions**: List of CognitiveContribution elements
+- **bloom_breakdown**: Count of elements per Bloom level
 
 ---
 
@@ -280,6 +312,8 @@ Contains:
 ## FibonacciNormalizationProfile
 
 Defines how the accumulated cognitive score is converted into the organization's modified Fibonacci scale.
+
+Default scale: 1, 3, 5, 8, 13, 20, 40, 100 with configurable raw-score thresholds between consecutive values.
 
 Supports:
 
