@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 import litellm
@@ -68,6 +69,27 @@ class LLMProviderConfig(BaseModel):
     )
 
 
+_CONFIG_SEARCH = [
+    Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "specmetrics",
+    Path("/etc/specmetrics"),
+]
+
+
+def _load_llm_config() -> dict[str, Any]:
+    for base in _CONFIG_SEARCH:
+        for fname in ("config.yml", "config.yaml", "config.json"):
+            path = base / fname
+            if path.exists():
+                try:
+                    import ruamel.yaml
+                    yaml = ruamel.yaml.YAML(typ="safe")
+                    data = yaml.load(path.read_text(encoding="utf-8"))
+                    return (data or {}).get("plugins", {}).get("extraction_stage", {}).get("llm", {})
+                except Exception:
+                    return {}
+    return {}
+
+
 class LLMExtractionProvider:
     def __init__(
         self,
@@ -80,19 +102,26 @@ class LLMExtractionProvider:
     ) -> None:
         self._provider_id = provider_id
         self._chunk_size = chunk_size
-        self._provider = provider
+
+        has_explicit = any(x is not None for x in (provider, api_url, model, api_key))
+        cfg = _load_llm_config() if not has_explicit else {}
+
+        self._provider = provider if provider is not None else cfg.get("provider")
 
         self._api_url = (
             api_url
+            or cfg.get("api_url")
             or os.environ.get("SPECMETRICS_LLM_API_URL")
         )
         self._model = (
             model
+            or cfg.get("model")
             or os.environ.get("SPECMETRICS_LLM_MODEL")
             or "gpt-4o-mini"
         )
         self._api_key = (
             api_key
+            or cfg.get("api_key")
             or os.environ.get("SPECMETRICS_LLM_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
         )
@@ -108,9 +137,6 @@ class LLMExtractionProvider:
     _no_key: bool = False
 
     def _check_config(self) -> str | None:
-        if self._provider is not None and self._provider == "none":
-            self.__class__._no_key = True
-            return None
         if not self._api_key:
             self.__class__._no_key = True
             if not self.__class__._config_warned:

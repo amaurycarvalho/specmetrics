@@ -46,6 +46,18 @@ _STAGE_NAME_TO_EVENT: dict[StageName, EventType] = {
     StageName.EXPORT: EventType.EXPORT_COMPLETED,
 }
 
+_STAGE_NAME_TO_HANDLER_NAMES: dict[str, list[str]] = {
+    "discover": ["discovery"],
+    "extract": ["semantic_extraction"],
+    "graph": ["evidence_graph"],
+    "cfm": ["canonical_model"],
+    "rule": ["Rule Pack Engine"],
+    "measure": ["FPA Measurement", "SFP Measurement", "SNAP Measurement",
+                 "Story Points Measurement", "Token Points Measurement",
+                 "Cognitive Points Measurement", "BCP Measurement"],
+    "export": [],
+}
+
 
 def _stage_name_from_event(event_type: EventType) -> str:
     for stage_name, et in _STAGE_NAME_TO_EVENT.items():
@@ -199,6 +211,7 @@ class PipelineOrchestrator:
             measurement=measurement,
             duration_seconds=elapsed,
             export_path=export_path,
+            _framework_detected=getattr(self, "_framework_detected", ""),
             canonical_model=result_ctx.canonical_model,
         )
 
@@ -212,11 +225,20 @@ class PipelineOrchestrator:
 
         results: list[StageResult] = []
         valid_stage_names = {s.value for s in StageName}
+
         for event_type in event_order:
             stage_name = _stage_name_from_event(event_type)
             if stage_name not in valid_stage_names:
                 continue
+
             timing = ctx.diagnostics.stage_timings.get(stage_name)
+            if timing is None:
+                alt_names = _STAGE_NAME_TO_HANDLER_NAMES.get(stage_name, [])
+                for alt_name in alt_names:
+                    timing = ctx.diagnostics.stage_timings.get(alt_name)
+                    if timing is not None:
+                        break
+
             if timing is None:
                 results.append(
                     StageResult(
@@ -225,6 +247,7 @@ class PipelineOrchestrator:
                     )
                 )
                 continue
+
             kernel_status = timing.status
             if kernel_status == KernelStageStatus.COMPLETED:
                 status = StageExecutionStatus.COMPLETED
@@ -240,11 +263,26 @@ class PipelineOrchestrator:
                 if timing.duration_ms is not None
                 else 0.0
             )
+
+            entities_found = 0
+            if stage_name == "discover":
+                adapter_data = getattr(ctx, "adapter_result", None) or {}
+                entities_found = len(adapter_data.get("documents", []))
+                adapters = adapter_data.get("adapters_used", [])
+                if "speckit-adapter" in adapters:
+                    self._framework_detected = "speckit"
+                elif "openspec-adapter" in adapters:
+                    self._framework_detected = "openspec"
+            elif stage_name == "extract":
+                extract_data = getattr(ctx, "extraction_result", None) or {}
+                entities_found = extract_data.get("total_elements", 0)
+
             results.append(
                 StageResult(
                     stage=StageName(stage_name),
                     status=status,
                     duration_seconds=duration_s,
+                    entities_found=entities_found,
                 )
             )
         return results

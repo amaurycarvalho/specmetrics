@@ -189,7 +189,15 @@ def llm_set(
     ),
 ) -> None:
     if provider == "none":
-        _write_llm_config(provider="none")
+        path = _get_user_config_path()
+        data = _read_config_yaml(path)
+        llm_data = _get_nested(data, LLM_NAMESPACE)
+        if llm_data:
+            for key in ("api_url", "model", "api_key"):
+                llm_data.pop(key, None)
+        _set_nested(data, LLM_NAMESPACE + ("provider",), "none")
+        _write_config_yaml(path, data)
+        print(f"Updated {path}")
         print("LLM provider set to 'none' — using deterministic structural extraction")
         print("  (no API key required, fully offline)")
         return

@@ -51,6 +51,7 @@ class PipelineResult:
     error: str = ""
     export_path: Path | None = None
     canonical_model: Any | None = None
+    _framework_detected: str = ""
 
 
 @dataclass

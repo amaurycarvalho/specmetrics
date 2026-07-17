@@ -30,10 +30,17 @@ def format_text_result(result: PipelineResult, verbose: bool = False) -> str:
     lines.append("Stages:")
     for sr in result.stages_executed:
         icon = _status_icon(sr.status)
-        stage_line = f"  {icon} {sr.stage.value:<12} ({sr.duration_seconds:.1f}s)"
+        extra = ""
+        if sr.stage.value == "discover":
+            framework = getattr(result, "_framework_detected", None)
+            if framework:
+                extra = f" [{framework}]"
+            if sr.entities_found > 0:
+                extra += f" ({sr.entities_found} documents)"
+        elif sr.entities_found > 0:
+            extra = f" ({sr.entities_found} items)"
+        stage_line = f"  {icon} {sr.stage.value:<12} ({sr.duration_seconds:.1f}s){extra}"
         lines.append(stage_line)
-        if verbose and sr.entities_found > 0:
-            lines.append(f"       entities: {sr.entities_found}")
 
     if result.error:
         lines.append("")
