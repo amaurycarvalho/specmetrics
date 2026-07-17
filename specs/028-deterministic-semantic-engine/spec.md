@@ -15,6 +15,11 @@
 - **Q1**: How should extracted elements be uniquely identified? → **A**: Reuse F27 content-hash IDs — `sha256(document_id + "::" + section + "::" + text)[:16]`. Same scheme as the LiteLLM engine.
 - **Q2**: What priority policy determines which rule wins when multiple rules match the same content? → **A**: Numeric priority scores (1–100). Higher score wins. Ties broken by rule ID lexicographic order.
 - **Q3**: What extraction statistics should the engine report? → **A**: Match F27 standard set — documents processed, elements extracted, elements by type, processing duration (ms), errors count.
+- **IMP-1**: Added EmphasisVisitor and LinkVisitor for bold/italic and hyperlink detection (FR-016).
+- **IMP-2**: Added framework-specific rule packs (`openspec_rules.yaml`, `speckit_rules.yaml`) with auto-detection via `document.document_type` (FR-015).
+- **IMP-3**: Added `EvidenceReference.rule_id` field to trace each element to its originating rule (FR-008).
+- **IMP-4**: Byte-identical output (SC-002) excludes `duration_ms` — added `ExtractionResult.deterministic_dump()` for reliable comparison (FR-017).
+- **IMP-5**: Default provider is `"none"` when no LLM config exists — pipeline uses DeterministicSemanticEngine automatically without warnings.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -30,7 +35,7 @@ Markdown Parser  →  AST
     │
     ▼
 Visitors  (HeadingVisitor, ListVisitor, TableVisitor, ParagraphVisitor,
-           CodeBlockVisitor, QuoteVisitor)
+           CodeBlockVisitor, QuoteVisitor, EmphasisVisitor, LinkVisitor)
     │
     ▼
 Rule Engine  (matches structural observations against rules)
@@ -132,9 +137,9 @@ A team has a domain-specific specification pattern not covered by built-in rules
 - **FR-001**: The Deterministic Semantic Engine MUST implement the `SemanticExtractionEngine` interface as defined by F27.
 - **FR-002**: The engine MUST perform extraction without any external services — no network access, API keys, or AI services.
 - **FR-003**: The engine MUST parse documents using a Markdown AST parser and MUST NOT rely on regular expressions as the primary parsing mechanism.
-- **FR-004**: The engine MUST traverse the AST using dedicated visitor classes for at least: headings, lists, tables, paragraphs, fenced code blocks, and blockquotes.
+- **FR-004**: The engine MUST traverse the AST using dedicated visitor classes for at least: headings, lists, tables, paragraphs, fenced code blocks, blockquotes, emphasis (bold/italic), and links.
 - **FR-005**: The engine MUST apply a rule engine that transforms structural observations into typed semantic elements.
-- **FR-006**: The engine MUST include a pattern library that recognizes at least: User Story patterns, Given/When/Then scenarios, Requirement statements (shall/must/should), and Business Rules (if/then).
+- **FR-006**: The engine MUST include a pattern library that recognizes at least: User Story patterns, Given/When/Then scenarios, Requirement statements (shall/must/should), Business Rules (if/then), Actors section, Constraints section, Assumptions section, Decisions section, Glossary Terms section, and Acceptance Criteria section.
 - **FR-007**: The engine MUST support framework-aware extraction rules for at least OpenSpec and SpecKit conventions.
 - **FR-008**: The engine MUST generate evidence references for every extracted element, including: document identifier, section identifier, original text fragment, and the extraction rule identifier that produced the element.
 - **FR-009**: The engine MUST assign deterministic confidence scores: explicit heading match (1.00), framework convention (0.95), structural heuristic (0.85), pattern inference (0.70).
@@ -143,6 +148,9 @@ A team has a domain-specific specification pattern not covered by built-in rules
 - **FR-012**: The engine MUST process documents in linear time relative to document size.
 - **FR-013**: New rule packs MUST be addable without modifying existing rule packs or the engine source code.
 - **FR-014**: The engine MUST assign deterministic content-hash IDs to every extracted element, using the F27 canonical scheme: `sha256(f"{document_id}::{section}::{text}")[:16]`.
+- **FR-015**: The engine MUST auto-detect the specification framework from `document_type` metadata and load corresponding framework-specific rule packs (OpenSpec, SpecKit) when available.
+- **FR-016**: The engine MUST include an EmphasisVisitor and LinkVisitor, each producing observations for bold/italic text spans and hyperlinks respectively.
+- **FR-017**: The engine's byte-identical output guarantee (SC-002) applies to semantic content (element IDs, types, confidence, evidence) but excludes `duration_ms` in processing statistics, which naturally varies between runs. The `ExtractionResult.deterministic_dump()` method provides a timing-excluded representation for reliable comparison.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -159,7 +167,7 @@ A team has a domain-specific specification pattern not covered by built-in rules
 ### Measurable Outcomes
 
 - **SC-001**: A repository with 10 specification documents containing headings, lists, tables, code blocks, and blockquotes is fully extracted in under 5 seconds — no network access or API keys required.
-- **SC-002**: Processing the same 10-document set twice produces byte-identical ExtractionResult output across both runs.
+- **SC-002**: Processing the same 10-document set twice produces identical ExtractionResult output across both runs (element IDs, types, confidence, evidence — excluding `duration_ms` which varies due to runtime conditions). Use `ExtractionResult.deterministic_dump()` for reliable comparison.
 - **SC-003**: Every extracted element includes a non-empty evidence reference with document ID and source text fragment.
 - **SC-004**: A document containing a User Story, Given/When/Then scenario, Requirement statement, and Business Rule produces correctly typed elements for each pattern with confidence scores matching the RFC-031 table.
 - **SC-005**: A new rule pack can be added and applied by placing a YAML file in the rule packs directory — no engine code changes, recompilation, or restart required.
@@ -181,6 +189,8 @@ This specification does not define:
 - The deterministic engine is invoked only through the SemanticExtractionEngine interface — it has no public API beyond extract().
 - Framework-specific rules (OpenSpec, SpecKit) are optional and loaded only when the corresponding rule pack files are present.
 - The engine processes one document at a time; document-level parallelism, if needed, is handled by the pipeline layer.
+- When no LLM provider is configured, the pipeline defaults to `provider = "none"`, which instantiates the DeterministicSemanticEngine automatically — no explicit configuration required for offline use.
+- Framework-specific rule packs (`openspec_rules.yaml`, `speckit_rules.yaml`) are detected and loaded automatically based on `document.document_type` at extraction time.
 
 ## Future Work
 

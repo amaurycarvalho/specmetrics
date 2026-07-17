@@ -112,6 +112,7 @@ def _write_llm_config(**kwargs: str | None) -> None:
 
 def _format_model_list() -> str:
     lines = []
+    lines.append(f"  {'none':<12} {'(deterministic)':<30} {'(no network)'}")
     for name, preset in PROVIDER_PRESETS.items():
         lines.append(f"  {name:<12} {preset['model']:<30} {preset['api_url']}")
     lines.append(f"  {'custom':<12} {'(user-defined)':<30} {'(user-defined)'}")
@@ -166,7 +167,7 @@ def config_dump(
 def llm_set(
     provider: str = typer.Argument(
         ...,
-        help="Provider name",
+        help="Provider name (use 'list' subcommand to see available providers)",
     ),
     model: str = typer.Option(
         None,
@@ -187,6 +188,12 @@ def llm_set(
         help="API base URL (overrides provider default)",
     ),
 ) -> None:
+    if provider == "none":
+        _write_llm_config(provider="none")
+        print("LLM provider set to 'none' — using deterministic structural extraction")
+        print("  (no API key required, fully offline)")
+        return
+
     preset = PROVIDER_PRESETS.get(provider)
     if preset is None and provider != "custom":
         print(f"Unknown provider '{provider}'. Available providers:\n{_format_model_list()}", file=sys.stderr)
@@ -199,7 +206,7 @@ def llm_set(
     final_api_url = api_url or (preset["api_url"] if preset else None)
     final_model = model or (preset["model"] if preset else None)
 
-    _write_llm_config(api_url=final_api_url, model=final_model, api_key=api_key)
+    _write_llm_config(provider=provider, api_url=final_api_url, model=final_model, api_key=api_key)
 
     print(f"LLM provider set to '{provider}'")
     if final_api_url:
@@ -220,7 +227,7 @@ def llm_show() -> None:
     print()
 
     if llm_data:
-        for key in ("api_url", "model", "api_key"):
+        for key in ("provider", "api_url", "model", "api_key"):
             value = llm_data.get(key)
             if value is not None:
                 display = "**********" if key == "api_key" else str(value)
@@ -228,10 +235,19 @@ def llm_show() -> None:
         print()
         print(f"  Config file: {path}")
     else:
-        print("  (not configured)")
+        print("  (not configured — will use 'none' / deterministic engine by default)")
         print()
         print("Set a provider with:  specmetrics config llm set <provider> [--api-key KEY]")
         print("Available providers:\n" + _format_model_list())
+
+
+@llm_app.command(name="list")
+def llm_list() -> None:
+    """List all available LLM providers."""
+    print("Available providers:\n")
+    print(f"  {'Provider':<12} {'Model':<30} {'API URL'}")
+    print(f"  {'-'*12:<12} {'-'*30:<30} {'-'*40}")
+    print(_format_model_list())
 
 
 @llm_app.command(name="set-model")

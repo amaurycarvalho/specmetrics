@@ -9,11 +9,15 @@ import litellm
 from pydantic import BaseModel, Field
 
 from specmetrics.kernel.adapter_interface import Document
+from specmetrics.kernel.deterministic_engine import DeterministicSemanticEngine
 from specmetrics.kernel.extraction_provider import (
     EvidenceReference,
     ExtractedElement,
     ExtractionResult,
     ProcessingStats,
+)
+from specmetrics.kernel.semantic_extraction_engine import (
+    ExtractionResult as NewExtractionResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,6 +49,10 @@ def _infer_type(document_type: str) -> str:
 
 
 class LLMProviderConfig(BaseModel):
+    provider: str = Field(
+        "none",
+        description="Provider name (none for deterministic engine)",
+    )
     api_url: str | None = Field(
         None,
         description="Base URL for the LLM API (e.g. https://api.openai.com/v1)",
@@ -65,12 +73,14 @@ class LLMExtractionProvider:
         self,
         provider_id: str = "llm-provider",
         chunk_size: int = _DEFAULT_CHUNK_SIZE,
+        provider: str | None = None,
         api_url: str | None = None,
         model: str | None = None,
         api_key: str | None = None,
     ) -> None:
         self._provider_id = provider_id
         self._chunk_size = chunk_size
+        self._provider = provider
 
         self._api_url = (
             api_url
@@ -98,6 +108,9 @@ class LLMExtractionProvider:
     _no_key: bool = False
 
     def _check_config(self) -> str | None:
+        if self._provider is not None and self._provider == "none":
+            self.__class__._no_key = True
+            return None
         if not self._api_key:
             self.__class__._no_key = True
             if not self.__class__._config_warned:
@@ -154,12 +167,22 @@ class LLMExtractionProvider:
             logger.warning(config_msg)
 
         if self.__class__._no_key:
-            for chunk_text, chunk_idx in chunks:
-                try:
-                    chunk_elements = self._structural_parse(document, chunk_text, chunk_idx)
-                    all_elements.extend(chunk_elements)
-                except Exception:
-                    errors += 1
+            det_engine = DeterministicSemanticEngine()
+            det_result: NewExtractionResult = det_engine.extract([document])
+            for el in det_result.elements:
+                all_elements.append(
+                    ExtractedElement(
+                        id=el.id,
+                        type=el.type,
+                        confidence=el.confidence,
+                        evidence=EvidenceReference(
+                            document_id=el.evidence.document_id,
+                            section_id=el.evidence.section_id,
+                            text=el.evidence.text,
+                        ),
+                        content=el.content,
+                    )
+                )
             duration = int((time.monotonic() - started_at) * 1000)
             return ExtractionResult(
                 provider_id=self._provider_id,
@@ -167,7 +190,7 @@ class LLMExtractionProvider:
                 processing_stats=ProcessingStats(
                     documents_processed=1,
                     elements_extracted=len(all_elements),
-                    errors=errors,
+                    errors=0,
                     duration_ms=duration,
                 ),
             )
@@ -201,8 +224,22 @@ class LLMExtractionProvider:
                     chunk_idx,
                 )
                 try:
-                    chunk_elements = self._structural_parse(document, chunk_text, chunk_idx)
-                    all_elements.extend(chunk_elements)
+                    det_engine = DeterministicSemanticEngine()
+                    det_result: NewExtractionResult = det_engine.extract([document])
+                    for el in det_result.elements:
+                        all_elements.append(
+                            ExtractedElement(
+                                id=el.id,
+                                type=el.type,
+                                confidence=el.confidence,
+                                evidence=EvidenceReference(
+                                    document_id=el.evidence.document_id,
+                                    section_id=el.evidence.section_id,
+                                    text=el.evidence.text,
+                                ),
+                                content=el.content,
+                            )
+                        )
                 except Exception:
                     errors += 1
 
@@ -245,45 +282,23 @@ class LLMExtractionProvider:
                     )
                 )
         except Exception:
-            logger.warning("Failed to parse LLM response, falling back to structural")
-            elements = self._structural_parse(document, document.content)
+            logger.warning("Failed to parse LLM response, falling back to deterministic engine")
+            det_engine = DeterministicSemanticEngine()
+            det_result: NewExtractionResult = det_engine.extract([document])
+            for el in det_result.elements:
+                elements.append(
+                    ExtractedElement(
+                        id=el.id,
+                        type=el.type,
+                        confidence=el.confidence,
+                        evidence=EvidenceReference(
+                            document_id=el.evidence.document_id,
+                            section_id=el.evidence.section_id,
+                            text=el.evidence.text,
+                        ),
+                        content=el.content,
+                    )
+                )
         return elements
 
-    def _structural_parse(
-        self, document: Document, chunk_text: str | None = None, chunk_idx: int = 0
-    ) -> list[ExtractedElement]:
-        elements: list[ExtractedElement] = []
-        content = chunk_text or document.content
-        section_id = f"chunk-{chunk_idx}" if chunk_idx > 0 else None
-        for section in (document.sections or []):
-            if chunk_text and section.content not in chunk_text:
-                continue
-            elements.append(
-                ExtractedElement(
-                    id=f"{document.id}/sec-{chunk_idx}-{section.id}",
-                    type="fact",
-                    confidence=0.6,
-                    evidence=EvidenceReference(
-                        document_id=document.id,
-                        section_id=section_id or section.id,
-                        text=section.content[:200],
-                    ),
-                    content=f"{section.title}: {section.content}",
-                )
-            )
-        if not elements:
-            fallback_text = content[:200] if content else "(empty document)"
-            elements.append(
-                ExtractedElement(
-                    id=f"{document.id}/full-{chunk_idx}",
-                    type="fact",
-                    confidence=0.5,
-                    evidence=EvidenceReference(
-                        document_id=document.id,
-                        section_id=section_id,
-                        text=fallback_text,
-                    ),
-                    content=content or "",
-                )
-            )
-        return elements
+

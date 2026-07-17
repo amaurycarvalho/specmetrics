@@ -5,7 +5,8 @@ from specmetrics.infrastructure.config.loader import Loader
 
 
 class TestLoader:
-    def test_discover_sources_no_files(self, tmp_path):
+    def test_discover_sources_no_files(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / ".config"))
         loader = Loader()
         sources = loader.discover_sources(tmp_path)
         assert len(sources) == 0  # no files in temp dir, env added by ConfigurationSystem

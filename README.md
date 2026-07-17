@@ -69,7 +69,10 @@ Before running measurements, configure the LLM provider for semantic extraction:
 
 ```bash
 # List available providers
-specmetrics config llm show
+specmetrics config llm list
+
+# Configure a simple deterministic local provider as LLM (default)
+specmetrics config llm set none
 
 # Configure a provider (e.g., ChatGPT/OpenAI)
 specmetrics config llm set chatgpt --api-key sk-...
@@ -79,9 +82,6 @@ specmetrics config llm set openai --model gpt-4o --api-key sk-...
 
 # Or use environment variables
 export SPECMETRICS_LLM_API_KEY=sk-...
-
-# Or use a deterministic semantic engine (default)
-specmetrics config llm set none
 ```
 
 > **Note**: LLM configuration is stored in `~/.config/specmetrics/config.yml`, outside your project directory. If no API key is configured, the pipeline falls back to structural extraction.
@@ -111,7 +111,7 @@ specmetrics plugins list --type measurement
 
 # Configuration
 specmetrics config dump
-specmetrics config llm set none
+specmetrics config llm list
 specmetrics config llm set deepseek --api-key sk-...
 specmetrics config llm show
 
@@ -144,6 +144,7 @@ specmetrics mcp stop
 | `export publisher-status`      | Show publisher status                                                               |
 | `config dump`                  | Show all resolved configuration                                                     |
 | `config llm set <provider>`    | Configure LLM provider (chatgpt, gemini, copilot, claude, deepseek, ollama, custom) |
+| `config llm list`              | List LLM providers                                                                  |
 | `config llm show`              | Show current LLM configuration                                                      |
 | `config llm set-model <model>` | Change LLM model                                                                    |
 | `config llm set-api-key <key>` | Change LLM API key                                                                  |

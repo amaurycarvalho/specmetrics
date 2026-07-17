@@ -116,6 +116,8 @@ A team lead wants to inspect which plugins are installed, verify their versions,
 - **FR-018**: The CLI MUST support loading project configuration from the `.specmetrics/` directory, including plugin selection and pipeline options
 - **FR-019**: The MCP Server MUST log its activity to stderr for debugging without interfering with the stdio JSON-RPC communication
 - **FR-020**: The MCP Server MUST support the MCP `initialize` handshake, returning server capabilities including a list of available tools
+- **FR-021**: The CLI MUST accept `none` as a valid LLM provider in `config llm set none`, configuring the pipeline to use the DeterministicSemanticEngine and requiring no API key or network access
+- **FR-022**: The CLI MUST provide a `config llm list` command that displays all available providers with their default model and API URL
 
 ### Key Entities
 
@@ -186,8 +188,9 @@ Nested sub-commands for LLM provider configuration. Config is stored outside the
 
 | Command | Description |
 |---------|-------------|
-| `config llm set <provider>` | Set LLM provider preset: `chatgpt`, `gemini`, `copilot`, `claude`, `deepseek`, `ollama`, `custom`. Options: `--model`, `--api-key`, `--api-url` (overrides preset defaults) |
-| `config llm show` | Display current LLM configuration |
+| `config llm list` | List all available LLM providers with their default model and API URL |
+| `config llm set <provider>` | Set LLM provider. Valid providers: `none` (deterministic engine, offline), `chatgpt`, `gemini`, `copilot`, `claude`, `deepseek`, `ollama`, `custom`. Options: `--model`, `--api-key`, `--api-url` (overrides preset defaults) |
+| `config llm show` | Display current LLM configuration, or indicate that `none` (deterministic engine) is the active/default provider |
 | `config llm set-model <model>` | Change the model identifier only |
 | `config llm set-api-key <key>` | Change the API key only |
 

@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class Loader:
-    _XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")
+    def _get_xdg_config_home(self) -> Path:
+        return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 
     def discover_sources(self, project_root: Path, cli_config_path: Path | None = None) -> list[ConfigurationSource]:
         sources: list[ConfigurationSource] = []
@@ -33,7 +34,7 @@ class Loader:
                 break
 
         for filename in config_files:
-            path = Path(self._XDG_CONFIG_HOME) / "specmetrics" / filename
+            path = self._get_xdg_config_home() / "specmetrics" / filename
             if path.exists():
                 sources.append(FileSource(path, SourceLevel.USER))
                 break

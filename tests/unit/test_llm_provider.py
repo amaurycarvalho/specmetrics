@@ -72,11 +72,17 @@ class TestLLMProviderGracefulDegradation:
         )
 
     @patch("specmetrics.plugins.semantic.llm_provider.litellm")
-    def test_falls_back_to_structural_parse_on_llm_error(self, mock_litellm: MagicMock):
+    def test_falls_back_to_deterministic_engine_on_llm_error(self, mock_litellm: MagicMock):
+        doc = Document(
+            id="doc-actors",
+            path="specs/actors.md",
+            document_type="section",
+            content="# Actors\n- Admin\n- User",
+        )
         mock_litellm.completion.side_effect = Exception("API key not configured")
-        result = self.provider.extract(self.doc)
+        result = self.provider.extract(doc)
         assert len(result.elements) >= 1
-        assert result.elements[0].type == "fact"
+        assert result.elements[0].type == "entity"
 
     @patch("specmetrics.plugins.semantic.llm_provider.litellm")
     def test_structural_parse_preserves_evidence(self, mock_litellm: MagicMock):
@@ -97,8 +103,8 @@ class TestLLMProviderGracefulDegradation:
         )
         mock_litellm.completion.side_effect = Exception("Unavailable")
         result = self.provider.extract(doc)
-        assert len(result.elements) >= 1
-        assert result.elements[0].type == "fact"
+        assert len(result.elements) == 0
+        assert result.processing_stats.errors == 0
 
     @patch("specmetrics.plugins.semantic.llm_provider.litellm")
     def test_returns_processing_stats(self, mock_litellm: MagicMock):

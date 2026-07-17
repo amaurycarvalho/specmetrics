@@ -124,7 +124,7 @@ As an AI engineering agent, I want to access pre-defined prompt templates throug
 - **SC-003**: A client can access specification documents and measurement results via resource URIs — the first resource fetch returns content within 1 second.
 - **SC-004**: The server starts, accepts connections, and shuts down gracefully within 3 seconds of the start/shutdown command.
 - **SC-005**: Error responses from invalid tool parameters include the parameter name, the invalid value, the expected format, and a human-readable message — verified by sending invalid inputs to each tool.
-- **SC-006**: All pipeline capabilities available via CLI are also available as MCP tools — verified by comparing the CLI command list against the MCP tools/list response.
+- **SC-006**: All pipeline capabilities available via CLI are also available as MCP tools — verified by comparing the CLI command list against the MCP tools/list response. Administrative commands (e.g., `config llm`) are CLI-only and not expected as MCP tools.
 
 ## Assumptions
 
