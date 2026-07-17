@@ -23,10 +23,10 @@
 
 **Purpose**: Extend existing pipeline infrastructure to support the new CSM stage
 
-- [ ] T001 Create `specmetrics/kernel/csm/` package directory with `__init__.py`
-- [ ] T002 [P] Add `CANONICAL_SPECIFICATION_MODEL_BUILT` to `EventType` enum in `specmetrics/kernel/events.py`
-- [ ] T003 [P] Add `canonical_spec_model` field to `PipelineContext` in `specmetrics/kernel/pipeline_context.py`
-- [ ] T004 Update `CANONICAL_EVENT_ORDER` in `specmetrics/kernel/pipeline_engine.py` — insert `CANONICAL_SPECIFICATION_MODEL_BUILT` after `EVIDENCE_GRAPH_BUILT`
+- [X] T001 Create `specmetrics/kernel/csm/` package directory with `__init__.py`
+- [X] T002 [P] Add `CANONICAL_SPECIFICATION_MODEL_BUILT` to `EventType` enum in `specmetrics/kernel/events.py`
+- [X] T003 [P] Add `canonical_spec_model` field to `PipelineContext` in `specmetrics/kernel/pipeline_context.py`
+- [X] T004 Update `CANONICAL_EVENT_ORDER` in `specmetrics/kernel/pipeline_engine.py` — insert `CANONICAL_SPECIFICATION_MODEL_BUILT` after `EVIDENCE_GRAPH_BUILT`
 
 **Parallel opportunities**: T002 and T003 are independent files and can run in parallel.
 
@@ -36,16 +36,16 @@
 
 **Purpose**: Core models, classifier, and builder function — MUST complete before any user story
 
-- [ ] T005 [P] Create `EvidenceRef` model in `specmetrics/kernel/csm/model.py` (shared reference type)
-- [ ] T006 [P] Create `CsmElement` base model with id (UUID v4), description, evidence_references, status fields in `specmetrics/kernel/csm/model.py`
-- [ ] T007 [P] Create `BuildMetadata` and `ClassificationConflict` models in `specmetrics/kernel/csm/metadata.py`
-- [ ] T008 Create all CSM entity models (Decision, Assumption, Constraint, Risk, OpenQuestion, AcceptanceCriterion, GlossaryTerm, Reference, SpecificationActivity) inheriting from CsmElement in `specmetrics/kernel/csm/model.py`
-- [ ] T009 Create `CanonicalSpecificationModel` root model (frozen) with all category dictionaries + query interface methods (`get_element`, `get_elements`, `get_elements_by_evidence`, `trace_evidence`) in `specmetrics/kernel/csm/model.py`
-- [ ] T010 Create deterministic classifier with regex patterns for all 8 canonical categories in `specmetrics/kernel/csm/classifier.py`
-- [ ] T011 Create SpecificationActivity type detector (exploration, clarification, refinement, review, validation) in `specmetrics/kernel/csm/activity_classifier.py`
-- [ ] T012 Create evidence graph traversal helpers for linking entities to evidence nodes in `specmetrics/kernel/csm/evidence_processing.py`
-- [ ] T013 Implement `build()` function that transforms EvidenceGraph → CanonicalSpecificationModel in `specmetrics/kernel/csm/builder.py`
-- [ ] T014 [P] Wire up `specmetrics/kernel/csm/__init__.py` to export all public symbols
+- [X] T005 [P] Create `EvidenceRef` model in `specmetrics/kernel/csm/model.py` (shared reference type)
+- [X] T006 [P] Create `CsmElement` base model with id (UUID v4), description, evidence_references, status fields in `specmetrics/kernel/csm/model.py`
+- [X] T007 [P] Create `BuildMetadata` and `ClassificationConflict` models in `specmetrics/kernel/csm/metadata.py`
+- [X] T008 Create all CSM entity models (Decision, Assumption, Constraint, Risk, OpenQuestion, AcceptanceCriterion, GlossaryTerm, Reference, SpecificationActivity) inheriting from CsmElement in `specmetrics/kernel/csm/model.py`
+- [X] T009 Create `CanonicalSpecificationModel` root model (frozen) with all category dictionaries + query interface methods (`get_element`, `get_elements`, `get_elements_by_evidence`, `trace_evidence`) in `specmetrics/kernel/csm/model.py`
+- [X] T010 Create deterministic classifier with regex patterns for all 8 canonical categories in `specmetrics/kernel/csm/classifier.py`
+- [X] T011 Create SpecificationActivity type detector (exploration, clarification, refinement, review, validation) in `specmetrics/kernel/csm/activity_classifier.py`
+- [X] T012 Create evidence graph traversal helpers for linking entities to evidence nodes in `specmetrics/kernel/csm/evidence_processing.py`
+- [X] T013 Implement `build()` function that transforms EvidenceGraph → CanonicalSpecificationModel in `specmetrics/kernel/csm/builder.py`
+- [X] T014 [P] Wire up `specmetrics/kernel/csm/__init__.py` to export all public symbols
 
 **Parallel opportunities**: T005–T007 are independent. T010–T012 are independent of each other. T014 depends on all preceding tasks.
 
@@ -61,21 +61,21 @@
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Unit test for CsmElement base and entity model construction in `tests/unit/test_csm_model.py`
-- [ ] T016 [P] [US1] Unit test for classifier — validate each canonical category is correctly identified from text patterns in `tests/unit/test_csm_classifier.py`
-- [ ] T017 [P] [US1] Unit test for SpecificationActivity type detection in `tests/unit/test_csm_classifier.py`
-- [ ] T018 [P] [US1] Unit test for BuildMetadata correctness in `tests/unit/test_csm_metadata.py`
-- [ ] T019 [US1] Unit test for `build()` function — sample evidence graph → CSM with correct categories in `tests/unit/test_csm_builder.py`
-- [ ] T020 [US1] Unit test for framework normalization — OpenSpec and SpecKit graphs produce structurally identical CSMs in `tests/unit/test_csm_builder.py`
-- [ ] T021 [US1] Unit test for empty evidence graph — produces empty CSM without errors in `tests/unit/test_csm_builder.py`
-- [ ] T022 [US1] Unit test for unclassifiable elements — preserved in References category in `tests/unit/test_csm_builder.py`
-- [ ] T023 [US1] Unit test for element immutability — frozen model enforced in `tests/unit/test_csm_model.py`
-- [ ] T024 [US1] Integration test for pipeline stage — Evidence Graph → CSM Builder emits CanonicalSpecificationModelBuilt event in `tests/integration/test_csm_pipeline_stage.py`
+- [X] T015 [P] [US1] Unit test for CsmElement base and entity model construction in `tests/unit/test_csm_model.py`
+- [X] T016 [P] [US1] Unit test for classifier — validate each canonical category is correctly identified from text patterns in `tests/unit/test_csm_classifier.py`
+- [X] T017 [P] [US1] Unit test for SpecificationActivity type detection in `tests/unit/test_csm_classifier.py`
+- [X] T018 [P] [US1] Unit test for BuildMetadata correctness in `tests/unit/test_csm_metadata.py`
+- [X] T019 [US1] Unit test for `build()` function — sample evidence graph → CSM with correct categories in `tests/unit/test_csm_builder.py`
+- [X] T020 [US1] Unit test for framework normalization — OpenSpec and SpecKit graphs produce structurally identical CSMs in `tests/unit/test_csm_builder.py`
+- [X] T021 [US1] Unit test for empty evidence graph — produces empty CSM without errors in `tests/unit/test_csm_builder.py`
+- [X] T022 [US1] Unit test for unclassifiable elements — preserved in References category in `tests/unit/test_csm_builder.py`
+- [X] T023 [US1] Unit test for element immutability — frozen model enforced in `tests/unit/test_csm_model.py`
+- [X] T024 [US1] Integration test for pipeline stage — Evidence Graph → CSM Builder emits CanonicalSpecificationModelBuilt event in `tests/integration/test_csm_pipeline_stage.py`
 
 ### Implementation for User Story 1
 
-- [ ] T025 [P] [US1] Implement `CsmBuilderStage` handler class in `specmetrics/kernel/csm/builder.py`
-- [ ] T026 [US1] Create stage plugin metadata registration in `specmetrics/plugins/stage/csm_builder.py`
+- [X] T025 [P] [US1] Implement `CsmBuilderStage` handler class in `specmetrics/kernel/csm/builder.py`
+- [X] T026 [US1] Create stage plugin metadata registration in `specmetrics/plugins/stage/csm_builder.py`
 
 **Checkpoint**: US1 is fully functional — the pipeline can transform evidence graphs into CSMs with all canonical categories, provenance preservation, and framework normalization.
 
@@ -89,14 +89,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T027 [P] [US2] Unit test for query interface — `get_element()`, `get_elements()` by category, `get_elements_by_evidence()` in `tests/unit/test_csm_model.py`
-- [ ] T028 [P] [US2] Unit test for evidence traceability — `trace_evidence()` returns full provenance chain in `tests/unit/test_csm_model.py`
-- [ ] T029 [US2] Unit test for cross-entity linking — SpecificationActivity linked to decisions/questions/assumptions in `tests/unit/test_csm_builder.py`
-- [ ] T030 [P] [US2] Contract test for CSM query interface — downstream consumer enumerates categories and queries elements in `tests/contract/test_csm_interface.py`
+- [X] T027 [P] [US2] Unit test for query interface — `get_element()`, `get_elements()` by category, `get_elements_by_evidence()` in `tests/unit/test_csm_model.py`
+- [X] T028 [P] [US2] Unit test for evidence traceability — `trace_evidence()` returns full provenance chain in `tests/unit/test_csm_model.py`
+- [X] T029 [US2] Unit test for cross-entity linking — SpecificationActivity linked to decisions/questions/assumptions in `tests/unit/test_csm_builder.py`
+- [X] T030 [P] [US2] Contract test for CSM query interface — downstream consumer enumerates categories and queries elements in `tests/contract/test_csm_interface.py`
 
 ### Implementation for User Story 2
 
-- [ ] T031 [US2] Implement query interface methods on `CanonicalSpecificationModel` in `specmetrics/kernel/csm/model.py` (if not already done in T009)
+- [X] T031 [US2] Implement query interface methods on `CanonicalSpecificationModel` in `specmetrics/kernel/csm/model.py` (if not already done in T009)
 
 **Note**: Query interface methods are expected to be created in T009 (Phase 2). T031 is a safety task to ensure completeness.
 
@@ -112,14 +112,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T032 [P] [US3] Unit test for `CsmConsumer` protocol conformance — mock consumer implements the protocol in `tests/unit/test_csm_model.py`
-- [ ] T033 [US3] Contract test — mock measurement engine consumes CSM from both OpenSpec and SpecKit sources, verifies identical structure in `tests/contract/test_csm_interface.py`
-- [ ] T034 [US3] Integration test — mock engine reads CSM from PipelineContext after full pipeline run in `tests/integration/test_csm_pipeline_stage.py`
+- [X] T032 [P] [US3] Unit test for `CsmConsumer` protocol conformance — mock consumer implements the protocol in `tests/unit/test_csm_model.py`
+- [X] T033 [US3] Contract test — mock measurement engine consumes CSM from both OpenSpec and SpecKit sources, verifies identical structure in `tests/contract/test_csm_interface.py`
+- [X] T034 [US3] Integration test — mock engine reads CSM from PipelineContext after full pipeline run in `tests/integration/test_csm_pipeline_stage.py`
 
 ### Implementation for User Story 3
 
-- [ ] T035 [P] [US3] Implement `CsmConsumer` protocol class in `specmetrics/kernel/csm/model.py`
-- [ ] T036 [US3] Implement serialization round-trip test — `model_dump_json()` → `model_validate_json()` produces identical model in `specmetrics/kernel/csm/model.py`
+- [X] T035 [P] [US3] Implement `CsmConsumer` protocol class in `specmetrics/kernel/csm/model.py`
+- [X] T036 [US3] Implement serialization round-trip test — `model_dump_json()` → `model_validate_json()` produces identical model in `specmetrics/kernel/csm/model.py`
 
 **Checkpoint**: US3 is fully functional — downstream engines can consume the CSM via the documented protocol without any framework-specific dependencies.
 
@@ -129,10 +129,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T037 [P] Run full test suite — verify `pytest tests/unit/test_csm_*.py tests/contract/test_csm_interface.py tests/integration/test_csm_pipeline_stage.py` all pass
-- [ ] T038 [P] Run performance benchmark — verify SC-001 (500 elements in under 3 seconds) with `pytest tests/unit/test_csm_builder.py -k test_performance_500_elements --benchmark-only`
-- [ ] T039 [P] Run quickstart validation scenarios from `specs/021-canonical-specification-model/quickstart.md`
-- [ ] T040 Code cleanup — remove unused imports, verify ruff linting passes
+- [X] T037 [P] Run full test suite — verify `pytest tests/unit/test_csm_*.py tests/contract/test_csm_interface.py tests/integration/test_csm_pipeline_stage.py` all pass
+- [X] T038 [P] Run performance benchmark — verify SC-001 (500 elements in under 3 seconds) with `pytest tests/unit/test_csm_builder.py -k test_performance_500_elements --benchmark-only`
+- [X] T039 [P] Run quickstart validation scenarios from `specs/021-canonical-specification-model/quickstart.md`
+- [X] T040 Code cleanup — remove unused imports, verify ruff linting passes
 
 ---
 
@@ -205,3 +205,16 @@ With multiple developers:
 3. When US1 + US2 complete:
    - Developer A: User Story 3 (consumer protocol + tests)
    - Developer B: Polish (benchmark, linting, quickstart validation)
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close gaps between specification intent and implementation identified by convergence assessment.
+
+- [X] T041 Implement framework-label stripping in `specmetrics/kernel/csm/classifier.py` (add `strip_framework_labels()` with `FRAMEWORK_PATTERNS`) and apply it to `description` in `specmetrics/kernel/csm/builder.py` per FR-003/SC-002 (`partial`)
+- [X] T042 Implement multi-pattern conflict detection — track all matching categories per node in `specmetrics/kernel/csm/classifier.py` and populate `ClassificationConflict` records in `specmetrics/kernel/csm/builder.py` per FR-015 (`partial`)
+- [X] T043 Refactor `_find_linked()` in `specmetrics/kernel/csm/builder.py` to a two-pass approach (classify all nodes first, then link activities to discovered entities) to ensure symmetric cross-activity linking per US2/AC2 (`partial`)
+- [X] T044 Add UUID v4 `@field_validator` to `CsmElement.id` in `specmetrics/kernel/csm/model.py` per data-model.md validation rules (`partial`)
+- [X] T045 Add non-empty `@field_validator` to `CsmElement.description` in `specmetrics/kernel/csm/model.py` per data-model.md validation rules (`partial`)
+- [X] T046 Remove unused `CATEGORY_MAP` dict from `specmetrics/kernel/csm/builder.py` per plan (`unrequested`)

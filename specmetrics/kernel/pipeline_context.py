@@ -15,6 +15,7 @@ class PipelineContext:
     adapter_result: Optional[Any] = None
     extraction_result: Optional[Any] = None
     evidence_graph: Optional[Any] = None
+    canonical_spec_model: Optional[Any] = None
     canonical_model: Optional[Any] = None
     measurement_result: Optional[Any] = None
     exported_files: Optional[list[str]] = None

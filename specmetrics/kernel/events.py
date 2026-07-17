@@ -14,6 +14,7 @@ class EventType(enum.Enum):
     DOCUMENTS_VALIDATED = "documents_validated"
     SEMANTIC_EXTRACTION_COMPLETED = "semantic_extraction_completed"
     EVIDENCE_GRAPH_BUILT = "evidence_graph_built"
+    CANONICAL_SPECIFICATION_MODEL_BUILT = "canonical_specification_model_built"
     CANONICAL_MODEL_BUILT = "canonical_model_built"
     RULE_PACK_APPLIED = "rule_pack_applied"
     MEASUREMENT_COMPLETED = "measurement_completed"
