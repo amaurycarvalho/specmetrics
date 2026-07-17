@@ -23,8 +23,8 @@
 
 **Purpose**: Create package directories for the new plugin
 
-- [ ] T001 Create `specmetrics/plugins/measurement/bcp/` package with `__init__.py`
-- [ ] T002 Create test directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
+- [X] T001 Create `specmetrics/plugins/measurement/bcp/` package with `__init__.py`
+- [X] T002 Create test directories: `tests/unit/`, `tests/contract/`, `tests/integration/` if not already present
 
 ---
 
@@ -34,20 +34,20 @@
 
 ### Models
 
-- [ ] T003 [P] Create all measurement models (`BCPMeasurementResult`, `BCPWorkItem`, `GeneratedStory`, `SDKResult`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/bcp/models.py`
+- [X] T003 [P] Create all measurement models (`BCPMeasurementResult`, `BCPWorkItem`, `GeneratedStory`, `SDKResult`, `MeasurementEvidence`, `ExecutionMetadata`, `MeasurementWarning`) in `specmetrics/plugins/measurement/bcp/models.py`
 
 ### Story Generator
 
-- [ ] T004 Create story generator in `specmetrics/plugins/measurement/bcp/story_generator.py` — `generate_story(fp, cfm) -> str`: converts a FunctionalProcess into a markdown user story string with title, actor names, operations, business rules, data groups, and relationships resolved from the CFM
+- [X] T004 Create story generator in `specmetrics/plugins/measurement/bcp/story_generator.py` — `generate_story(fp, cfm) -> str`: converts a FunctionalProcess into a markdown user story string with title, actor names, operations, business rules, data groups, and relationships resolved from the CFM
 
 ### SDK Adapter
 
-- [ ] T005 Create SDK adapter in `specmetrics/plugins/measurement/bcp/sdk_adapter.py` — `BcpSdkAdapter` class wrapping `BCPClient` with dual import path (`bcp_calculator` / `src.sdk`), retry with exponential backoff (3 attempts: 1s, 2s, 4s), error translation, provider configuration
-- [ ] T006 Create explainer in `specmetrics/plugins/measurement/bcp/explainer.py` — per-item evidence_refs assembly, SDK response preservation, component breakdown collection
+- [X] T005 Create SDK adapter in `specmetrics/plugins/measurement/bcp/sdk_adapter.py` — `BcpSdkAdapter` class wrapping `BCPClient` with dual import path (`bcp_calculator` / `src.sdk`), retry with exponential backoff (3 attempts: 1s, 2s, 4s), error translation, provider configuration
+- [X] T006 Create explainer in `specmetrics/plugins/measurement/bcp/explainer.py` — per-item evidence_refs assembly, SDK response preservation, component breakdown collection
 
 ### Package Wiring
 
-- [ ] T007 Wire up `specmetrics/plugins/measurement/bcp/__init__.py` to export `BCPMeasurementResult`, `BCPPlugin`, `create_bcp_measurement_metadata`
+- [X] T007 Wire up `specmetrics/plugins/measurement/bcp/__init__.py` to export `BCPMeasurementResult`, `BCPPlugin`, `create_bcp_measurement_metadata`
 
 **Parallel opportunities**: T003, T004 are independent. T005 depends on understanding the SDK API.
 
@@ -63,17 +63,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Unit test for model construction and serialization in `tests/unit/test_bcp_models.py`
-- [ ] T009 [P] [US1] Unit test for story generator — each FP generates a correctly formatted markdown string with title, actors, operations, rules, data groups in `tests/unit/test_bcp_story_generator.py`
-- [ ] T010 [P] [US1] Unit test for SDK adapter — `calculate()` calls BCPClient, returns parsed result, handles retry in `tests/unit/test_bcp_sdk_adapter.py`
-- [ ] T011 [P] [US1] Unit test for SDK adapter — exponential backoff on transient errors, immediate fail on auth errors in `tests/unit/test_bcp_sdk_adapter.py`
-- [ ] T012 [P] [US1] Unit test for SDK adapter — missing SDK gracefully returns adapter with error state in `tests/unit/test_bcp_sdk_adapter.py`
-- [ ] T013 [US1] Integration test — mock SDK, known CFM, full measurement flow produces correct BCPWorkItems and total in `tests/unit/test_bcp_integration.py`
+- [X] T008 [P] [US1] Unit test for model construction and serialization in `tests/unit/test_bcp_models.py`
+- [X] T009 [P] [US1] Unit test for story generator — each FP generates a correctly formatted markdown string with title, actors, operations, rules, data groups in `tests/unit/test_bcp_story_generator.py`
+- [X] T010 [P] [US1] Unit test for SDK adapter — `calculate()` calls BCPClient, returns parsed result, handles retry in `tests/unit/test_bcp_sdk_adapter.py`
+- [X] T011 [P] [US1] Unit test for SDK adapter — exponential backoff on transient errors, immediate fail on auth errors in `tests/unit/test_bcp_sdk_adapter.py`
+- [X] T012 [P] [US1] Unit test for SDK adapter — missing SDK gracefully returns adapter with error state in `tests/unit/test_bcp_sdk_adapter.py`
+- [X] T013 [US1] Integration test — mock SDK, known CFM, full measurement flow produces correct BCPWorkItems and total in `tests/unit/test_bcp_integration.py`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Create BCP plugin (`BCPPlugin`, `BCPHandler`, `create_bcp_measurement_metadata`) in `specmetrics/plugins/measurement/bcp/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM from context, invokes story_generator + sdk_adapter per FP, packages BCPMeasurementResult
-- [ ] T015 [US1] Register BCP entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
+- [X] T014 [US1] Create BCP plugin (`BCPPlugin`, `BCPHandler`, `create_bcp_measurement_metadata`) in `specmetrics/plugins/measurement/bcp/plugin.py` — handler subscribes to `MEASUREMENT_COMPLETED`, reads CFM from context, invokes story_generator + sdk_adapter per FP, packages BCPMeasurementResult
+- [X] T015 [US1] Register BCP entry point in `pyproject.toml` under `specmetrics.plugins.measurement`
 
 **Checkpoint**: US1 is fully functional — the pipeline can produce BCP scores via the external SDK.
 
@@ -87,12 +87,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Unit test for explainer — per-item generated_story, SDK response, component_breakdown, evidence_refs in `tests/unit/test_bcp_integration.py`
-- [ ] T017 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema with SDK breakdown per FR-026 in `tests/contract/test_bcp_measurement.py`
+- [X] T016 [P] [US2] Unit test for explainer — per-item generated_story, SDK response, component_breakdown, evidence_refs in `tests/unit/test_bcp_integration.py`
+- [X] T017 [US2] Contract test for measurement API — verify plugin metadata, handler event type, result schema with SDK breakdown per FR-026 in `tests/contract/test_bcp_measurement.py`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implement explainer detail per FR-026 — generated_story, sdk_response, component_breakdown, evidence_refs preservation in `specmetrics/plugins/measurement/bcp/explainer.py`
+- [X] T018 [US2] Implement explainer detail per FR-026 — generated_story, sdk_response, component_breakdown, evidence_refs preservation in `specmetrics/plugins/measurement/bcp/explainer.py`
 
 **Checkpoint**: US2 is fully functional — every BCP score includes the generated story, raw SDK response, component breakdown, and CFM evidence.
 
@@ -106,13 +106,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Unit test for provider configuration — adapter initializes with "openai" and "claude", verifies constructor args in `tests/unit/test_bcp_sdk_adapter.py`
-- [ ] T020 [P] [US3] Unit test for missing API key validation — missing env var emits warning, adapter returns error state in `tests/unit/test_bcp_sdk_adapter.py`
+- [X] T019 [P] [US3] Unit test for provider configuration — adapter initializes with "openai" and "claude", verifies constructor args in `tests/unit/test_bcp_sdk_adapter.py`
+- [X] T020 [P] [US3] Unit test for missing API key validation — missing env var emits warning, adapter returns error state in `tests/unit/test_bcp_sdk_adapter.py`
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Implement provider selection in adapter — read provider config from Rule Pack or environment, pass to `BCPClient(provider=...)` in `specmetrics/plugins/measurement/bcp/sdk_adapter.py`
-- [ ] T022 [US3] Implement credential validation — check configured provider's env var before SDK call, emit structured warning if missing in `specmetrics/plugins/measurement/bcp/sdk_adapter.py`
+- [X] T021 [US3] Implement provider selection in adapter — read provider config from Rule Pack or environment, pass to `BCPClient(provider=...)` in `specmetrics/plugins/measurement/bcp/sdk_adapter.py`
+- [X] T022 [US3] Implement credential validation — check configured provider's env var before SDK call, emit structured warning if missing in `specmetrics/plugins/measurement/bcp/sdk_adapter.py`
 
 **Checkpoint**: US3 is fully functional — organizations can switch between OpenAI and Claude via configuration.
 
@@ -126,11 +126,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T023 [US4] Integration test for pipeline — CFM → BCP measurement with mocked SDK, result in `ctx.measurement_result`, plugin auto-discovered in `tests/integration/test_bcp_pipeline.py`
+- [X] T023 [US4] Integration test for pipeline — CFM → BCP measurement with mocked SDK, result in `ctx.measurement_result`, plugin auto-discovered in `tests/integration/test_bcp_pipeline.py`
 
 ### Implementation for User Story 4
 
-- [ ] T024 [US4] Implement OpenTelemetry metrics — SDK execution duration histogram, processed story gauge, SDK request counter, SDK error counter following existing patterns in `specmetrics/plugins/measurement/bcp/plugin.py`
+- [X] T024 [US4] Implement OpenTelemetry metrics — SDK execution duration histogram, processed story gauge, SDK request counter, SDK error counter following existing patterns in `specmetrics/plugins/measurement/bcp/plugin.py`
 
 **Checkpoint**: US4 is fully functional — plugin auto-discovers, executes, emits observability metrics, and output is export-compatible.
 
@@ -140,9 +140,9 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T025 [P] Run full test suite — verify `pytest tests/unit/test_bcp_*.py tests/contract/test_bcp_measurement.py tests/integration/test_bcp_pipeline.py` all pass
-- [ ] T026 [P] Run quickstart validation scenarios from `specs/026-measurement-engine-bcp/quickstart.md`
-- [ ] T027 Code cleanup — remove unused imports, verify `ruff check` passes
+- [X] T025 [P] Run full test suite — verify `pytest tests/unit/test_bcp_*.py tests/contract/test_bcp_measurement.py tests/integration/test_bcp_pipeline.py` all pass
+- [X] T026 [P] Run quickstart validation scenarios from `specs/026-measurement-engine-bcp/quickstart.md`
+- [X] T027 Code cleanup — remove unused imports, verify `ruff check` passes
 
 ---
 

@@ -108,6 +108,7 @@ specmetrics plugins list --type measurement
 
 # Configuration
 specmetrics config dump
+specmetrics config llm set none
 specmetrics config llm set deepseek --api-key sk-...
 specmetrics config llm show
 
@@ -128,34 +129,34 @@ specmetrics mcp stop
 
 ### CLI Parameters
 
-| Command | Description |
-|---------|-------------|
-| `measure [path]` | Execute full measurement pipeline |
-| `version` | Print platform and plugin versions |
-| `plugins list` | List discovered plugins |
-| `plugins verify` | Verify plugin compatibility |
-| `plugins list-formats` | List export formats and publishers |
-| `export run` | Export measurement results |
-| `export list-formats` | List exporter plugins |
-| `export publisher-status` | Show publisher status |
-| `config dump` | Show all resolved configuration |
-| `config llm set <provider>` | Configure LLM provider (chatgpt, gemini, copilot, claude, deepseek, ollama, custom) |
-| `config llm show` | Show current LLM configuration |
-| `config llm set-model <model>` | Change LLM model |
-| `config llm set-api-key <key>` | Change LLM API key |
-| `explain <run-id>` | Explain a measurement result |
-| `mcp start` | Start MCP server for AI agents |
-| `mcp stop` | Stop MCP server |
-| `mcp status` | Check MCP server status |
-| `validate <paths...>` | Validate specification documents |
+| Command                        | Description                                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `measure [path]`               | Execute full measurement pipeline                                                   |
+| `version`                      | Print platform and plugin versions                                                  |
+| `plugins list`                 | List discovered plugins                                                             |
+| `plugins verify`               | Verify plugin compatibility                                                         |
+| `plugins list-formats`         | List export formats and publishers                                                  |
+| `export run`                   | Export measurement results                                                          |
+| `export list-formats`          | List exporter plugins                                                               |
+| `export publisher-status`      | Show publisher status                                                               |
+| `config dump`                  | Show all resolved configuration                                                     |
+| `config llm set <provider>`    | Configure LLM provider (chatgpt, gemini, copilot, claude, deepseek, ollama, custom) |
+| `config llm show`              | Show current LLM configuration                                                      |
+| `config llm set-model <model>` | Change LLM model                                                                    |
+| `config llm set-api-key <key>` | Change LLM API key                                                                  |
+| `explain <run-id>`             | Explain a measurement result                                                        |
+| `mcp start`                    | Start MCP server for AI agents                                                      |
+| `mcp stop`                     | Stop MCP server                                                                     |
+| `mcp status`                   | Check MCP server status                                                             |
+| `validate <paths...>`          | Validate specification documents                                                    |
 
 **Common options across commands:**
 
-| Flag | Description |
-|------|-------------|
-| `--verbose` / `-v` | Detailed progress output |
-| `--quiet` / `-q` | Suppress non-error output |
-| `--help` | Show help for any command |
+| Flag               | Description               |
+| ------------------ | ------------------------- |
+| `--verbose` / `-v` | Detailed progress output  |
+| `--quiet` / `-q`   | Suppress non-error output |
+| `--help`           | Show help for any command |
 
 Run `specmetrics --help` or `specmetrics <command> --help` for detailed options on any command.
 
