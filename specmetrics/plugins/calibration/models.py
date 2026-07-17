@@ -1,0 +1,33 @@
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+
+class SpecificationCostWeights(BaseModel):
+    activities: dict[str, float] = {}
+    decisions: float = 1.5
+    assumptions: float = 1.0
+    constraints: float = 1.5
+    risks: float = 2.0
+    open_questions: float = 1.0
+    acceptance_criteria: float = 1.0
+    glossary_terms: float = 0.5
+
+
+class CodeGenerationCostWeights(BaseModel):
+    functional_processes: float = 5.0
+    business_rules: float = 3.0
+    operations: float = 2.0
+    data_groups: float = 2.0
+    relationships: float = 1.0
+    actors: float = 1.0
+
+
+class CalibrationProfile(BaseModel):
+    version: str = "1.0"
+    specification_cost: SpecificationCostWeights = Field(
+        default_factory=SpecificationCostWeights
+    )
+    code_generation_cost: CodeGenerationCostWeights = Field(
+        default_factory=CodeGenerationCostWeights
+    )

@@ -31,6 +31,7 @@ specmetrics-mcp = "specmetrics.mcp.server:main"
 fpa = "specmetrics.plugins.measurement.fpa.plugin:create_fpa_measurement_metadata"
 sfp = "specmetrics.plugins.measurement.sfp.plugin:create_sfp_measurement_metadata"
 snap = "specmetrics.plugins.measurement.snap.plugin:create_snap_measurement_metadata"
+token_points = "specmetrics.plugins.measurement.token_points.plugin:create_token_points_measurement_metadata"
 
 [project.entry-points."specmetrics.plugins.rule_pack"]
 rule_pack_engine = "specmetrics.plugins.rule_pack.plugin:create_rule_pack_engine_metadata"
