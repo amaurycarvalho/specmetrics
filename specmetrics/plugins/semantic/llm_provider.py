@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -47,6 +49,27 @@ CANONICAL_TYPE_MAP: dict[str, str] = {
 
 def _infer_type(document_type: str) -> str:
     return CANONICAL_TYPE_MAP.get(document_type, "unknown")
+
+
+def _strip_code_fence(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        first_nl = text.find("\n")
+        if first_nl != -1:
+            text = text[first_nl + 1:]
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
+
+
+_RETRY_DELAY_RE = re.compile(r"'retryDelay':\s*'(\d+(?:\.\d+)?)s'")
+
+
+def _parse_retry_delay(error_text: str) -> float | None:
+    match = _RETRY_DELAY_RE.search(error_text)
+    if match:
+        return float(match.group(1))
+    return None
 
 
 class LLMProviderConfig(BaseModel):
@@ -156,6 +179,7 @@ class LLMExtractionProvider:
         }
         if self._api_url:
             kwargs["api_base"] = self._api_url
+            kwargs["custom_llm_provider"] = "openai"
         if self._api_key:
             kwargs["api_key"] = self._api_key
         return kwargs
@@ -224,30 +248,58 @@ class LLMExtractionProvider:
         completion_kwargs = self._build_completion_kwargs()
 
         for chunk_text, chunk_idx in chunks:
-            try:
-                response = litellm.completion(
-                    **completion_kwargs,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "Extract semantic elements from the following specification document. "
-                                "Return a JSON array of objects with fields: type (fact/entity/relationship/operation), "
-                                "confidence (0.0-1.0), and content."
-                            ),
-                        },
-                        {"role": "user", "content": chunk_text},
-                    ],
-                )
-                chunk_elements = self._parse_response(response, document, chunk_idx)
-                all_elements.extend(chunk_elements)
-            except Exception:
+            retries = 0
+            while retries < 3:
+                try:
+                    response = litellm.completion(
+                        **completion_kwargs,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": (
+                                    "Extract semantic elements from the following specification document. "
+                                    "Return a JSON array of objects with fields: type (fact/entity/relationship/operation), "
+                                    "confidence (0.0-1.0), and content."
+                                ),
+                            },
+                            {"role": "user", "content": chunk_text},
+                        ],
+                    )
+                    chunk_elements = self._parse_response(response, document, chunk_idx)
+                    all_elements.extend(chunk_elements)
+                    break
+                except litellm.RateLimitError as exc:
+                    retries += 1
+                    delay = _parse_retry_delay(str(exc))
+                    if delay:
+                        logger.warning(
+                            "Rate limit hit for chunk %d (attempt %d/3). "
+                            "Waiting %.1fs before retry...",
+                            chunk_idx,
+                            retries,
+                            delay,
+                        )
+                        time.sleep(delay)
+                    else:
+                        logger.warning(
+                            "Rate limit hit for chunk %d (attempt %d/3). "
+                            "No retry delay specified, retrying immediately...",
+                            chunk_idx,
+                            retries,
+                        )
+                except Exception as exc:
+                    logger.warning(
+                        "LLM API call failed for chunk %d: %s",
+                        chunk_idx,
+                        exc,
+                    )
+                    break
+            else:
                 logger.warning(
-                    "LLM API call failed for chunk %d. "
-                    "Run 'specmetrics config llm set <provider> --api-key <key>' to configure credentials, "
-                    "or 'specmetrics config llm show' to review current settings. "
-                    "Falling back to structural extraction for this chunk.",
+                    "LLM API call failed for chunk %d after %d retries — "
+                    "falling back to structural extraction",
                     chunk_idx,
+                    retries,
                 )
                 try:
                     det_engine = DeterministicSemanticEngine()
@@ -286,8 +338,7 @@ class LLMExtractionProvider:
     ) -> list[ExtractedElement]:
         elements: list[ExtractedElement] = []
         try:
-            content = response.choices[0].message.content
-            import json
+            content = _strip_code_fence(response.choices[0].message.content)
             data = json.loads(content)
             for i, item in enumerate(data):
                 elem_type = item.get("type", "fact")

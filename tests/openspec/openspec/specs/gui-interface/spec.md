@@ -1,0 +1,321 @@
+## Purpose
+
+Define the graphical user interface for FlowScope, including the Tkinter main window, notebook-based navigation (Análise Geral / Análise do Ticker), VWAP chart widget, ticker list management, OrientationPanel for explanatory content, and clipboard export.
+
+## Requirements
+
+### Requirement: Navegação por notebook de abas
+O sistema DEVE substituir o seletor de visualização por RadioButtons por um ttk.Notebook principal com duas abas: "Análise Geral" e "Análise do Ticker". A aba "Análise Geral" DEVE conter um sub-notebook com as abas "VWAP" (exibe o gráfico de distribuição de preços) e "Quadrantes" (placeholder). A aba "Análise do Ticker" DEVE conter um combobox para seleção de ticker e um sub-notebook com 5 abas placeholder: "Dominância do Pregão", "Fluxo Financeiro", "Participação Institucional", "Eficiência do Movimento" e "Resumo Geral".
+
+#### Scenario: Navegação entre abas principais
+- **WHEN** o usuário clica na aba "Análise Geral"
+- **THEN** o sistema DEVE exibir o sub-notebook com as abas "VWAP" e "Quadrantes"
+
+#### Scenario: Navegação para análise de ticker
+- **WHEN** o usuário clica na aba "Análise do Ticker"
+- **THEN** o sistema DEVE exibir o combobox de seleção de ticker e o sub-notebook com as 5 sub-abas placeholder
+
+### Requirement: OrientationPanel para conteúdo explicativo
+O sistema DEVE exibir um OrientationPanel na barra lateral direita contendo título e texto explicativo fixo associado à sub-aba ativa. Cada sub-aba DEVE ter seu próprio conteúdo explicativo composto por (objetivo, pergunta respondida, indicadores envolvidos, como interpretá-lo), nesta ordem. O texto explicativo DEVE suportar formatação rica nativa: cabeçalhos de seção (Objetivo, Responde a pergunta, Indicadores envolvidos, Como interpretar) em **negrito** e perguntas em itálico. O método `set_content(title, body)` DEVE aceitar `body` como uma lista de tuplas `(str, str)` onde o segundo elemento é o nome da tag de formatação.
+
+#### Scenario: OrientationPanel atualizado ao trocar sub-aba
+- **WHEN** o usuário seleciona a sub-aba "VWAP"
+- **THEN** o OrientationPanel DEVE exibir o título "VWAP — Volume Weighted Average Price" e o texto explicativo correspondente, contendo os campos Objetivo, Responde a pergunta, Indicadores envolvidos e Como interpretar, nesta ordem
+
+#### Scenario: OrientationPanel da sub-aba VWAP contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "VWAP"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _Quem está acima do preço justo e quem está abaixo?_"
+
+#### Scenario: OrientationPanel da sub-aba Quadrantes contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Quadrantes"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _Quem dominou o fechamento?_"
+
+#### Scenario: OrientationPanel da sub-aba Dominância do Pregão contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Dominância do Pregão"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _Quem venceu a disputa diária pelo preço?_"
+
+#### Scenario: OrientationPanel da sub-aba Evolução da Dominância contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Evolução da Dominância"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _Quem venceu a disputa diária pelo preço?_"
+
+#### Scenario: OrientationPanel da sub-aba Amplitude de Preço contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Amplitude de Preço"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta" seguido da pergunta sobre movimento direcional e evolução do fechamento
+
+#### Scenario: OrientationPanel da sub-aba Fluxo Financeiro contém a pergunta atualizada
+- **WHEN** o usuário seleciona a sub-aba "Fluxo Financeiro"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _O movimento de hoje foi sustentado por fluxo financeiro?_"
+
+#### Scenario: OrientationPanel da sub-aba Fluxo Financeiro contém indicadores atualizados
+- **WHEN** o usuário seleciona a sub-aba "Fluxo Financeiro"
+- **THEN** o texto do OrientationPanel DEVE conter "Daily Money Flow (DMF)" e "Money Flow Volume acumulado"
+
+#### Scenario: OrientationPanel da sub-aba Participação Institucional contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Participação Institucional"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _Quem parece estar negociando? Grandes participantes ou varejo?_"
+
+#### Scenario: OrientationPanel da sub-aba Eficiência do Movimento contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Eficiência do Movimento"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _O mercado caminhou com convicção ou apenas oscilou?_"
+
+#### Scenario: OrientationPanel da sub-aba Resumo Geral contém a pergunta
+- **WHEN** o usuário seleciona a sub-aba "Resumo Geral"
+- **THEN** o texto do OrientationPanel DEVE conter "Responde a pergunta: _O que realmente aconteceu neste ativo?_"
+
+#### Scenario: OrientationPanel exibe texto com formatação
+- **WHEN** o usuário seleciona a sub-aba "VWAP"
+- **THEN** o OrientationPanel DEVE exibir "Objetivo:" em **negrito**, a pergunta em itálico, e os demais textos sem formatação especial
+
+#### Scenario: set_content aceita lista de tuplas
+- **WHEN** o sistema chama `set_content("Título", [("Objetivo: ", "bold"), ("texto plano", "")])`
+- **THEN** o OrientationPanel DEVE exibir "Objetivo:" em negrito e "texto plano" sem formatação
+
+### Requirement: Formatação via tags tk.Text
+O OrientationPanel DEVE configurar duas tags no widget `tk.Text`: `"bold"` (fonte TkDefaultFont 9 bold) e `"italic"` (fonte TkDefaultFont 9 italic). Tags DEVEM ser aplicadas conforme o nome da tag em cada tupla do body.
+
+#### Scenario: Tag bold aplicada a cabeçalhos
+- **WHEN** o body contém `("Objetivo: ", "bold")`
+- **THEN** o texto "Objetivo:" DEVE ser exibido em negrito
+
+#### Scenario: Tag italic aplicada a perguntas
+- **WHEN** o body contém `("pergunta", "italic")`
+- **THEN** o texto "pergunta" DEVE ser exibido em itálico
+
+#### Scenario: Tag vazia não aplica formatação
+- **WHEN** o body contém `("texto plano", "")`
+- **THEN** o texto DEVE ser exibido sem formatação especial
+
+### Requirement: Gráfico de distribuição de preços VWAP
+O sistema DEVE exibir um violin plot horizontal com o ticker no eixo X e o valor do desvio percentual do TradAvrgPric em relação ao VWAP no eixo Y, calculado como `(TradAvrgPric - VWAP) / VWAP × 100`. A largura do violino em cada faixa DEVE ser proporcional à soma de FinInstrmQty para aquele ticker em todo o período. Sobreposto ao violin plot, DEVE haver:
+- Uma barra vertical (`vlines`) do menor MinPric ao maior MaxPric, normalizados pelo VWAP, com um marcador em 0% indicando o VWAP
+- Um scatter plot destacando o LastPric de cada ticker normalizado pelo VWAP, referente à data mais recente do período
+- Uma linha horizontal tracejada em Y = 0% representando o VWAP
+
+O eixo Y DEVE exibir o rótulo "Diferença do VWAP (%)" e os limites DEVEM ser simétricos em torno de 0%.
+
+#### Scenario: Exibição do violin plot com eixo normalizado
+- **WHEN** dados de múltiplos tickers são carregados e a sub-aba VWAP está selecionada
+- **THEN** o sistema DEVE exibir um violin plot horizontal com perfil de volume (largura ∝ Σ FinInstrMty por bucket), barra vertical vlines (MinPric–MaxPric normalizados, marcador VWAP em 0%), scatter (LastPric normalizado), e linha tracejada em Y = 0%
+
+#### Scenario: Ticker com dados de um único dia
+- **WHEN** um ticker possui dados em apenas 1 dia
+- **THEN** o violin plot DEVE exibir uma forma estreita centrada em 0% (TradAvrgPric = VWAP), com barra vertical mostrando MinPric = MaxPric normalizados e VWAP = TradAvrgPric em 0%
+
+#### Scenario: Sem dados para exibir
+- **WHEN** não há dados carregados ou o filtro resulta em lista vazia
+- **THEN** o sistema DEVE exibir uma mensagem "Nenhum ticker corresponde ao filtro."
+
+### Requirement: Contagem de tickers
+O sistema DEVE exibir um label ao lado do campo de tickers indicando a quantidade total ou selecionada, dependendo do modo atual:
+- Modo visualização: "Tickers (N)" com N = total de tickers no Listbox; "Exibindo M de N ativos" quando M < N selecionados
+- Modo edição: "Tickers (N)" com N = total de tickers no Text widget
+
+#### Scenario: Label no modo visualização com todos marcados
+- **WHEN** dados de 37 tickers são carregados e todos estão marcados no Listbox
+- **THEN** o label DEVE mostrar "Tickers (37)"
+
+#### Scenario: Label no modo visualização com seleção parcial
+- **WHEN** o usuário desmarca 10 dos 37 tickers no Listbox
+- **THEN** o label DEVE mostrar "Exibindo 27 de 37 ativos"
+
+#### Scenario: Label no modo edição
+- **WHEN** o usuário alterna para modo edição com 37 tickers carregados
+- **THEN** o label DEVE mostrar "Tickers (37)"
+
+### Requirement: Ícone da aplicação na janela
+O sistema DEVE carregar e exibir o ícone da aplicação na barra de título e barra de tarefas.
+
+#### Scenario: Ícone carregado no Linux
+- **WHEN** o aplicativo inicia no Linux e `flowscope.png` existe em `src/flowscope/icons/`
+- **THEN** a janela DEVE usar `self.wm_iconphoto(True, tk.PhotoImage(file=path))`
+
+#### Scenario: Ícone carregado no Windows
+- **WHEN** o aplicativo inicia no Windows e `flowscope.ico` existe em `src/flowscope/icons/`
+- **THEN** a janela DEVE usar `self.iconbitmap(path)`
+
+### Requirement: Botão "Hoje" carrega dados automaticamente
+
+O sistema DEVE, ao clicar no botão "Hoje", atualizar o DateEntry para a data atual E executar imediatamente o carregamento de dados (mesma ação do botão "Carregar"), como se o usuário tivesse clicado em "Carregar" em sequência.
+
+#### Scenario: Clique no botão Hoje carrega dados do dia
+- **WHEN** o usuário clica no botão "Hoje"
+- **THEN** o DateEntry DEVE ser atualizado para a data atual E os dados DEVEM ser carregados para essa data, com o mesmo comportamento (loading state, statusbar, gráficos) do botão "Carregar"
+
+### Requirement: OrientationPanel atualizado com novos indicadores
+
+O OrientationPanel DEVE exibir conteúdo explicativo para cada novo indicador à medida que as sub-abas são implementadas, seguindo o mesmo padrão existente (título + texto explicativo + interpretação).
+
+#### Scenario: OrientationPanel para Dominância do Pregão
+
+- **WHEN** o usuário seleciona a sub-aba "Dominância do Pregão"
+- **THEN** o OrientationPanel DEVE exibir título e texto explicativo sobre Range, Range%, Typical Price, Median Price e Weighted Close
+
+#### Scenario: OrientationPanel para Fluxo Financeiro
+
+- **WHEN** o usuário seleciona a sub-aba "Fluxo Financeiro"
+- **THEN** o OrientationPanel DEVE exibir título e texto explicativo sobre CLV, Money Flow Volume, Buying Pressure e Selling Pressure
+
+### Requirement: Exposição dos resultados do engine DAG para a GUI
+
+O sistema DEVE expor os resultados completos do `IndicatorEngine.execute()` para que os widgets da GUI possam consumir qualquer indicador pelo seu `id`.
+
+#### Scenario: Consumo de indicador pela GUI
+
+- **WHEN** o engine retorna resultados com `results["clv"]["PETR4"]` contendo dados de CLV
+- **THEN** o widget da sub-aba "Fluxo Financeiro" DEVE acessar `results["clv"]` para exibir o CLV do ticker selecionado
+
+### Requirement: Botões de índice IBOV, IDIV e IFIX
+
+O sistema DEVE exibir três botões — "IBOV", "IDIV" e "IFIX" — na barra superior do TickerList, após um separador vertical do grupo de seleção (Editar, Selecionar Todos, Desmarcar Todos). Cada botão, quando pressionado, DEVE baixar a carteira teórica diária do respectivo índice via API B3 e **substituir** o conteúdo do Listbox pelos tickers obtidos. Durante todo o processo de download e análise, todos os botões da aplicação DEVEM ser desabilitados e restaurados ao estado anterior ao finalizar (conforme especificado em `loading-state-management`).
+
+#### Scenario: Botão IBOV carrega carteira do IBOV com loading state
+- **WHEN** o usuário clica no botão "IBOV"
+- **THEN** o sistema DEVE desabilitar todos os botões, baixar a carteira do IBOV, preencher o campo de tickers com os tickers obtidos, processar os dados, e restaurar os botões ao estado anterior
+
+#### Scenario: Botão IFIX carrega carteira do IFIX com loading state
+- **WHEN** o usuário clica no botão "IFIX"
+- **THEN** o sistema DEVE desabilitar todos os botões, baixar a carteira do IFIX, preencher o campo de tickers com os tickers obtidos, processar os dados, e restaurar os botões ao estado anterior
+
+#### Scenario: Falha no download de um índice
+- **WHEN** o usuário clica em um botão de índice, o download falha, e a lista de tickers NÃO é alterada
+- **THEN** o sistema DEVE exibir uma mensagem de erro na barra de status e restaurar os botões ao estado anterior
+
+### Requirement: Preenchimento automático com IDIV quando lista vazia
+
+O sistema DEVE, quando a lista de tickers estiver vazia e o usuário pressionar "Carregar", buscar automaticamente a carteira do **IDIV** e preencher o Listbox com os tickers do índice. Durante esta operação, todos os botões DEVEM ser desabilitados.
+
+#### Scenario: Carregar com lista vazia desabilita botões
+- **WHEN** a lista de tickers está vazia e o usuário clica em "Carregar"
+- **THEN** o sistema DEVE desabilitar todos os botões, buscar a carteira IDIV, preencher o Listbox com os tickers obtidos, selecionar todos, carregar os dados, e restaurar os botões
+
+#### Scenario: Erro na busca IDIV com lista vazia restaura botões
+- **WHEN** a lista de tickers está vazia, o sistema tenta buscar IDIV, a busca falha, e NÃO carrega dados
+- **THEN** o sistema DEVE exibir uma mensagem de erro e restaurar os botões ao estado anterior
+
+#### Scenario: Lista já preenchida mantém loading state
+- **WHEN** a lista de tickers contém tickers e o usuário clica em "Carregar"
+- **THEN** o sistema DEVE desabilitar todos os botões, carregar os dados para todos os tickers existentes no Listbox, e restaurar os botões ao finalizar
+
+### Requirement: Comboboxes de ticker da Análise Geral removidos
+Os comboboxes de seleção de ticker nas abas VWAP, Quadrantes e Dominância do Pregão foram removidos. A seleção de tickers é feita exclusivamente pelo Listbox no TickerList. Todos os gráficos da Análise Geral usam os tickers selecionados no Listbox.
+
+A regra de exibição de setas (quiver) no gráfico de Quadrantes é mantida: setas são exibidas quando apenas 1 ticker está selecionado no Listbox.
+
+#### Scenario: VWAP exibe todos os tickers selecionados
+- **WHEN** o usuário seleciona 5 tickers no Listbox e navega para a aba VWAP
+- **THEN** o histograma VWAP DEVE exibir dados para todos os 5 tickers
+
+#### Scenario: Quadrantes com setas quando 1 ticker selecionado
+- **WHEN** o usuário seleciona exatamente 1 ticker no Listbox e navega para a aba Quadrantes
+- **THEN** o gráfico de quadrantes DEVE exibir setas (quiver) para o ticker selecionado
+
+#### Scenario: Quadrantes sem setas quando múltiplos tickers
+- **WHEN** o usuário seleciona 3 tickers no Listbox e navega para a aba Quadrantes
+- **THEN** o gráfico de quadrantes DEVE exibir pontos sem setas
+
+### Requirement: Sub-aba Fluxo Financeiro ativa com painel visual
+
+O sistema DEVE ativar a sub-aba "Fluxo Financeiro" (removendo-a do conjunto de abas desabilitadas) e exibir o `FinancialFlowPanel` no lugar do placeholder `tk.Text`.
+
+#### Scenario: Fluxo Financeiro selecionável
+- **WHEN** o usuário navega para a aba "Análise do Ticker"
+- **THEN** a sub-aba "Fluxo Financeiro" DEVE estar ativa e selecionável
+
+#### Scenario: FinancialFlowPanel exibido na sub-aba
+- **WHEN** o usuário seleciona a sub-aba "Fluxo Financeiro"
+- **THEN** o sistema DEVE exibir o `FinancialFlowPanel` com gauge, barra empilhada e classificação
+
+### Requirement: Summary callback atualiza OrientationPanel dinamicamente
+
+O sistema DEVE conectar o `summary_callback` do `FinancialFlowPanel` para atualizar dinamicamente o OrientationPanel com um resumo textual do fluxo financeiro, seguindo o mesmo padrão do gráfico de Quadrantes.
+
+#### Scenario: OrientationPanel atualizado com resumo do fluxo
+- **WHEN** o `FinancialFlowPanel` invoca `summary_callback(summary_text)`
+- **THEN** o texto do OrientationPanel DEVE ser atualizado para incluir "---" seguido do summary_text, sem perder o conteúdo explicativo base
+
+### Requirement: Indicators tab config atualizada
+
+O sistema DEVE atualizar a configuração de indicadores da tab "Fluxo Financeiro" em `tab_configs` para refletir corretamente os indicadores utilizados pelo painel visual.
+
+#### Scenario: Indicadores corretos na tab_config
+- **WHEN** a sub-aba "Fluxo Financeiro" é selecionada
+- **THEN** o sistema DEVE usar apenas os indicadores relevantes para o painel (daily_money_flow, money_flow_volume, clv, buying_pressure, selling_pressure, range_percentual)
+
+### Requirement: Carga de dados usa todos os tickers da lista
+O método `_ensure_tickers()` DEVE usar `get_all_listbox_tickers()` para obter a lista completa de tickers, independentemente de quais estão marcados. A marcação no Listbox só afeta a exibição nos painéis, não a carga de dados.
+
+#### Scenario: Carga com tickers desmarcados
+- **WHEN** o usuário tem 30 tickers no Listbox, desmarca 10, e clica em "Carregar"
+- **THEN** os dados DEVEM ser carregados para todos os 30 tickers (não apenas os 20 marcados)
+
+### Requirement: Combobox de seleção de período
+
+O sistema DEVE exibir um combobox do tipo `ttk.Combobox` em modo read-only na barra superior, posicionado entre o botão "Carregar" e o combobox de amostragem, com as opções: "Últimos 30 dias", "Últimos 60 dias (cache)", "Últimos 90 dias (cache)". O valor padrão DEVE ser "Últimos 30 dias".
+
+#### Scenario: Posicionamento do combobox de período
+- **WHEN** o usuário visualiza a barra superior
+- **THEN** o combobox de período DEVE estar posicionado entre o botão "Carregar" e o combobox de amostragem
+
+#### Scenario: Combobox de período é readonly
+- **WHEN** o usuário tenta digitar no combobox de período
+- **THEN** o sistema DEVE impedir a digitação (apenas seleção dos itens pré-definidos)
+
+### Requirement: Combobox de seleção de amostragem
+
+O sistema DEVE exibir um combobox do tipo `ttk.Combobox` em modo read-only na barra superior, posicionado entre o combobox de período e o botão "Copiar dados CSV", com as opções: "Fibonacci", "Fibonacci reverso", "Fibonacci duplo", "Monte Carlo", "Monte Carlo duplo", "Todos os dias". O valor padrão DEVE ser "Fibonacci".
+
+#### Scenario: Posicionamento do combobox de amostragem
+- **WHEN** o usuário visualiza a barra superior
+- **THEN** o combobox de amostragem DEVE estar posicionado entre o combobox de período e o botão "Copiar dados CSV"
+
+### Requirement: Tooltips nos comboboxes
+
+Cada combobox DEVE ter um tooltip fixo (usando a classe `ToolTip` existente) que explique a função do controle.
+
+#### Scenario: Tooltip do período
+- **WHEN** o usuário passa o mouse sobre o combobox de período
+- **THEN** DEVE exibir o tooltip "Seleciona a janela de tempo para análise dos dados históricos"
+
+#### Scenario: Tooltip da amostragem
+- **WHEN** o usuário passa o mouse sobre o combobox de amostragem
+- **THEN** DEVE exibir o tooltip "Define o método de seleção das datas dentro do período"
+
+### Requirement: Texto explicativo dinâmico do método de amostragem
+
+A mensagem explicativa do método de amostragem DEVE ser exibida em um `tk.Label` (`_sampling_label`) posicionado ao lado do `_date_label` na barra superior, com cor `fg="gray"`. O label DEVE ser atualizado no evento `<<ComboboxSelected>>` do combobox de amostragem. O texto explicativo do período permanece na barra de status.
+
+#### Scenario: Label de amostragem mostra texto conciso ao selecionar
+- **WHEN** o usuário seleciona "Fibonacci" no combobox de amostragem
+- **THEN** o `_sampling_label` DEVE exibir "Amostra concentrada nas datas mais recentes."
+
+### Requirement: Texto explicativo do período na barra de status
+
+Ao selecionar um item no combobox de período, a barra de status DEVE exibir o texto explicativo do período selecionado. Apenas quando o usuário finaliza a seleção (evento `<<ComboboxSelected>>`) é que a ação de recarga (se aplicável) DEVE ser disparada.
+
+#### Scenario: Texto explicativo ao selecionar período 60 dias
+- **WHEN** o usuário seleciona "Últimos 60 dias (cache)" no combobox de período
+- **THEN** a barra de status DEVE exibir "Janela de 60 dias corridos. Apenas dados já em cache serão utilizados — sem download da B3."
+
+### Requirement: Recarga automática ao mudar seleção com dados carregados
+
+O sistema DEVE monitorar o evento `<<ComboboxSelected>>` de ambos os comboboxes. Se houver dados previamente carregados (`self._current_data` não vazio), DEVE iniciar automaticamente uma nova carga de dados usando a nova configuração de período e amostragem, respeitando o OperationGuard.
+
+#### Scenario: Mudança de período com dados carregados
+- **WHEN** o usuário tem dados carregados e seleciona "Últimos 60 dias (cache)" no combobox de período
+- **THEN** o sistema DEVE desabilitar os controles, iniciar nova carga com período=60, e restaurar os controles ao finalizar
+
+#### Scenario: Mudança de amostragem sem dados carregados
+- **WHEN** o usuário abre a aplicação (sem dados carregados) e seleciona "Monte Carlo duplo"
+- **THEN** o sistema NÃO DEVE executar nenhuma ação além de atualizar o valor selecionado
+
+### Requirement: Comboboxes desabilitados durante operações
+
+Os comboboxes de período e amostragem DEVEM ser desabilitados (state=DISABLED) durante qualquer operação de carga ou processamento, juntamente com os demais botões da interface.
+
+#### Scenario: Combos desabilitados durante carga
+- **WHEN** o usuário clica em "Carregar"
+- **THEN** os comboboxes de período e amostragem DEVEM ser desabilitados, impedindo qualquer alteração durante o processamento
+
+#### Scenario: Combos restaurados após carga
+- **WHEN** o processamento finaliza (com sucesso ou erro)
+- **THEN** os comboboxes DEVEM retornar ao estado "readonly"

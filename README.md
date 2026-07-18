@@ -80,6 +80,9 @@ specmetrics config llm set chatgpt --api-key sk-...
 # Use a different model
 specmetrics config llm set openai --model gpt-4o --api-key sk-...
 
+# Test LLM connection
+specmetrics config llm test
+
 # Or use environment variables
 export SPECMETRICS_LLM_API_KEY=sk-...
 ```

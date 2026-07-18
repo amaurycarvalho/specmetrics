@@ -37,6 +37,10 @@ from specmetrics.kernel.pipeline_context import PipelineContext
 logger = structlog.get_logger(__name__)
 
 
+def _non_empty(text: str, fallback: str) -> str:
+    return text if text.strip() else (fallback if fallback.strip() else "(no content)")
+
+
 def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
     specification_activities: dict[str, SpecificationActivity] = {}
     decisions: dict[str, Decision] = {}
@@ -72,14 +76,14 @@ def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
         if category is None:
             references[node_id] = Reference(
                 id=node_id,
-                description=strip_framework_labels(node.text),
+                description=_non_empty(strip_framework_labels(node.text), node.text),
                 evidence_references=get_evidence_references(node_id, graph),
                 original_label=node.semantic_type or "",
             )
             continue
 
         category_for_node[node_id] = category
-        clean_text = strip_framework_labels(node.text)
+        clean_text = _non_empty(strip_framework_labels(node.text), node.text)
         evidence_refs = get_evidence_references(node_id, graph)
 
         if category == "decision":

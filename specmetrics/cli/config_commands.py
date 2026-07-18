@@ -31,7 +31,7 @@ PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     },
     "gemini": {
         "api_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-        "model": "gemini-2.0-flash",
+        "model": "gemini-3.1-flash-lite",
     },
     "copilot": {
         "api_url": "https://models.inference.ai.azure.com",
@@ -278,3 +278,64 @@ def llm_set_api_key(
 ) -> None:
     _write_llm_config(api_key=api_key)
     print("LLM API key updated")
+
+
+@llm_app.command(name="test")
+def llm_test() -> None:
+    path = _get_user_config_path()
+    data = _read_config_yaml(path)
+    llm_data = _get_nested(data, LLM_NAMESPACE) or {}
+
+    provider = llm_data.get("provider", "none")
+    api_url = llm_data.get("api_url")
+    model = llm_data.get("model")
+    api_key = llm_data.get("api_key")
+
+    if provider == "none" or not provider:
+        print("Provider: none (deterministic engine)")
+        print("Status:  \u2705 deterministic engine is always available")
+        return
+
+    print(f"Provider: {provider}")
+    if api_url:
+        print(f"API URL:  {api_url}")
+    if model:
+        print(f"Model:    {model}")
+    if api_key:
+        print("API key:  ********")
+    else:
+        print("API key:  \u274c not configured")
+        print()
+        print("Run:  specmetrics config llm set <provider> --api-key <key>")
+        raise typer.Exit(code=1)
+
+    if not model:
+        print("\u274c no model configured")
+        raise typer.Exit(code=1)
+
+    import litellm
+
+    litellm.suppress_debug_info = True
+
+    kwargs: dict[str, Any] = {"model": model}
+    if api_url:
+        kwargs["api_base"] = api_url
+        kwargs["custom_llm_provider"] = "openai"
+    if api_key:
+        kwargs["api_key"] = api_key
+
+    try:
+        response = litellm.completion(
+            **kwargs,
+            messages=[
+                {"role": "user", "content": "Say exactly: LLM test successful"}
+            ],
+            max_tokens=10,
+        )
+        content = response.choices[0].message.content.strip()
+        print(f"Response: {content}")
+        print("Status:   \u2705 connection successful")
+    except Exception as exc:
+        print(f"Status:   \u274c connection failed")
+        print(f"Error:    {exc}")
+        raise typer.Exit(code=1)
