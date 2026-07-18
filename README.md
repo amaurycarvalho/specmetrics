@@ -151,6 +151,7 @@ specmetrics mcp stop
 | `config llm show`              | Show current LLM configuration                                                      |
 | `config llm set-model <model>` | Change LLM model                                                                    |
 | `config llm set-api-key <key>` | Change LLM API key                                                                  |
+| `config llm test`              | Test LLM current provider                                                           |
 | `explain <run-id>`             | Explain a measurement result                                                        |
 | `mcp start`                    | Start MCP server for AI agents                                                      |
 | `mcp stop`                     | Stop MCP server                                                                     |

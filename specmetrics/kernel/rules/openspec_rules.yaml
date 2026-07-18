@@ -1,4 +1,15 @@
+version: "1.0.0"
+framework: "openspec"
+document_types:
+  - "specification"
+  - "proposal"
+  - "design"
+  - "tasks"
+  - "delta"
+description: "OpenSpec framework specialist rule pack for deterministic extraction of CFM and CSM semantic models from OpenSpec master specs, proposals, designs, and delta specs"
+
 rules:
+  # Existing heading-based rules (baseline coverage)
   - id: "openspec-use-case"
     name: "OpenSpec Use Case"
     pattern:
@@ -30,3 +41,261 @@ rules:
     type: "fact"
     confidence: 1.00
     priority: 95
+
+  # FR-014: Requirement heading
+  - id: "openspec-req-heading"
+    name: "Requirement Heading"
+    pattern:
+      regex: '^### Requirement: (.+)$'
+    type: "fact"
+    confidence: 0.95
+    priority: 80
+
+  # FR-015: Portuguese DEVE statement
+  - id: "openspec-deve-statement"
+    name: "DEVE Statement"
+    pattern:
+      regex: '(O sistema|O [A-Z][a-zA-Z]+|[A-Z][a-zA-Z]+) (DEVE|NÃO DEVE|DEVEM|NÃO DEVEM) (.+)'
+    type: "fact"
+    confidence: 0.95
+    priority: 78
+
+  # FR-016: English SHALL statement
+  - id: "openspec-shall-statement"
+    name: "SHALL Statement"
+    pattern:
+      regex: '(The system|[A-Z][a-zA-Z]+) (SHALL|SHALL NOT|SHOULD|MAY) (.+)'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+
+  # FR-017: Scenario heading
+  - id: "openspec-scenario-heading"
+    name: "Scenario Heading"
+    pattern:
+      regex: '^#### Scenario: (.+)$'
+    type: "operation"
+    confidence: 0.95
+    priority: 80
+
+  # FR-018: GIVEN precondition
+  - id: "openspec-given-precondition"
+    name: "GIVEN Precondition"
+    pattern:
+      regex: '^-\s+\*\*GIVEN\*\* (.+)$'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+
+  # FR-019: WHEN operation trigger
+  - id: "openspec-when-trigger"
+    name: "WHEN Trigger"
+    pattern:
+      regex: '^-\s+\*\*WHEN\*\* (.+)$'
+    type: "operation"
+    confidence: 0.95
+    priority: 78
+
+  # FR-020: THEN assertion
+  - id: "openspec-then-assertion"
+    name: "THEN Assertion"
+    pattern:
+      regex: '^-\s+\*\*THEN\*\* (.+)$'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+
+  # FR-021: Capability ID
+  - id: "openspec-capability-id"
+    name: "Capability ID"
+    pattern:
+      regex: '\b(FS\d{3}|DC\d{3}|DR\d{3}|DT\d{3}|DP\d{3}|IC\d{3}|LC\d{3}|REQ-[A-Z0-9-]+)\b'
+    type: "entity"
+    confidence: 0.85
+    priority: 70
+
+  # FR-022: Decision record (colon format)
+  - id: "openspec-decision-colon"
+    name: "Decision Record (Colon)"
+    pattern:
+      regex: '^### Decision (\d+): (.+)$'
+    type: "fact"
+    confidence: 0.95
+    priority: 80
+    document_type: "design"
+
+  # FR-022: Decision record (dot format, Portuguese)
+  - id: "openspec-decision-dot"
+    name: "Decision Record (Dot)"
+    pattern:
+      regex: '^### (\d+)\. (.+)$'
+    type: "fact"
+    confidence: 0.90
+    priority: 78
+    document_type: "design"
+
+  # FR-023: Risk/Trade-off
+  - id: "openspec-risk"
+    name: "Risk"
+    pattern:
+      regex: '^-\s+\[Risk\] (.+) → Mitigation: (.+)$'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+    document_type: "design"
+
+  - id: "openspec-tradeoff"
+    name: "Trade-off"
+    pattern:
+      regex: '^-\s+\[Trade-off\] (.+) → Acceptable because (.+)$'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+    document_type: "design"
+
+  # FR-024: Why/What Changes/Context/Goals
+  - id: "openspec-why-section"
+    name: "Why Section"
+    pattern:
+      regex: '^## Why$'
+    type: "fact"
+    confidence: 0.90
+    priority: 70
+    document_type: "proposal"
+
+  - id: "openspec-what-changes"
+    name: "What Changes Section"
+    pattern:
+      regex: '^## What Changes$'
+    type: "fact"
+    confidence: 0.90
+    priority: 70
+    document_type: "proposal"
+
+  - id: "openspec-context-section"
+    name: "Context Section"
+    pattern:
+      regex: '^## Context$'
+    type: "fact"
+    confidence: 0.90
+    priority: 70
+    document_type: "design"
+
+  - id: "openspec-goals-section"
+    name: "Goals / Non-Goals"
+    pattern:
+      regex: '^## Goals / Non-Goals$'
+    type: "fact"
+    confidence: 0.90
+    priority: 70
+    document_type: "design"
+
+  # FR-025: Capabilities
+  - id: "openspec-new-capabilities"
+    name: "New Capabilities"
+    pattern:
+      regex: '^### New Capabilities$'
+    type: "entity"
+    confidence: 0.95
+    priority: 80
+    document_type: "proposal"
+
+  - id: "openspec-modified-capabilities"
+    name: "Modified Capabilities"
+    pattern:
+      regex: '^### Modified Capabilities$'
+    type: "fact"
+    confidence: 0.90
+    priority: 75
+    document_type: "proposal"
+
+  # FR-026: Task checklist
+  - id: "openspec-task-category"
+    name: "Task Category"
+    pattern:
+      regex: '^## (\d+)\. (.+)$'
+    type: "fact"
+    confidence: 0.85
+    priority: 65
+    document_type: "tasks"
+
+  - id: "openspec-task-item"
+    name: "Task Item"
+    pattern:
+      regex: '^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$'
+    type: "fact"
+    confidence: 0.85
+    priority: 65
+    document_type: "tasks"
+
+  # FR-027: Domain entity (TitleCase)
+  - id: "openspec-domain-entity"
+    name: "Domain Entity"
+    pattern:
+      regex: '\b(TradeDay|AggregatedMetrics|DominanceClassification|ConvictionClassification|MoneyFlowClassification|InstitutionalClassification|LiquidityClassification|Diagnosis|TickerList|OrientationPanel|PriceRangePanel|CLVGauge|ClassificationBar|BuySellBar|PriceRangeDiagram|IndicatorEngine|B3Client|CacheManager)\b'
+    type: "entity"
+    confidence: 0.85
+    priority: 65
+
+  # FR-028: Purpose section
+  - id: "openspec-purpose"
+    name: "Purpose Section"
+    pattern:
+      regex: '^## Purpose$'
+    type: "entity"
+    confidence: 0.90
+    priority: 70
+
+  # FR-029: Inline actor references (Portuguese/English)
+  - id: "openspec-actor-ref"
+    name: "Actor Reference"
+    pattern:
+      regex: '\b(Usuário|Sistema|Cliente|Analista|Operador|User|System|Client|Analyst|Operator)\b'
+    type: "entity"
+    confidence: 0.80
+    priority: 60
+
+  # Delta spec: ADDED Requirements
+  - id: "openspec-added-requirements"
+    name: "ADDED Requirements"
+    pattern:
+      regex: '^## ADDED Requirements$'
+    type: "entity"
+    confidence: 0.95
+    priority: 85
+
+  # Delta spec: MODIFIED Requirements
+  - id: "openspec-modified-requirements"
+    name: "MODIFIED Requirements"
+    pattern:
+      regex: '^## MODIFIED Requirements$'
+    type: "fact"
+    confidence: 0.95
+    priority: 85
+
+  # Delta spec: substitui marker
+  - id: "openspec-substitui-marker"
+    name: "Substitui Marker"
+    pattern:
+      regex: '\(substitui .+?\)'
+    type: "fact"
+    confidence: 0.90
+    priority: 70
+
+  # No-change spec detection
+  - id: "openspec-no-change"
+    name: "No Specification Change"
+    pattern:
+      regex: 'No specification changes required'
+    type: "fact"
+    confidence: 1.00
+    priority: 10
+
+  # AND clause following GIVEN/THEN
+  - id: "openspec-and-clause"
+    name: "AND Clause"
+    pattern:
+      regex: '^-\s+\*\*AND\*\* (.+)$'
+    type: "fact"
+    confidence: 0.85
+    priority: 70

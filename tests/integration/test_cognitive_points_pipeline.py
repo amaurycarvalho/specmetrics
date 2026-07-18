@@ -99,16 +99,16 @@ class TestCognitivePointsPipeline:
         assert result_ctx is not None
         assert result_ctx.measurement_result is not None
         payload = result_ctx.measurement_result
-        assert "total_cognitive_points" in payload
-        assert "raw_score" in payload
-        assert "specification_review_effort" in payload
-        assert "functional_validation_effort" in payload
-        assert "element_counts" in payload
-        assert "duration_ms" in payload
-        assert payload["total_cognitive_points"] > 0
-        assert payload["raw_score"] > 0
-        assert payload["specification_review_effort"]["total_raw"] > 0
-        assert payload["functional_validation_effort"]["total_raw"] > 0
+        assert "cognitive_total_cognitive_points" in payload
+        assert "cognitive_raw_score" in payload
+        assert "cognitive_specification_review_effort" in payload
+        assert "cognitive_functional_validation_effort" in payload
+        assert "cognitive_element_counts" in payload
+        assert "cognitive_duration_ms" in payload
+        assert payload["cognitive_total_cognitive_points"] > 0
+        assert payload["cognitive_raw_score"] > 0
+        assert payload["cognitive_specification_review_effort"]["total_raw"] > 0
+        assert payload["cognitive_functional_validation_effort"]["total_raw"] > 0
 
     def test_pipeline_missing_csm(self):
         cfm = _make_cfm()
@@ -125,9 +125,9 @@ class TestCognitivePointsPipeline:
         handler = CognitivePointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["specification_review_effort"]["total_raw"] == 0
-        assert payload["functional_validation_effort"]["total_raw"] > 0
-        assert len(payload["warnings"]) > 0
+        assert payload["cognitive_specification_review_effort"]["total_raw"] == 0
+        assert payload["cognitive_functional_validation_effort"]["total_raw"] > 0
+        assert len(payload["cognitive_warnings"]) > 0
 
     def test_pipeline_missing_cfm(self):
         csm = _make_csm()
@@ -144,8 +144,8 @@ class TestCognitivePointsPipeline:
         handler = CognitivePointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["functional_validation_effort"]["total_raw"] == 0
-        assert payload["specification_review_effort"]["total_raw"] > 0
+        assert payload["cognitive_functional_validation_effort"]["total_raw"] == 0
+        assert payload["cognitive_specification_review_effort"]["total_raw"] > 0
 
     def test_pipeline_both_missing(self):
         ctx = PipelineContext(
@@ -161,5 +161,5 @@ class TestCognitivePointsPipeline:
         handler = CognitivePointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["total_cognitive_points"] == 1
-        assert payload["raw_score"] == 0
+        assert payload["cognitive_total_cognitive_points"] == 1
+        assert payload["cognitive_raw_score"] == 0

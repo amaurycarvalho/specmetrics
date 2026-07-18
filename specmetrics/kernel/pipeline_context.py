@@ -30,3 +30,12 @@ class PipelineContext:
         if event is not None:
             kwargs["published_events"] = self.published_events + (event,)
         return dataclasses.replace(self, **kwargs)
+
+    def merge_stage_output(
+        self, field_name: str, value: dict, event: Any = None
+    ) -> PipelineContext:
+        current = getattr(self, field_name, None) or {}
+        if not isinstance(current, dict):
+            current = {}
+        merged = {**current, **value}
+        return self.with_stage_output(field_name, merged, event=event)

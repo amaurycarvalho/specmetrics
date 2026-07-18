@@ -106,7 +106,11 @@ def _build_metrics_from_measurement_result(
 ) -> list[MetricExplanation]:
     metrics: list[MetricExplanation] = []
 
-    total_fp = measurement_result.get("total_function_points", 0)
+    total_fp = (
+        measurement_result.get("fpa_total_function_points")
+        or measurement_result.get("total_function_points")
+        or 0
+    )
     if total_fp is not None:
         metrics.append(
             MetricExplanation(

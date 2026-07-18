@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from pathlib import Path
 
@@ -32,6 +33,8 @@ logger = structlog.get_logger(__name__)
 
 _NON_TEXT_THRESHOLD = 0.3
 
+_EXPECTED_RULE_PACK_MAJOR_VERSION = 1
+
 
 def _is_likely_binary(content: str) -> bool:
     if not content:
@@ -43,6 +46,13 @@ def _is_likely_binary(content: str) -> bool:
 def _content_hash(document_id: str, section_id: str | None, text: str) -> str:
     raw = f"{document_id}::{section_id or ''}::{text}"
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def _parse_major_version(version: str) -> int | None:
+    try:
+        return int(version.split(".")[0])
+    except (ValueError, IndexError):
+        return None
 
 
 try:
@@ -115,19 +125,80 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
         )
         return result
 
-    def _process_document(
+    def _check_pack_version(self, path: str | Path) -> None:
+        try:
+            meta = RulePackLoader.load_meta(path)
+            if meta.version:
+                if not RulePackLoader.validate_version(meta.version):
+                    logger.warning(
+                        "rule_pack_invalid_version",
+                        path=str(path),
+                        version=meta.version,
+                    )
+                else:
+                    major = _parse_major_version(meta.version)
+                    if major is not None and major != _EXPECTED_RULE_PACK_MAJOR_VERSION:
+                        logger.warning(
+                            "rule_pack_major_version_mismatch",
+                            path=str(path),
+                            version=meta.version,
+                            expected_major=_EXPECTED_RULE_PACK_MAJOR_VERSION,
+                        )
+        except (FileNotFoundError, RuntimeError) as exc:
+            logger.warning("rule_pack_version_check_failed", path=str(path), error=str(exc))
+
+    def _match_rule_against_observation(
+        self, rule: ExtractionRule, section_type: str, heading_text: str, content: str
+    ) -> bool:
+        pat = rule.pattern
+
+        regex = pat.get("regex", "")
+        if regex:
+            try:
+                if re.search(regex, content):
+                    return True
+                if re.search(regex, heading_text):
+                    return True
+            except re.error:
+                logger.warning("regex_error", rule_id=rule.id, pattern=regex)
+            return False
+
+        heading_match = pat.get("heading", "")
+        if heading_match:
+            candidates = [section_type, heading_text]
+            if section_type != heading_text:
+                candidates.append(heading_text)
+            match_values = [heading_match] if isinstance(heading_match, str) else heading_match
+            for h_candidate in candidates:
+                for m in match_values:
+                    if isinstance(m, str) and m.lower() == h_candidate.lower():
+                        return True
+            return False
+
+        keywords = pat.get("keywords", [])
+        if keywords:
+            min_matches = pat.get("min_matches", len(keywords))
+            matched = sum(1 for kw in keywords if kw.lower() in content.lower())
+            return matched >= min_matches
+
+        structure = pat.get("structure")
+        if structure:
+            return True
+
+        return False
+
+    def _execute_rules(
         self, doc: Document, rules: list[ExtractionRule]
-    ) -> tuple[list[ExtractedElement], int]:
+    ) -> tuple[list[ExtractedElement], int, int, int, set[str]]:
         if _md is None:
             logger.error("markdown_it_not_available")
-            return [], 1
+            return [], 0, 0, len(rules), set()
 
         if _is_likely_binary(doc.content):
             logger.warning("skipping_binary_content", doc_id=doc.id)
-            return [], 1
+            return [], 0, 0, len(rules), set()
 
         tokens = _md.parse(doc.content)
-
         state = ExtractionState()
 
         visitors = [
@@ -151,67 +222,56 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
             obs.location = (doc.id, obs.location[1])
 
         elements: list[ExtractedElement] = []
+        rules_attempted = 0
+        rules_succeeded = 0
+        rules_failed = 0
+        failed_rule_ids: set[str] = set()
+        doc_type = (doc.document_type or "").lower()
+
         for obs in state.observations:
             section_type = obs.context.get("section_type", "")
-            heading_text = obs.content
             content = obs.content
             doc_id = doc.id
             section_id = obs.location[1]
 
-            candidates: list[str] = [section_type, heading_text]
-            if section_type != heading_text:
-                candidates.append(heading_text)
-
-            matched_rule = None
             for rule in rules:
-                pat = rule.pattern
-
-                heading_match = pat.get("heading", "")
-                if heading_match:
-                    match_values = [heading_match] if isinstance(heading_match, str) else heading_match
-                    for h_candidate in candidates:
-                        for m in match_values:
-                            if isinstance(m, str) and m.lower() == h_candidate.lower():
-                                matched_rule = rule
-                                break
-                        if matched_rule:
-                            break
-                    if matched_rule:
-                        break
+                if rule.document_type and rule.document_type != doc_type:
                     continue
+                if rule.target_sections:
+                    st_lower = section_type.lower()
+                    if not any(ts.lower() == st_lower for ts in rule.target_sections):
+                        continue
 
-                keywords = pat.get("keywords", [])
-                if keywords:
-                    min_matches = pat.get("min_matches", len(keywords))
-                    matched = sum(1 for kw in keywords if kw.lower() in content.lower())
-                    if matched >= min_matches:
-                        matched_rule = rule
-                        break
-                    continue
+                rules_attempted += 1
+                try:
+                    if self._match_rule_against_observation(rule, section_type, section_type, content):
+                        elem_id = _content_hash(doc_id, section_id, content)
+                        evidence = EvidenceReference(
+                            document_id=doc_id,
+                            section_id=section_id,
+                            text=content,
+                            rule_id=rule.id,
+                        )
+                        element = ExtractedElement(
+                            id=elem_id,
+                            type=rule.type,
+                            content=content,
+                            confidence=rule.confidence,
+                            evidence=evidence,
+                        )
+                        elements.append(element)
+                        rules_succeeded += 1
+                except Exception as exc:
+                    rules_failed += 1
+                    failed_rule_ids.add(rule.id)
+                    logger.warning(
+                        "rule_execution_failed",
+                        rule_id=rule.id,
+                        doc_id=doc.id,
+                        error=str(exc),
+                    )
 
-                structure = pat.get("structure")
-                if structure:
-                    matched_rule = rule
-                    break
-
-            if matched_rule is not None:
-                elem_id = _content_hash(doc_id, section_id, content)
-                evidence = EvidenceReference(
-                    document_id=doc_id,
-                    section_id=section_id,
-                    text=content,
-                    rule_id=matched_rule.id,
-                )
-                element = ExtractedElement(
-                    id=elem_id,
-                    type=matched_rule.type,
-                    content=content,
-                    confidence=matched_rule.confidence,
-                    evidence=evidence,
-                )
-                elements.append(element)
-
-        return elements, 0
+        return elements, rules_attempted, rules_succeeded, rules_failed, failed_rule_ids
 
     def _load_framework_packs(self, documents: list[Document]) -> list[str]:
         detected: set[str] = set()
@@ -226,10 +286,12 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
         if "openspec" in detected:
             osp = str(rules_dir / "openspec_rules.yaml")
             if Path(osp).exists():
+                self._check_pack_version(osp)
                 packs.append(osp)
         if "speckit" in detected:
             skp = str(rules_dir / "speckit_rules.yaml")
             if Path(skp).exists():
+                self._check_pack_version(skp)
                 packs.append(skp)
         return packs
 
@@ -256,10 +318,28 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
         errors_count = 0
 
         for doc in documents:
-            elements, err = self._process_document(doc, rules)
+            doc_start = time.monotonic()
+            elements, attempted, succeeded, failed, failed_ids = self._execute_rules(doc, rules)
             all_elements.extend(elements)
-            if err:
-                errors_count += err
+
+            duration = int((time.monotonic() - doc_start) * 1000)
+            total_rules = attempted or 1
+            success_rate = (succeeded / total_rules) * 100
+
+            if attempted > 0 and success_rate < 99.0:
+                logger.debug(
+                    "low_extraction_success_rate",
+                    document_id=doc.id,
+                    success_rate=round(success_rate, 2),
+                    rules_attempted=attempted,
+                    rules_succeeded=succeeded,
+                    rules_failed=failed,
+                    failed_rule_ids=sorted(failed_ids),
+                    duration_ms=duration,
+                )
+
+            if failed > 0:
+                errors_count += failed
             else:
                 documents_processed += 1
 

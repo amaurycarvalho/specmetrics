@@ -7,6 +7,7 @@ class StageName(enum.Enum):
     DISCOVER = "discover"
     EXTRACT = "extract"
     GRAPH = "graph"
+    CSM = "csm"
     CFM = "cfm"
     RULE = "rule"
     MEASURE = "measure"

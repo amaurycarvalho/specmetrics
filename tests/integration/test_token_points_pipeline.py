@@ -86,14 +86,14 @@ class TestTokenPointsPipeline:
         assert result_ctx is not None
         assert result_ctx.measurement_result is not None
         payload = result_ctx.measurement_result
-        assert "total_score" in payload
-        assert "specification_cost" in payload
-        assert "code_generation_cost" in payload
-        assert "element_counts" in payload
-        assert "duration_ms" in payload
-        assert payload["total_score"] > 0
-        assert payload["specification_cost"] > 0
-        assert payload["code_generation_cost"] > 0
+        assert "token_total_score" in payload
+        assert "token_specification_cost" in payload
+        assert "token_code_generation_cost" in payload
+        assert "token_element_counts" in payload
+        assert "token_duration_ms" in payload
+        assert payload["token_total_score"] > 0
+        assert payload["token_specification_cost"] > 0
+        assert payload["token_code_generation_cost"] > 0
 
     def test_pipeline_missing_csm(self):
         cfm = _make_cfm()
@@ -110,9 +110,9 @@ class TestTokenPointsPipeline:
         handler = TokenPointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["specification_cost"] == 0
-        assert payload["code_generation_cost"] > 0
-        assert len(payload["warnings"]) > 0
+        assert payload["token_specification_cost"] == 0
+        assert payload["token_code_generation_cost"] > 0
+        assert len(payload["token_warnings"]) > 0
 
     def test_pipeline_missing_cfm(self):
         csm = _make_csm()
@@ -129,8 +129,8 @@ class TestTokenPointsPipeline:
         handler = TokenPointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["code_generation_cost"] == 0
-        assert payload["specification_cost"] > 0
+        assert payload["token_code_generation_cost"] == 0
+        assert payload["token_specification_cost"] > 0
 
     def test_pipeline_both_missing(self):
         ctx = PipelineContext(
@@ -146,4 +146,4 @@ class TestTokenPointsPipeline:
         handler = TokenPointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["total_score"] == 0
+        assert payload["token_total_score"] == 0

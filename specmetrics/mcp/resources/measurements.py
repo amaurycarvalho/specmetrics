@@ -75,7 +75,8 @@ def handle_export_resource(uri: str) -> str:
         lines = ["metric,value,unit"]
         if "measurement" in data:
             m = data["measurement"]
-            lines.append(f"total_function_points,{m.get('total_function_points', '')},function_points")
+            fp = m.get("fpa_total_function_points") or m.get("total_function_points", "")
+            lines.append(f"total_function_points,{fp},function_points")
         return "\n".join(lines)
     else:
         raise ToolError(-32602, f"Unsupported export format: {fmt}")

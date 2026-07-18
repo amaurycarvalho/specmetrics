@@ -163,12 +163,12 @@ class SFPMeasurementHandler:
         result = plugin.measure(cfm)
 
         payload: dict[str, Any] = {
-            "total_sfp": result.summary.total_sfp,
-            "total_components": result.summary.total_component_count,
-            "breakdown": {ct: {"count": b.count, "total_sfp": b.total_sfp} for ct, b in result.summary.by_type.items()},
+            "sfp_total_sfp": result.summary.total_sfp,
+            "sfp_total_components": result.summary.total_component_count,
+            "sfp_breakdown": {ct: {"count": b.count, "total_sfp": b.total_sfp} for ct, b in result.summary.by_type.items()},
         }
 
-        return ctx.with_stage_output("measurement_result", payload)
+        return ctx.merge_stage_output("measurement_result", payload)
 
 
 def create_sfp_measurement_metadata() -> PluginMetadata:

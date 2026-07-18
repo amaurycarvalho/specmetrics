@@ -336,6 +336,6 @@ def llm_test() -> None:
         print(f"Response: {content}")
         print("Status:   \u2705 connection successful")
     except Exception as exc:
-        print(f"Status:   \u274c connection failed")
+        print("Status:   \u274c connection failed")
         print(f"Error:    {exc}")
         raise typer.Exit(code=1)

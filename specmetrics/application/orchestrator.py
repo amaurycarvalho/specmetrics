@@ -7,6 +7,8 @@ from typing import Any
 import structlog
 
 from specmetrics.kernel.adapter_registry import AdapterRegistry
+from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
+from specmetrics.kernel.csm.model import CanonicalSpecificationModel
 from specmetrics.kernel.diagnostics import StageStatus as KernelStageStatus
 from specmetrics.kernel.events import EventType
 from specmetrics.kernel.exceptions import PipelineError
@@ -40,6 +42,7 @@ _STAGE_NAME_TO_EVENT: dict[StageName, EventType] = {
     StageName.DISCOVER: EventType.REPOSITORY_LOADED,
     StageName.EXTRACT: EventType.SEMANTIC_EXTRACTION_COMPLETED,
     StageName.GRAPH: EventType.EVIDENCE_GRAPH_BUILT,
+    StageName.CSM: EventType.CANONICAL_SPECIFICATION_MODEL_BUILT,
     StageName.CFM: EventType.CANONICAL_MODEL_BUILT,
     StageName.RULE: EventType.RULE_PACK_APPLIED,
     StageName.MEASURE: EventType.MEASUREMENT_COMPLETED,
@@ -50,6 +53,7 @@ _STAGE_NAME_TO_HANDLER_NAMES: dict[str, list[str]] = {
     "discover": ["discovery"],
     "extract": ["semantic_extraction"],
     "graph": ["evidence_graph"],
+    "csm": ["canonical_spec_model"],
     "cfm": ["canonical_model"],
     "rule": ["Rule Pack Engine"],
     "measure": ["FPA Measurement", "SFP Measurement", "SNAP Measurement",
@@ -276,6 +280,34 @@ class PipelineOrchestrator:
             elif stage_name == "extract":
                 extract_data = getattr(ctx, "extraction_result", None) or {}
                 entities_found = extract_data.get("total_elements", 0)
+            elif stage_name == "graph":
+                graph_data = getattr(ctx, "evidence_graph", None) or {}
+                if isinstance(graph_data, dict):
+                    entities_found = graph_data.get("node_count", 0)
+            elif stage_name == "csm":
+                csm = getattr(ctx, "canonical_spec_model", None)
+                if isinstance(csm, CanonicalSpecificationModel):
+                    entities_found = sum(csm.metadata.element_counts.values())
+            elif stage_name == "cfm":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    entities_found = sum(cfm.metadata.element_counts.values())
+            elif stage_name == "rule":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    entities_found = sum(cfm.metadata.element_counts.values())
+            elif stage_name == "measure":
+                mr = getattr(ctx, "measurement_result", None) or {}
+                if isinstance(mr, dict):
+                    entities_found = (
+                        mr.get("fpa_total_function_points", 0)
+                        or mr.get("sfp_total_components", 0)
+                        or mr.get("bcp_measured_items", 0)
+                        or mr.get("token_total_score", 0)
+                        or mr.get("cognitive_total_cognitive_points", 0)
+                        or mr.get("storypoints_estimated_items", 0)
+                        or mr.get("snap_total_items", 0)
+                    )
 
             results.append(
                 StageResult(
@@ -296,11 +328,11 @@ class PipelineOrchestrator:
         mr = ctx.measurement_result
         if isinstance(mr, dict):
             return MeasurementResult(
-                total_function_points=mr.get("total_function_points", 0),
-                breakdown=mr.get("breakdown", {}),
-                complexity_distribution=mr.get("complexity_distribution", {}),
+                total_function_points=mr.get("fpa_total_function_points", 0),
+                breakdown=mr.get("fpa_breakdown", {}),
+                complexity_distribution=mr.get("fpa_complexity_distribution", []),
                 evidence_refs=mr.get("evidence_refs", []),
-                applied_rule_pack=mr.get("applied_rule_pack", ""),
+                applied_rule_pack=mr.get("storypoints_applied_rule_pack", ""),
             )
         return MeasurementResult()
 
@@ -325,10 +357,9 @@ class PipelineOrchestrator:
 
         result_data: dict[str, Any] = {
             "total_function_points": (
-                ctx.measurement_result.get("total_function_points", 0)
-                if isinstance(ctx.measurement_result, dict)
-                else 0
-            ),
+                ctx.measurement_result.get("fpa_total_function_points")
+                or ctx.measurement_result.get("total_function_points", 0)
+            ) if isinstance(ctx.measurement_result, dict) else 0,
             "status": "completed" if ctx.diagnostics and not ctx.diagnostics.errors else "failed",
             "duration_ms": (
                 ctx.diagnostics.total_duration_ms

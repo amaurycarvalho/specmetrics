@@ -85,14 +85,14 @@ class StoryPointsHandler:
         dist_str = {str(k): v for k, v in result.distribution.items()}
 
         payload: dict[str, Any] = {
-            "method": result.method,
-            "scale": result.scale,
-            "total_story_points": result.total_story_points,
-            "estimated_items": len(result.items),
-            "distribution": dist_str,
-            "applied_rule_pack": result.applied_rule_pack,
-            "duration_ms": result.execution_metadata.duration_ms,
-            "warnings": [
+            "storypoints_method": result.method,
+            "storypoints_scale": result.scale,
+            "storypoints_total_story_points": result.total_story_points,
+            "storypoints_estimated_items": len(result.items),
+            "storypoints_distribution": dist_str,
+            "storypoints_applied_rule_pack": result.applied_rule_pack,
+            "storypoints_duration_ms": result.execution_metadata.duration_ms,
+            "storypoints_warnings": [
                 w.model_dump() for w in result.warnings
             ],
         }
@@ -111,7 +111,7 @@ class StoryPointsHandler:
             duration_ms=result.execution_metadata.duration_ms,
         )
 
-        return ctx.with_stage_output(
+        return ctx.merge_stage_output(
             "measurement_result", payload, event=storypoints_event
         )
 

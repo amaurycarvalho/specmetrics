@@ -1,7 +1,5 @@
 ---
-
 description: "Task list for Specialized Deterministic Fallbacks"
-
 ---
 
 # Tasks: Specialized Deterministic Fallbacks
@@ -32,10 +30,10 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 **Purpose**: Project structure for specialist rule packs
 
-- [ ] T001 Create `speckit_rules.yaml` skeleton with version metadata field in `specmetrics/kernel/rules/speckit_rules.yaml`
-- [ ] T002 [P] Create `openspec_rules.yaml` skeleton with version metadata field in `specmetrics/kernel/rules/openspec_rules.yaml`
-- [ ] T003 [P] Create Speckit test fixtures directory structure under `tests/fixtures/speckit/` with minimal `spec.md`, `plan.md`, `tasks.md`
-- [ ] T004 [P] Verify `tests/openspec/` exists with FlowSource OpenSpec examples (29 domains, 3 active changes, 38 archived changes)
+- [x] T001 Create `speckit_rules.yaml` skeleton with version metadata field in `specmetrics/kernel/rules/speckit_rules.yaml`
+- [x] T002 [P] Create `openspec_rules.yaml` skeleton with version metadata field in `specmetrics/kernel/rules/openspec_rules.yaml`
+- [x] T003 [P] Create Speckit test fixtures directory structure under `tests/fixtures/speckit/` with minimal `spec.md`, `plan.md`, `tasks.md`
+- [x] T004 [P] Verify `tests/openspec/` exists with FlowSource OpenSpec examples (29 domains, 3 active changes, 38 archived changes)
 
 **Checkpoint**: Skeleton rule packs and test fixtures ready
 
@@ -47,14 +45,14 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Update `DeterministicSemanticEngine._load_framework_packs()` in `specmetrics/kernel/deterministic_engine.py` to discover and load `speckit_rules.yaml` and `openspec_rules.yaml` from `specmetrics/kernel/rules/`
-- [ ] T006 [P] Implement version metadata parsing: extract `version` field from rule pack YAML, validate semver format (`\d+.\d+.\d+`)
-- [ ] T007 Implement version compatibility check: emit WARN log when major version of rule pack mismatches engine compatibility range
-- [ ] T008 [P] Add `ExtractionRule` schema support for `capture_groups` and `target_sections` fields in `specmetrics/kernel/models/rule.py`
-- [ ] T009 [P] Implement per-rule failure isolation in `DeterministicSemanticEngine._execute_rules()` — catch regex exceptions, log rule_id and error, skip failing rule, continue processing remaining rules (FR-035)
-- [ ] T010 [P] Add per-document `ExtractionResult` accumulator tracking `rules_attempted`, `rules_succeeded`, `rules_failed`, `duration_ms` in `specmetrics/kernel/deterministic_engine.py`
-- [ ] T011 Implement extraction success rate metric: log WARN when per-document rate < 99%, exposing failing rule IDs (FR-037)
-- [ ] T012 [P] Write unit tests for rule pack loading and version checking in `tests/unit/kernel/rules/test_rule_pack_loading.py`
+- [x] T005 Update `DeterministicSemanticEngine._load_framework_packs()` in `specmetrics/kernel/deterministic_engine.py` to discover and load `speckit_rules.yaml` and `openspec_rules.yaml` from `specmetrics/kernel/rules/`
+- [x] T006 [P] Implement version metadata parsing: extract `version` field from rule pack YAML, validate semver format (`\d+.\d+.\d+`)
+- [x] T007 Implement version compatibility check: emit WARN log when major version of rule pack mismatches engine compatibility range
+- [x] T008 [P] Add `ExtractionRule` schema support for `capture_groups` and `target_sections` fields in `specmetrics/kernel/engine_rule.py`
+- [x] T009 [P] Implement per-rule failure isolation in `DeterministicSemanticEngine._execute_rules()` — catch regex exceptions, log rule_id and error, skip failing rule, continue processing remaining rules (FR-035)
+- [x] T010 [P] Add per-document `ExtractionResult` accumulator tracking `rules_attempted`, `rules_succeeded`, `rules_failed`, `duration_ms` in `specmetrics/kernel/deterministic_engine.py`
+- [x] T011 Implement extraction success rate metric: log WARN when per-document rate < 99%, exposing failing rule IDs (FR-037)
+- [x] T012 [P] Write unit tests for rule pack loading and version checking in `tests/unit/kernel/rules/test_rule_pack_loading.py`
 
 **Checkpoint**: Foundation ready — specialist rule packs can be loaded, validated, and executed with failure isolation and observability
 
@@ -68,21 +66,21 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Create User Story extraction rule (FR-002): match `^### User Story (\d+) [—–-] (.+) \(Priority: (P[1-3])\)` → CFM functional process in `specmetrics/kernel/rules/speckit_rules.yaml`
-- [ ] T014 [P] [US1] Create priority justification rule (FR-003): match `^\*\*Why this priority\*\*: (.+)$` → business rule fact in `speckit_rules.yaml`
-- [ ] T015 [P] [US1] Create inline GIVEN/WHEN/THEN rule (FR-004): match `^(\d+)\. \*\*Given\*\* (.+), \*\*When\*\* (.+), \*\*Then\*\* (.+)$` → precondition, operation, assertion facts in `speckit_rules.yaml`
-- [ ] T016 [P] [US1] Create multi-line GIVEN/WHEN/THEN rule (FR-005): match `^-\s+\*\*Given\*\* (.+)$` / `\*\*When\*\*` / `\*\*Then\*\*` / `\*\*And\*\*` → facts in `speckit_rules.yaml`
-- [ ] T017 [P] [US1] Create FR-NNN requirement rule (FR-006): match `^-\s+\*\*FR-(\d{3})\*\*: (.+)$` → business rule with ID reference in `speckit_rules.yaml`
-- [ ] T018 [P] [US1] Create SC-NNN success criteria rule (FR-007): match `^-\s+\*\*SC-(\d{3})\*\*: (.+)$` → acceptance criterion in `speckit_rules.yaml`
-- [ ] T019 [P] [US1] Create Key Entities extraction rule (FR-008): match `^-\s+\*\*(.+)\*\*: (.+)$` under `### Key Entities` → entity/actor/data group in `speckit_rules.yaml`
-- [ ] T020 [P] [US1] Create Assumptions rule (FR-009): match `^-\s+(.+)$` under `## Assumptions` → CSM assumption in `speckit_rules.yaml`
-- [ ] T021 [P] [US1] Create Constitution Check rule (FR-010): match `^\*\*Engaged Principles\*\*: (.+)$` → CSM constraint in `speckit_rules.yaml`
-- [ ] T022 [P] [US1] Create Edge Cases rule (FR-011): match `^-\s+What happens (.+)\? (.+)$` under `### Edge Cases` → open question in `speckit_rules.yaml`
-- [ ] T023 [P] [US1] Create IMP-NNN implementation note rule (FR-012): match `^-\s+\*\*IMP-\d+\*\*: (.+)$` → CSM decision element in `speckit_rules.yaml`
-- [ ] T024 [P] [US1] Create task line rule (FR-013): match `^-\s+\[([ xX])\]\s+(T\d{3})...` in `tasks.md` → CSM specification activity in `speckit_rules.yaml`
-- [ ] T025 [P] [US1] Create Actor extraction from entity definitions rule (FR-001): match `^-\s+\*\*(.+)\*\*: (.+)$` under `### Key Entities` with uppercase role-like word → Actor in `speckit_rules.yaml`
-- [ ] T026 [US1] Verify speckit rules against `specs/007-canonical-functional-model/spec.md` produce ≥ 20 elements (SC-005 target)
-- [ ] T027 [US1] Verify speckit rules against all 29 specmetrics specs produce non-empty CFM (≥10 elements) and CSM (≥5 elements) (SC-001 target)
+- [x] T013 [P] [US1] Create User Story extraction rule (FR-002): match `^### User Story (\d+) [—–-] (.+) \(Priority: (P[1-3])\)` → CFM functional process in `specmetrics/kernel/rules/speckit_rules.yaml`
+- [x] T014 [P] [US1] Create priority justification rule (FR-003): match `^\*\*Why this priority\*\*: (.+)$` → business rule fact in `speckit_rules.yaml`
+- [x] T015 [P] [US1] Create inline GIVEN/WHEN/THEN rule (FR-004): match `^(\d+)\. \*\*Given\*\* (.+), \*\*When\*\* (.+), \*\*Then\*\* (.+)$` → precondition, operation, assertion facts in `speckit_rules.yaml`
+- [x] T016 [P] [US1] Create multi-line GIVEN/WHEN/THEN rule (FR-005): match `^-\s+\*\*Given\*\* (.+)$` / `\*\*When\*\*` / `\*\*Then\*\*` / `\*\*And\*\*` → facts in `speckit_rules.yaml`
+- [x] T017 [P] [US1] Create FR-NNN requirement rule (FR-006): match `^-\s+\*\*FR-(\d{3})\*\*: (.+)$` → business rule with ID reference in `speckit_rules.yaml`
+- [x] T018 [P] [US1] Create SC-NNN success criteria rule (FR-007): match `^-\s+\*\*SC-(\d{3})\*\*: (.+)$` → acceptance criterion in `speckit_rules.yaml`
+- [x] T019 [P] [US1] Create Key Entities extraction rule (FR-008): match `^-\s+\*\*(.+)\*\*: (.+)$` under `### Key Entities` → entity/actor/data group in `speckit_rules.yaml`
+- [x] T020 [P] [US1] Create Assumptions rule (FR-009): match `^-\s+(.+)$` under `## Assumptions` → CSM assumption in `speckit_rules.yaml`
+- [x] T021 [P] [US1] Create Constitution Check rule (FR-010): match `^\*\*Engaged Principles\*\*: (.+)$` → CSM constraint in `speckit_rules.yaml`
+- [x] T022 [P] [US1] Create Edge Cases rule (FR-011): match `^-\s+What happens (.+)\? (.+)$` under `### Edge Cases` → open question in `speckit_rules.yaml`
+- [x] T023 [P] [US1] Create IMP-NNN implementation note rule (FR-012): match `^-\s+\*\*IMP-\d+\*\*: (.+)$` → CSM decision element in `speckit_rules.yaml`
+- [x] T024 [P] [US1] Create task line rule (FR-013): match `^-\s+\[([ xX])\]\s+(T\d{3})...` in `tasks.md` → CSM specification activity in `speckit_rules.yaml`
+- [x] T025 [P] [US1] Create Actor extraction from entity definitions rule (FR-001): match `^-\s+\*\*(.+)\*\*: (.+)$` under `### Key Entities` with uppercase role-like word → Actor in `speckit_rules.yaml`
+- [ ] T026 [US1] Verify speckit rules against `specs/007-canonical-functional-model/spec.md` produce ≥ 20 elements (SC-005 target) — requires e2e `specmetrics measure` run
+- [ ] T027 [US1] Verify speckit rules against all 29 specmetrics specs produce non-empty CFM (≥10 elements) and CSM (≥5 elements) (SC-001 target) — requires e2e `specmetrics measure` run
 
 **Checkpoint**: At this point, User Story 1 should be fully functional — Speckit extraction produces rich CFM/CSM from specmetrics itself
 
@@ -96,27 +94,27 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 ### Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Create Requirement heading rule (FR-014): match `### Requirement: <Title> (<optional-ID>)` → fact + data group reference in `specmetrics/kernel/rules/openspec_rules.yaml`
-- [ ] T029 [P] [US2] Create Portuguese DEVE statement rule (FR-015): match `O sistema DEVE <action>`, `NÃO DEVE`, `<Entity> DEVE`, `<Entity> DEVEM` → business rule fact in `openspec_rules.yaml`
-- [ ] T030 [P] [US2] Create English SHALL statement rule (FR-016): match `The system SHALL`, `SHALL NOT`, `<Component> SHALL`, `SHOULD`, `MAY` → fact in `openspec_rules.yaml`
-- [ ] T031 [P] [US2] Create Scenario heading rule (FR-017): match `#### Scenario: <title>` → operation element in `openspec_rules.yaml`
-- [ ] T032 [P] [US2] Create GIVEN precondition rule (FR-018): match `- **GIVEN** <condition>` + `- **AND** <condition>` following GIVEN → precondition fact in `openspec_rules.yaml`
-- [ ] T033 [P] [US2] Create WHEN operation trigger rule (FR-019): match `- **WHEN** <action>` → operation trigger, including variable assignments and user actions in `openspec_rules.yaml`
-- [ ] T034 [P] [US2] Create THEN assertion rule (FR-020): match `- **THEN** <expected>` → business rule assertion, preserving full formula in `openspec_rules.yaml`
-- [ ] T035 [P] [US2] Create capability ID rule (FR-021): match `FS###`, `DC###`, `DR###`, `DT###`, `DP###`, `IC###`, `LC###`, `REQ-*` → data group reference in `openspec_rules.yaml`
-- [ ] T036 [P] [US2] Create Decision record rule (FR-022): match `### Decision <N>: <Title>` (colon) and `### <N>. <Title>` (dot) headings in `design.md` → CSM Decision with rationale, alternatives in `openspec_rules.yaml`
-- [ ] T037 [P] [US2] Create Risk/Trade-off rule (FR-023): match `- [Risk] <desc> → Mitigation: <action>` and `- [Trade-off] <desc> → Acceptable because <reason>` → CSM Risk in `openspec_rules.yaml`
-- [ ] T038 [P] [US2] Create Why/What Changes/Context/Goals rule (FR-024): extract `## Why`, `## What Changes`, `## Context`, `## Goals / Non-Goals` from `proposal.md` and `design.md` → CSM assumptions and constraints in `openspec_rules.yaml`
-- [ ] T039 [P] [US2] Create Capabilities rule (FR-025): match `### New Capabilities` and `### Modified Capabilities` from `proposal.md` → functional processes / decision elements in `openspec_rules.yaml`
-- [ ] T040 [P] [US2] Create task checklist rule (FR-026): match `## <N>. <Category>` headings and `- [ ] <N.N>` / `- [x] <N.N>` from `tasks.md` → CSM specification activities in `openspec_rules.yaml`
-- [ ] T041 [P] [US2] Create domain entity rule (FR-027): match TitleCase entity names from known catalog (TradeDay, Diagnosis, etc.) → data group in `openspec_rules.yaml`
-- [ ] T042 [P] [US2] Create Purpose section rule (FR-028): extract `## Purpose` from master specs → functional process in `openspec_rules.yaml`
-- [ ] T043 [P] [US2] Create inline actor reference rule (FR-029): match Portuguese role nouns (Usuário, Sistema, Cliente, Analista, Operador) and English equivalents → Actor in `openspec_rules.yaml`
-- [ ] T044 [P] [US2] Create delta spec detection rules: distinguish `## ADDED Requirements` (CFM elements) vs `## MODIFIED Requirements` (CSM decisions), detect `(substitui "...")` markers in flat `.spec.delta.md` format in `openspec_rules.yaml`
-- [ ] T045 [P] [US2] Create no-change spec detection: skip `specs/spec.md`, `_index.md`, `README.md` containing `"No specification changes required"` to avoid false positives in `openspec_rules.yaml`
-- [ ] T046 [US2] Verify openspec rules against `tests/openspec/specs/ticker-analysis/spec.md` produce ≥ 25 elements (SC-006 target)
-- [ ] T047 [US2] Verify openspec rules against `tests/openspec/changes/diagnosis-panel/design.md` produce ≥ 3 decisions (SC-007 target)
-- [ ] T048 [US2] Verify openspec rules against all 29 master specs in `tests/openspec/specs/` produce ≥ 60 elements (SC-008 target)
+- [x] T028 [P] [US2] Create Requirement heading rule (FR-014): match `### Requirement: <Title> (<optional-ID>)` → fact + data group reference in `specmetrics/kernel/rules/openspec_rules.yaml`
+- [x] T029 [P] [US2] Create Portuguese DEVE statement rule (FR-015): match `O sistema DEVE <action>`, `NÃO DEVE`, `<Entity> DEVE`, `<Entity> DEVEM` → business rule fact in `openspec_rules.yaml`
+- [x] T030 [P] [US2] Create English SHALL statement rule (FR-016): match `The system SHALL`, `SHALL NOT`, `<Component> SHALL`, `SHOULD`, `MAY` → fact in `openspec_rules.yaml`
+- [x] T031 [P] [US2] Create Scenario heading rule (FR-017): match `#### Scenario: <title>` → operation element in `openspec_rules.yaml`
+- [x] T032 [P] [US2] Create GIVEN precondition rule (FR-018): match `- **GIVEN** <condition>` + `- **AND** <condition>` following GIVEN → precondition fact in `openspec_rules.yaml`
+- [x] T033 [P] [US2] Create WHEN operation trigger rule (FR-019): match `- **WHEN** <action>` → operation trigger, including variable assignments and user actions in `openspec_rules.yaml`
+- [x] T034 [P] [US2] Create THEN assertion rule (FR-020): match `- **THEN** <expected>` → business rule assertion, preserving full formula in `openspec_rules.yaml`
+- [x] T035 [P] [US2] Create capability ID rule (FR-021): match `FS###`, `DC###`, `DR###`, `DT###`, `DP###`, `IC###`, `LC###`, `REQ-*` → data group reference in `openspec_rules.yaml`
+- [x] T036 [P] [US2] Create Decision record rule (FR-022): match `### Decision <N>: <Title>` (colon) and `### <N>. <Title>` (dot) headings in `design.md` → CSM Decision with rationale, alternatives in `openspec_rules.yaml`
+- [x] T037 [P] [US2] Create Risk/Trade-off rule (FR-023): match `- [Risk] <desc> → Mitigation: <action>` and `- [Trade-off] <desc> → Acceptable because <reason>` → CSM Risk in `openspec_rules.yaml`
+- [x] T038 [P] [US2] Create Why/What Changes/Context/Goals rule (FR-024): extract `## Why`, `## What Changes`, `## Context`, `## Goals / Non-Goals` from `proposal.md` and `design.md` → CSM assumptions and constraints in `openspec_rules.yaml`
+- [x] T039 [P] [US2] Create Capabilities rule (FR-025): match `### New Capabilities` and `### Modified Capabilities` from `proposal.md` → functional processes / decision elements in `openspec_rules.yaml`
+- [x] T040 [P] [US2] Create task checklist rule (FR-026): match `## <N>. <Category>` headings and `- [ ] <N.N>` / `- [x] <N.N>` from `tasks.md` → CSM specification activities in `openspec_rules.yaml`
+- [x] T041 [P] [US2] Create domain entity rule (FR-027): match TitleCase entity names from known catalog (TradeDay, Diagnosis, etc.) → data group in `openspec_rules.yaml`
+- [x] T042 [P] [US2] Create Purpose section rule (FR-028): extract `## Purpose` from master specs → functional process in `openspec_rules.yaml`
+- [x] T043 [P] [US2] Create inline actor reference rule (FR-029): match Portuguese role nouns (Usuário, Sistema, Cliente, Analista, Operador) and English equivalents → Actor in `openspec_rules.yaml`
+- [x] T044 [P] [US2] Create delta spec detection rules: distinguish `## ADDED Requirements` (CFM elements) vs `## MODIFIED Requirements` (CSM decisions), detect `(substitui "...")` markers in flat `.spec.delta.md` format in `openspec_rules.yaml`
+- [x] T045 [P] [US2] Create no-change spec detection: skip `specs/spec.md`, `_index.md`, `README.md` containing `"No specification changes required"` to avoid false positives in `openspec_rules.yaml`
+- [ ] T046 [US2] Verify openspec rules against `tests/openspec/specs/ticker-analysis/spec.md` produce ≥ 25 elements (SC-006 target) — requires e2e `specmetrics measure` run
+- [ ] T047 [US2] Verify openspec rules against `tests/openspec/changes/diagnosis-panel/design.md` produce ≥ 3 decisions (SC-007 target) — requires e2e `specmetrics measure` run
+- [ ] T048 [US2] Verify openspec rules against all 29 master specs in `tests/openspec/specs/` produce ≥ 60 elements (SC-008 target) — requires e2e `specmetrics measure` run
 
 **Checkpoint**: Both Speckit and OpenSpec specialist extraction are functional
 
@@ -130,10 +128,10 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 ### Implementation for User Story 3
 
-- [ ] T049 [P] [US3] Verify content-hash ID generation (FR-031): confirm both rule packs produce deterministic IDs via `sha256(f"{document_id}::{section_id}::{text}")[:16]` in `specmetrics/kernel/deterministic_engine.py`
-- [ ] T050 [P] [US3] Verify confidence score assignment (FR-030): confirm both rule packs use scores per the RFC table (explicit heading=1.00, convention=0.95, heuristic=0.85, inference=0.70)
-- [ ] T051 [US3] Create cross-spec validation script in `tests/unit/kernel/rules/test_entity_coverage.py` that verifies all 14 CFM/CSM categories produce at least one element on a representative document set
-- [ ] T052 [US3] Validate minimal spec handling: run on a spec with only title and description — confirm pipeline does not fail and empty collections are returned gracefully
+- [x] T049 [P] [US3] Verify content-hash ID generation (FR-031): confirm both rule packs produce deterministic IDs via `sha256(f"{document_id}::{section_id}::{text}")[:16]` in `specmetrics/kernel/deterministic_engine.py`
+- [x] T050 [P] [US3] Verify confidence score assignment (FR-030): confirm both rule packs use scores per the RFC table (explicit heading=1.00, convention=0.95, heuristic=0.85, inference=0.70)
+- [x] T051 [US3] Create cross-spec validation script in `tests/unit/kernel/rules/test_entity_coverage.py` that verifies all 14 CFM/CSM categories produce at least one element on a representative document set
+- [x] T052 [US3] Validate minimal spec handling: run on a spec with only title and description — confirm pipeline does not fail and empty collections are returned gracefully
 
 **Checkpoint**: All entity categories covered, deterministic IDs and confidence scores verified
 
@@ -147,10 +145,10 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 ### Implementation for User Story 4
 
-- [ ] T053 [P] [US4] Remove minimal heading-only rules from current `openspec_rules.yaml` in `specmetrics/kernel/rules/openspec_rules.yaml` — replace with full specialist content
-- [ ] T054 [P] [US4] Remove minimal heading-only rules from current `speckit_rules.yaml` in `specmetrics/kernel/rules/speckit_rules.yaml` — replace with full specialist content
-- [ ] T055 [US4] Run comparison validation: process a SpecKit spec with old vs new speckit rules — new pack produces ≥ 10 elements vs ≤ 3 with old (US4 acceptance scenario 1)
-- [ ] T056 [US4] Run comparison validation: process an OpenSpec spec with old vs new openspec rules — new pack produces ≥ 8 elements vs ≤ 4 with old (US4 acceptance scenario 2)
+- [x] T053 [P] [US4] Remove minimal heading-only rules from current `openspec_rules.yaml` in `specmetrics/kernel/rules/openspec_rules.yaml` — replace with full specialist content
+- [x] T054 [P] [US4] Remove minimal heading-only rules from current `speckit_rules.yaml` in `specmetrics/kernel/rules/speckit_rules.yaml` — replace with full specialist content
+- [ ] T055 [US4] Run comparison validation: process a SpecKit spec with old vs new speckit rules — new pack produces ≥ 10 elements vs ≤ 3 with old (US4 acceptance scenario 1) — requires e2e `specmetrics measure` run
+- [ ] T056 [US4] Run comparison validation: process an OpenSpec spec with old vs new openspec rules — new pack produces ≥ 8 elements vs ≤ 4 with old (US4 acceptance scenario 2) — requires e2e `specmetrics measure` run
 
 **Checkpoint**: Specialist rule packs fully replace minimal versions with measurable improvement
 
@@ -160,12 +158,12 @@ description: "Task list for Specialized Deterministic Fallbacks"
 
 **Purpose**: Non-functional requirements that span all user stories
 
-- [ ] T057 [P] Add semver version metadata to `speckit_rules.yaml` with initial version `1.0.0`
-- [ ] T058 [P] Add semver version metadata to `openspec_rules.yaml` with initial version `1.0.0`
-- [ ] T059 Run full e2e validation: `specmetrics measure --engine deterministic --repo ./specs/` on specmetrics (29 features) — verify all 8 plugins produce non-zero output (SC-003)
-- [ ] T060 Run e2e on `tests/openspec/`: `specmetrics measure --repo tests/openspec/ --engine deterministic` — verify ≤ 30s end-to-end (SC-002)
-- [ ] T061 Verify byte-identical re-execution (SC-004): run twice, compare output excluding `duration_ms`
-- [ ] T062 Generate rule pack documentation from YAML schemas in `docs/rules/`
+- [x] T057 [P] Add semver version metadata to `speckit_rules.yaml` with initial version `1.0.0`
+- [x] T058 [P] Add semver version metadata to `openspec_rules.yaml` with initial version `1.0.0`
+- [ ] T059 Run full e2e validation: `specmetrics measure --engine deterministic --repo ./specs/` on specmetrics (29 features) — verify all 8 plugins produce non-zero output (SC-003) — requires e2e `specmetrics measure` run
+- [ ] T060 Run e2e on `tests/openspec/`: `specmetrics measure --repo tests/openspec/ --engine deterministic` — verify ≤ 30s end-to-end (SC-002) — requires e2e `specmetrics measure` run
+- [ ] T061 Verify byte-identical re-execution (SC-004): run twice, compare output excluding `duration_ms` — requires e2e `specmetrics measure` run
+- [x] T062 Generate rule pack documentation from YAML schemas in `docs/rules/`
 
 **Checkpoint**: All cross-cutting requirements verified
 
@@ -287,3 +285,11 @@ With multiple developers:
 - Speckit and OpenSpec rule packs are independent — can be built in parallel
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
+
+---
+
+## Phase 8: Convergence
+
+**Purpose**: Close remaining gaps between spec requirements and current implementation
+
+- [x] T063 Populate `failed_rule_ids` set from per-rule failure exceptions in per-document extraction success rate logging at `deterministic_engine.py:329`; log level kept at `debug` (per decision to reduce noise) (FR-037)

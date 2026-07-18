@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import litellm
+from litellm import RateLimitError
 from pydantic import BaseModel, Field
 
 from specmetrics.kernel.adapter_interface import Document
@@ -206,21 +207,15 @@ class LLMExtractionProvider:
             start = end
         return chunks
 
-    def extract(self, document: Document) -> ExtractionResult:
-        started_at = time.monotonic()
-        all_elements: list[ExtractedElement] = []
-        chunks = self._chunk_content(document.content)
-        errors = 0
-
-        config_msg = self._check_config()
-        if config_msg is not None:
-            logger.warning(config_msg)
-
-        if self.__class__._no_key:
+    def _run_deterministic_fallback(
+        self, document: Document
+    ) -> tuple[list[ExtractedElement], int]:
+        try:
             det_engine = DeterministicSemanticEngine()
             det_result: NewExtractionResult = det_engine.extract([document])
+            elements: list[ExtractedElement] = []
             for el in det_result.elements:
-                all_elements.append(
+                elements.append(
                     ExtractedElement(
                         id=el.id,
                         type=el.type,
@@ -233,6 +228,24 @@ class LLMExtractionProvider:
                         content=el.content,
                     )
                 )
+            return elements, 0
+        except Exception:
+            return [], 1
+
+    def extract(self, document: Document) -> ExtractionResult:
+        started_at = time.monotonic()
+        all_elements: list[ExtractedElement] = []
+        chunks = self._chunk_content(document.content)
+        errors = 0
+
+        config_msg = self._check_config()
+        if config_msg is not None:
+            logger.warning(config_msg)
+
+        if self.__class__._no_key:
+            fallback_elements, fallback_errors = self._run_deterministic_fallback(document)
+            all_elements.extend(fallback_elements)
+            errors += fallback_errors
             duration = int((time.monotonic() - started_at) * 1000)
             return ExtractionResult(
                 provider_id=self._provider_id,
@@ -240,7 +253,7 @@ class LLMExtractionProvider:
                 processing_stats=ProcessingStats(
                     documents_processed=1,
                     elements_extracted=len(all_elements),
-                    errors=0,
+                    errors=errors,
                     duration_ms=duration,
                 ),
             )
@@ -268,7 +281,7 @@ class LLMExtractionProvider:
                     chunk_elements = self._parse_response(response, document, chunk_idx)
                     all_elements.extend(chunk_elements)
                     break
-                except litellm.RateLimitError as exc:
+                except RateLimitError as exc:
                     retries += 1
                     delay = _parse_retry_delay(str(exc))
                     if delay:
@@ -289,10 +302,14 @@ class LLMExtractionProvider:
                         )
                 except Exception as exc:
                     logger.warning(
-                        "LLM API call failed for chunk %d: %s",
+                        "LLM API call failed for chunk %d: %s — "
+                        "falling back to structural extraction",
                         chunk_idx,
                         exc,
                     )
+                    fb_elements, fb_errors = self._run_deterministic_fallback(document)
+                    all_elements.extend(fb_elements)
+                    errors += fb_errors
                     break
             else:
                 logger.warning(
@@ -301,25 +318,9 @@ class LLMExtractionProvider:
                     chunk_idx,
                     retries,
                 )
-                try:
-                    det_engine = DeterministicSemanticEngine()
-                    det_result: NewExtractionResult = det_engine.extract([document])
-                    for el in det_result.elements:
-                        all_elements.append(
-                            ExtractedElement(
-                                id=el.id,
-                                type=el.type,
-                                confidence=el.confidence,
-                                evidence=EvidenceReference(
-                                    document_id=el.evidence.document_id,
-                                    section_id=el.evidence.section_id,
-                                    text=el.evidence.text,
-                                ),
-                                content=el.content,
-                            )
-                        )
-                except Exception:
-                    errors += 1
+                fb_elements, fb_errors = self._run_deterministic_fallback(document)
+                all_elements.extend(fb_elements)
+                errors += fb_errors
 
         duration = int((time.monotonic() - started_at) * 1000)
         return ExtractionResult(
@@ -360,22 +361,8 @@ class LLMExtractionProvider:
                 )
         except Exception:
             logger.warning("Failed to parse LLM response, falling back to deterministic engine")
-            det_engine = DeterministicSemanticEngine()
-            det_result: NewExtractionResult = det_engine.extract([document])
-            for el in det_result.elements:
-                elements.append(
-                    ExtractedElement(
-                        id=el.id,
-                        type=el.type,
-                        confidence=el.confidence,
-                        evidence=EvidenceReference(
-                            document_id=el.evidence.document_id,
-                            section_id=el.evidence.section_id,
-                            text=el.evidence.text,
-                        ),
-                        content=el.content,
-                    )
-                )
+            fb_elements, _ = self._run_deterministic_fallback(document)
+            elements.extend(fb_elements)
         return elements
 
 

@@ -56,12 +56,12 @@ class TestStoryPointsPipeline:
         assert result_ctx is not None
         assert result_ctx.measurement_result is not None
         payload = result_ctx.measurement_result
-        assert "total_story_points" in payload
-        assert "method" in payload
-        assert payload["method"] == "StoryPoints"
-        assert "estimated_items" in payload
-        assert "duration_ms" in payload
-        assert payload["total_story_points"] > 0
+        assert "storypoints_total_story_points" in payload
+        assert "storypoints_method" in payload
+        assert payload["storypoints_method"] == "StoryPoints"
+        assert "storypoints_estimated_items" in payload
+        assert "storypoints_duration_ms" in payload
+        assert payload["storypoints_total_story_points"] > 0
 
     def test_pipeline_missing_cfm(self):
         ctx = PipelineContext(canonical_model=None)
@@ -74,8 +74,8 @@ class TestStoryPointsPipeline:
         handler = StoryPointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["total_story_points"] == 0
-        assert len(payload["warnings"]) > 0
+        assert payload["storypoints_total_story_points"] == 0
+        assert len(payload["storypoints_warnings"]) > 0
 
     def test_pipeline_empty_cfm(self):
         cfm = CanonicalFunctionalModel(
@@ -94,5 +94,5 @@ class TestStoryPointsPipeline:
         handler = StoryPointsHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["total_story_points"] == 0
-        assert payload["estimated_items"] == 0
+        assert payload["storypoints_total_story_points"] == 0
+        assert payload["storypoints_estimated_items"] == 0

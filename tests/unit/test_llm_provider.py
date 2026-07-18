@@ -74,10 +74,10 @@ class TestLLMProviderGracefulDegradation:
     @patch("specmetrics.plugins.semantic.llm_provider.litellm")
     def test_falls_back_to_deterministic_engine_on_llm_error(self, mock_litellm: MagicMock):
         doc = Document(
-            id="doc-actors",
-            path="specs/actors.md",
+            id="doc-story",
+            path="specs/story.md",
             document_type="section",
-            content="# Actors\n- Admin\n- User",
+            content="# Test\nAs a User, I want to login, So that I can access my account",
         )
         mock_litellm.completion.side_effect = Exception("API key not configured")
         result = self.provider.extract(doc)

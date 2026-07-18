@@ -62,32 +62,32 @@ class CognitivePointsHandler:
         )
 
         payload: dict[str, Any] = {
-            "total_cognitive_points": result.total_cognitive_points,
-            "raw_score": result.raw_score,
-            "specification_review_effort": {
+            "cognitive_total_cognitive_points": result.total_cognitive_points,
+            "cognitive_raw_score": result.raw_score,
+            "cognitive_specification_review_effort": {
                 "total_raw": result.specification_review_effort.total_raw,
                 "bloom_breakdown": spec_bloom,
             },
-            "functional_validation_effort": {
+            "cognitive_functional_validation_effort": {
                 "total_raw": result.functional_validation_effort.total_raw,
                 "bloom_breakdown": func_bloom,
             },
-            "fibonacci_normalization": {
+            "cognitive_fibonacci_normalization": {
                 "raw_score": result.fibonacci_normalization.raw_score,
                 "threshold": result.fibonacci_normalization.threshold_applied,
                 "output": result.fibonacci_normalization.output_value,
             },
-            "element_counts": {
+            "cognitive_element_counts": {
                 "csm": result.measurement_metadata.csm_element_count,
                 "cfm": result.measurement_metadata.cfm_element_count,
                 "total": result.measurement_metadata.total_elements_processed,
             },
-            "bloom_distribution": dict(
+            "cognitive_bloom_distribution": dict(
                 result.measurement_metadata.bloom_distribution
             ),
-            "calibration_version": result.calibration_version,
-            "duration_ms": result.measurement_metadata.duration_ms,
-            "warnings": [
+            "cognitive_calibration_version": result.calibration_version,
+            "cognitive_duration_ms": result.measurement_metadata.duration_ms,
+            "cognitive_warnings": [
                 w.model_dump() for w in result.measurement_metadata.warnings
             ],
         }
@@ -109,7 +109,7 @@ class CognitivePointsHandler:
             duration_ms=result.measurement_metadata.duration_ms,
         )
 
-        return ctx.with_stage_output(
+        return ctx.merge_stage_output(
             "measurement_result", payload, event=cognitive_event
         )
 

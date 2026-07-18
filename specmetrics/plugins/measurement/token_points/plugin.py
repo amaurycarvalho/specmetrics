@@ -60,23 +60,23 @@ class TokenPointsHandler:
         breakdown = get_breakdown_by_type(result)
 
         payload: dict[str, Any] = {
-            "total_score": result.total_score,
-            "specification_cost": result.specification_cost.total,
-            "code_generation_cost": result.code_generation_cost.total,
-            "element_counts": {
+            "token_total_score": result.total_score,
+            "token_specification_cost": result.specification_cost.total,
+            "token_code_generation_cost": result.code_generation_cost.total,
+            "token_element_counts": {
                 "csm": result.measurement_metadata.csm_element_count,
                 "cfm": result.measurement_metadata.cfm_element_count,
                 "total": result.measurement_metadata.total_elements_processed,
                 "unknown_csm": result.measurement_metadata.unknown_csm_element_count,
                 "unknown_cfm": result.measurement_metadata.unknown_cfm_element_count,
             },
-            "calibration_version": result.calibration_version,
-            "top_contributors": [
+            "token_calibration_version": result.calibration_version,
+            "token_top_contributors": [
                 {"type": t, "count": v["count"], "total": v["total"]}
                 for t, v in breakdown.items()
             ],
-            "duration_ms": result.measurement_metadata.duration_ms,
-            "warnings": [w.model_dump() for w in result.measurement_metadata.warnings],
+            "token_duration_ms": result.measurement_metadata.duration_ms,
+            "token_warnings": [w.model_dump() for w in result.measurement_metadata.warnings],
         }
 
         token_event = PipelineEvent(
@@ -95,7 +95,7 @@ class TokenPointsHandler:
             duration_ms=result.measurement_metadata.duration_ms,
         )
 
-        return ctx.with_stage_output("measurement_result", payload, event=token_event)
+        return ctx.merge_stage_output("measurement_result", payload, event=token_event)
 
     def _resolve_calibration(self, ctx: PipelineContext) -> CalibrationProfile:
         metadata = ctx.metadata

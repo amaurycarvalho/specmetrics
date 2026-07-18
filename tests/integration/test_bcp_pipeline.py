@@ -60,10 +60,10 @@ class TestBCPPipeline:
         assert result_ctx is not None
         assert result_ctx.measurement_result is not None
         payload = result_ctx.measurement_result
-        assert "method" in payload
-        assert payload["method"] == "BCP"
-        assert "total_bcp" in payload
-        assert payload["total_bcp"] > 0
+        assert "bcp_method" in payload
+        assert payload["bcp_method"] == "BCP"
+        assert "bcp_total_bcp" in payload
+        assert payload["bcp_total_bcp"] > 0
 
     def test_pipeline_missing_cfm(self):
         ctx = PipelineContext(canonical_model=None)
@@ -76,5 +76,5 @@ class TestBCPPipeline:
         handler = BCPHandler()
         result_ctx = handler.handle(event)
         payload = result_ctx.measurement_result
-        assert payload["total_bcp"] == 0
-        assert len(payload["warnings"]) > 0
+        assert payload["bcp_total_bcp"] == 0
+        assert len(payload["bcp_warnings"]) > 0

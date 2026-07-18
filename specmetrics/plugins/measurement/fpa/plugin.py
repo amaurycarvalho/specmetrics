@@ -109,17 +109,17 @@ class FPAMeasurementHandler:
         result = plugin.measure(cfm)
 
         payload: dict[str, Any] = {
-            "total_function_points": result.summary.total_ufp,
-            "breakdown": {ft: {"count": b.count, "total_ufp": b.total_ufp} for ft, b in result.summary.by_type.items()},
-            "complexity_distribution": [
+            "fpa_total_function_points": result.summary.total_ufp,
+            "fpa_breakdown": {ft: {"count": b.count, "total_ufp": b.total_ufp} for ft, b in result.summary.by_type.items()},
+            "fpa_complexity_distribution": [
                 {"function_type": c.function_type, "complexity": c.complexity, "count": c.count, "total_ufp": c.total_ufp}
                 for c in result.summary.complexity_distribution
             ],
-            "function_counts": result.summary.by_type,
-            "complexity_counts": result.summary.by_complexity,
+            "fpa_function_counts": result.summary.by_type,
+            "fpa_complexity_counts": result.summary.by_complexity,
         }
 
-        return ctx.with_stage_output("measurement_result", payload)
+        return ctx.merge_stage_output("measurement_result", payload)
 
 
 def create_fpa_measurement_metadata() -> PluginMetadata:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 
 import structlog
@@ -24,6 +25,21 @@ from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
 
 logger = structlog.get_logger(__name__)
+
+
+_OPERATION_DIRECTION_PATTERNS = [
+    (re.compile(r'\*\*WHEN\*\*'), "input"),
+    (re.compile(r'\*\*GIVEN\*\*'), "input"),
+    (re.compile(r'#### Scenario:'), "query"),
+    (re.compile(r'\*\*THEN\*\*'), "output"),
+]
+
+
+def _infer_operation_direction(text: str) -> str:
+    for pattern, direction in _OPERATION_DIRECTION_PATTERNS:
+        if pattern.search(text):
+            return direction
+    return "input"
 
 
 def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
@@ -70,10 +86,16 @@ def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
                 evidence=evidence,
             ))
         elif category == "operation":
+            direction = _infer_operation_direction(node.text)
             operations[node_id] = Operation(
                 id=node_id, name=clean_name, parent_process_id="",
                 description=node.text, evidence=evidence,
+                metadata={"direction": direction},
             )
+
+    functional_processes = _build_functional_processes(
+        operations, data_groups, actors
+    )
 
     build_duration_ms = int((time.monotonic() - started_at) * 1000)
     element_counts = {
@@ -107,6 +129,58 @@ def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
         metadata=metadata,
         evidence_graph_ref=graph.run_id,
     )
+
+
+def _build_functional_processes(
+    operations: dict[str, Operation],
+    data_groups: dict[str, DataGroup],
+    actors: dict[str, Actor],
+) -> dict[str, FunctionalProcess]:
+    if not operations:
+        return {}
+
+    ops_by_doc: dict[str, list[tuple[str, Operation]]] = {}
+    for op_id, op in operations.items():
+        doc_id = op.evidence.document_id if op.evidence else "unknown"
+        if doc_id not in ops_by_doc:
+            ops_by_doc[doc_id] = []
+        ops_by_doc[doc_id].append((op_id, op))
+
+    data_groups_by_doc: dict[str, list[tuple[str, DataGroup]]] = {}
+    for dg_id, dg in data_groups.items():
+        doc_id = dg.evidence.document_id if dg.evidence else "unknown"
+        if doc_id not in data_groups_by_doc:
+            data_groups_by_doc[doc_id] = []
+        data_groups_by_doc[doc_id].append((dg_id, dg))
+
+    actors_by_doc: dict[str, list[tuple[str, Actor]]] = {}
+    for act_id, act in actors.items():
+        doc_id = act.evidence.document_id if act.evidence else "unknown"
+        if doc_id not in actors_by_doc:
+            actors_by_doc[doc_id] = []
+        actors_by_doc[doc_id].append((act_id, act))
+
+    functional_processes: dict[str, FunctionalProcess] = {}
+    for doc_id, ops in ops_by_doc.items():
+        fp_id = f"fp_{doc_id}"
+        fp_ops = [op_id for op_id, _ in ops]
+        fp_evidence = ops[0][1].evidence if ops[0][1].evidence else EvidenceRef(
+            graph_node_id=fp_id, document_id=doc_id, text="",
+        )
+
+        fp_dgs = [dg_id for dg_id, _ in data_groups_by_doc.get(doc_id, [])]
+        fp_actors = [act_id for act_id, _ in actors_by_doc.get(doc_id, [])]
+
+        functional_processes[fp_id] = FunctionalProcess(
+            id=fp_id,
+            name=f"Functional Process — {doc_id}",
+            operation_ids=fp_ops,
+            data_group_ids=fp_dgs,
+            actor_ids=fp_actors,
+            evidence=fp_evidence,
+        )
+
+    return functional_processes
 
 
 def _extract_relationship_endpoints(node_id: str, graph: EvidenceGraph) -> tuple[str, str]:

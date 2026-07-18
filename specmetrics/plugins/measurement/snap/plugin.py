@@ -151,15 +151,15 @@ class SNAPMeasurementHandler:
         result = plugin.measure(cfm)
 
         payload: dict[str, Any] = {
-            "total_snap": result.summary.total_snap,
-            "total_items": result.summary.total_item_count,
-            "by_category": {
+            "snap_total_snap": result.summary.total_snap,
+            "snap_total_items": result.summary.total_item_count,
+            "snap_by_category": {
                 cat.category_id: {"count": len(cat.items), "total_contribution": cat.total_contribution}
                 for cat in result.categories
             },
         }
 
-        return ctx.with_stage_output("measurement_result", payload)
+        return ctx.merge_stage_output("measurement_result", payload)
 
 
 def create_snap_measurement_metadata() -> PluginMetadata:

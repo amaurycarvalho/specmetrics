@@ -79,15 +79,15 @@ class BCPHandler:
         result = self._measure(cfm, str(ctx.execution_id))
 
         payload: dict[str, Any] = {
-            "method": result.method,
-            "sdk_version": result.sdk_version,
-            "provider": result.provider,
-            "total_bcp": result.total_bcp,
-            "measured_items": len(result.items),
-            "items_succeeded": result.execution_metadata.items_succeeded,
-            "items_failed": result.execution_metadata.items_failed,
-            "duration_ms": result.execution_metadata.duration_ms,
-            "warnings": [w.model_dump() for w in result.warnings],
+            "bcp_method": result.method,
+            "bcp_sdk_version": result.sdk_version,
+            "bcp_provider": result.provider,
+            "bcp_total_bcp": result.total_bcp,
+            "bcp_measured_items": len(result.items),
+            "bcp_items_succeeded": result.execution_metadata.items_succeeded,
+            "bcp_items_failed": result.execution_metadata.items_failed,
+            "bcp_duration_ms": result.execution_metadata.duration_ms,
+            "bcp_warnings": [w.model_dump() for w in result.warnings],
         }
 
         bcp_event = PipelineEvent(
@@ -104,7 +104,7 @@ class BCPHandler:
             duration_ms=result.execution_metadata.duration_ms,
         )
 
-        return ctx.with_stage_output(
+        return ctx.merge_stage_output(
             "measurement_result", payload, event=bcp_event
         )
 
