@@ -8,6 +8,7 @@ from typing import Optional
 import structlog
 import typer
 
+from .commands.clean import clean_command
 from .commands.explain import explain_cli
 from .commands.mcp import mcp_cli
 from .commands.validate import validate_cli
@@ -50,6 +51,55 @@ app.add_typer(validate_cli)
 
 
 @app.command()
+def clean(
+    project_path: Path = typer.Option(
+        ".",
+        "--project-path",
+        help="Path to the SpecMetrics project",
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+    ),
+    keep_runs: int = typer.Option(
+        90,
+        "--keep-runs",
+        help="Maximum number of most recent runs to retain (0 disables)",
+    ),
+    keep_days: int = typer.Option(
+        30,
+        "--keep-days",
+        help="Maximum age in days for a run to be retained (0 disables)",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Preview which runs would be deleted without actually deleting them",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Show detailed progress output",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress non-error output",
+    ),
+) -> None:
+    clean_command(
+        project_path=project_path,
+        keep_runs=keep_runs,
+        keep_days=keep_days,
+        dry_run_flag=dry_run,
+        verbose=verbose,
+        quiet=quiet,
+    )
+
+
+@app.command()
 def measure(
     project_path: Path = typer.Argument(
         ".",
@@ -58,6 +108,12 @@ def measure(
         file_okay=False,
         dir_okay=True,
         resolve_path=True,
+    ),
+    metrics: Optional[str] = typer.Option(
+        None,
+        "--metrics",
+        "-m",
+        help="Metrics to measure: all, bcp, fpa, sfp, snap, sp, tshirt, tp, cp (comma-separated)",
     ),
     output: str = typer.Option(
         None,
@@ -75,6 +131,16 @@ def measure(
         None,
         "--from",
         help="Start from this stage (skip earlier stages)",
+    ),
+    export_run: bool = typer.Option(
+        False,
+        "--export",
+        help="Automatically run export after measurement completes",
+    ),
+    export_format: Optional[str] = typer.Option(
+        None,
+        "--format",
+        help="Export format(s) when --export is used (comma-separated: json,csv,xml)",
     ),
     verbose: bool = typer.Option(
         False,
@@ -107,9 +173,12 @@ def measure(
 ) -> None:
     exit_code = run_measure(
         project_path=project_path,
+        metrics=metrics,
         output=output,
         stage=stage,
         from_stage=from_stage,
+        export_run=export_run,
+        export_format=export_format,
         verbose=verbose,
         quiet=quiet,
         log_file=log_file,

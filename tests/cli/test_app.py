@@ -13,6 +13,11 @@ class TestCliApp:
         assert result.exit_code == 0
         assert "measure" in result.output
 
+    def test_help_shows_metrics_option(self):
+        result = runner.invoke(app, ["measure", "--help"])
+        assert result.exit_code == 0
+        assert "--metrics" in result.output
+
     def test_version_command(self):
         result = runner.invoke(app, ["version"])
         assert result.exit_code == 0

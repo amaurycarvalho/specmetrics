@@ -23,10 +23,15 @@ class SecuritySettings(BaseModel):
     tls_ca_cert_path: str | None = Field(None, description="Path to CA certificate bundle")
 
 
+class RunArtifactsSettings(BaseModel):
+    max_entities_per_stage: int = Field(5000, ge=1, description="Max entities per stage JSON artifact before truncation")
+
+
 class CoreConfig(BaseModel):
     pipeline: PipelineSettings = Field(default_factory=PipelineSettings)
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    run_artifacts: RunArtifactsSettings = Field(default_factory=RunArtifactsSettings)
 
 
 @runtime_checkable

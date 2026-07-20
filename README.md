@@ -92,12 +92,26 @@ export SPECMETRICS_LLM_API_KEY=sk-...
 ### How to Use
 
 ```bash
-# Full pipeline measurement
+# Measurement syntax
+specmetrics measure [PROJECT_PATH] [OPTIONS]
+
+  --metrics, -m: bcp,fpa,sfp,snap,sp,tshirt,tp,cp (comma-separated, defaults to all)
+  --export:          Automatically run export after measurement
+  --format:          Export format(s) when --export is used (json, csv, xml; comma-separated)
+
+# Full pipeline measurement (all metrics, current path)
 specmetrics measure
+
+# Run specific measurements at current path
+specmetrics measure --metrics sp,tp,cp
 
 # Run specific stages
 specmetrics measure --stage extract
 specmetrics measure --from measure
+
+# Measure and export in one command
+specmetrics measure --export
+specmetrics measure --export --format json,csv
 
 # Output formats
 specmetrics measure --output json
@@ -122,10 +136,17 @@ specmetrics config llm show
 specmetrics validate specs/
 
 # Export results
+specmetrics export list
+specmetrics export run [MEASURE_ID] [PROJECT_PATH] [--format json,csv,xml]
 specmetrics export run --format json,csv
 
 # Explain a measurement run
 specmetrics explain <run-id>
+
+# Housekeeping: clean old measurement runs
+specmetrics clean
+specmetrics clean --keep-runs 30 --keep-days 7
+specmetrics clean --dry-run
 
 # MCP server (for AI agent integration)
 specmetrics mcp start
@@ -137,12 +158,14 @@ specmetrics mcp stop
 
 | Command                        | Description                                                                         |
 | ------------------------------ | ----------------------------------------------------------------------------------- |
-| `measure [path]`               | Execute full measurement pipeline                                                   |
+| `clean [options]`              | Remove old measurement run folders from `.specmetrics/runs/` (`--keep-runs`, `--keep-days`, `--dry-run`) |
+| `measure [path] [options]`     | Execute full measurement pipeline (`--metrics` to select, `--export` to auto-export) |
 | `version`                      | Print platform and plugin versions                                                  |
 | `plugins list`                 | List discovered plugins                                                             |
 | `plugins verify`               | Verify plugin compatibility                                                         |
 | `plugins list-formats`         | List export formats and publishers                                                  |
-| `export run`                   | Export measurement results                                                          |
+| `export list`                  | List all measure runs with IDs and timestamps                                       |
+| `export run [id] [path]`       | Export measurement results to `.specmetrics/exports/` (JSON, CSV, XML; latest run if no ID; runs pipeline if no runs exist) |
 | `export list-formats`          | List exporter plugins                                                               |
 | `export publisher-status`      | Show publisher status                                                               |
 | `config dump`                  | Show all resolved configuration                                                     |

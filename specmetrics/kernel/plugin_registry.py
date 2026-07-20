@@ -5,9 +5,11 @@ from typing import Optional
 
 import structlog
 
+from specmetrics.application.models import CLI_ID_TO_PLUGIN_ID
+
 from .events import EventType
 from .handler_registry import EventHandler, HandlerRegistry
-from .plugin_metadata import PluginMetadata, PluginStatus
+from .plugin_metadata import PluginMetadata, PluginStatus, PluginType
 
 logger = structlog.get_logger(__name__)
 
@@ -85,10 +87,18 @@ class PluginRegistry:
     def get_by_type(self, plugin_type: str) -> list[PluginDescriptor]:
         return list(self._by_plugin_type.get(plugin_type, []))
 
-    def install_handlers(self, handler_registry: HandlerRegistry) -> None:
+    def install_handlers(
+        self,
+        handler_registry: HandlerRegistry,
+        metrics_filter: list[str] | None = None,
+    ) -> None:
         for descriptor in self._plugins.values():
             if descriptor.status != PluginStatus.REGISTERED:
                 continue
+            if metrics_filter is not None and descriptor.metadata.plugin_type == PluginType.MEASUREMENT:
+                plugin_ids = {CLI_ID_TO_PLUGIN_ID.get(m, m) for m in metrics_filter}
+                if descriptor.metadata.id not in plugin_ids:
+                    continue
             for et in descriptor.metadata.handled_event_types:
                 handler = descriptor.metadata.handler_factory
                 if handler is not None:

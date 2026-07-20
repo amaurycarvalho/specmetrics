@@ -66,7 +66,7 @@ def handle_export_results(arguments: dict) -> list[TextContent]:
     if not exporters:
         return [TextContent(type="text", text=json.dumps({"error": "No exporter plugins found"}))]
 
-    out_dir = Path(output_path_str) if output_path_str else (project_path / "exports")
+    out_dir = Path(output_path_str) if output_path_str else (project_path / ".specmetrics" / "exports")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     export_orch = ExportOrchestrator(exporters)

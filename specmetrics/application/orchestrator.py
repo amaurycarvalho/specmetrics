@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+
 
 import structlog
 
@@ -26,17 +27,135 @@ from .enums import (
     StageName,
 )
 from specmetrics.infrastructure.config.loader import ConfigurationSystem
+from specmetrics.cli.output_models import (
+    ErrorRecord,
+    MeasureMetadata,
+    MeasureOutput,
+    MetricResult as OutputMetricResult,
+    StageInfo as OutputStageInfo,
+)
 
 from .models import (
+    METRIC_NAME_MAP,
+    ErrorOutputItem,
     MeasurementResult,
+    MetricOutputItem,
     PipelineRequest,
     PipelineResult,
     PluginInfo,
+    StageOutputItem,
     StageResult,
     VersionInfo,
 )
 
+
+_TRUNCATE_TEXT_LENGTH = 200
+
+
+def _truncate_text(text: str | None, max_len: int = _TRUNCATE_TEXT_LENGTH) -> str | None:
+    if text is None:
+        return None
+    return text[:max_len] if len(text) > max_len else text
+
+
+def _truncate_entities(
+    entities: list[dict],
+    max_per_stage: int,
+    per_category: bool = False,
+) -> list[dict]:
+    if len(entities) <= max_per_stage:
+        return entities
+    logger.info(
+        "entities_truncated",
+        total=len(entities),
+        limit=max_per_stage,
+        per_category=per_category,
+    )
+    if per_category:
+        truncated: list[dict] = []
+        categories: dict[str, list[dict]] = {}
+        for e in entities:
+            cat = e.get("type", "_other")
+            categories.setdefault(cat, []).append(e)
+        for cat_list in categories.values():
+            truncated.extend(cat_list[:max_per_stage])
+        truncated.append({"_truncated": True, "_total_count": len(entities)})
+        return truncated
+    truncated = entities[:max_per_stage]
+    truncated.append({"_truncated": True, "_total_count": len(entities)})
+    return truncated
+
 logger = structlog.get_logger(__name__)
+
+
+def _serialize_stage_data(
+    result: PipelineResult,
+    max_entities_per_stage: int = 5000,
+) -> dict[str, list[dict]]:
+    stages: dict[str, list[dict]] = {}
+    csm_cfm_stages = {"csm", "cfm"}
+    for sd in result.stage_details:
+        entry: dict = {
+            "name": sd.name,
+            "count": sd.count,
+            "count_type": sd.count_type,
+            "duration_ms": sd.duration_ms,
+        }
+        raw_entities = result.stage_entities.get(sd.name, [])
+        if raw_entities:
+            per_category = sd.name in csm_cfm_stages
+            entry["entities"] = _truncate_entities(raw_entities, max_entities_per_stage, per_category=per_category)
+        else:
+            entry["entities"] = []
+        stages[sd.name] = [entry]
+    return stages
+
+
+def save_run_artifacts(
+    project_path: Path,
+    measure_id: str,
+    result: PipelineResult,
+    max_entities_per_stage: int = 5000,
+) -> Path:
+    runs_dir = project_path / ".specmetrics" / "runs" / measure_id
+    runs_dir.mkdir(parents=True, exist_ok=True)
+
+    metadata = {
+        "id": measure_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "sdd_framework": (
+            result._framework_detected
+            if getattr(result, "_framework_detected", None) and isinstance(result._framework_detected, str)
+            else "unknown"
+        ),
+        "llm": (
+            {"provider": result.llm_provider, "model": result.llm_model}
+            if result.llm_provider and result.llm_provider != "none"
+            else {"provider": "none"}
+        ),
+        "project_path": str(result.project_path or project_path),
+    }
+    (runs_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
+
+    stages = _serialize_stage_data(result, max_entities_per_stage=max_entities_per_stage)
+    for stage_name, entries in stages.items():
+        (runs_dir / f"{stage_name}.json").write_text(json.dumps(entries, indent=2))
+
+    logger.info("run_artifacts_saved", path=str(runs_dir), stages=list(stages.keys()))
+    return runs_dir
+
+
+def read_run_artifacts(run_dir: Path) -> dict:
+    artifacts: dict = {}
+    metadata_file = run_dir / "metadata.json"
+    if metadata_file.exists():
+        artifacts["metadata"] = json.loads(metadata_file.read_text())
+    for stage_file in sorted(run_dir.glob("*.json")):
+        if stage_file.name == "metadata.json":
+            continue
+        artifacts[stage_file.stem] = json.loads(stage_file.read_text())
+    return artifacts
+
 
 _STAGE_NAME_TO_EVENT: dict[StageName, EventType] = {
     StageName.DISCOVER: EventType.REPOSITORY_LOADED,
@@ -106,12 +225,12 @@ class PipelineOrchestrator:
     def set_config_system(self, config_system: ConfigurationSystem) -> None:
         self._config_system = config_system
 
-    def discover_plugins(self) -> None:
+    def discover_plugins(self, metrics_filter: list[str] | None = None) -> None:
         self._registry = load_plugins(
             registry=self._registry,
             validator=self._plugin_validator,
         )
-        self._registry.install_handlers(self._handler_registry)
+        self._registry.install_handlers(self._handler_registry, metrics_filter=metrics_filter)
         if self._config_system is not None:
             for desc in self._registry.list_plugins():
                 factory = desc.metadata.handler_factory
@@ -164,7 +283,7 @@ class PipelineOrchestrator:
                 error=f"Project path not found: {request.project_path}",
             )
 
-        self.discover_plugins()
+        self.discover_plugins(metrics_filter=request.metrics_filter)
 
         event_order = _resolve_event_order(request.stages, request.from_stage)
 
@@ -199,9 +318,21 @@ class PipelineOrchestrator:
 
         elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
 
-        stages_executed = self._build_stage_results(result_ctx, event_order)
+        stages_executed = self._build_stage_results(result_ctx, event_order, request.metrics_filter)
         measurement = self._extract_measurement(result_ctx)
+        metric_results = self._build_metric_results(result_ctx, request.metrics_filter)
+        stage_details = self._build_stage_details(result_ctx, event_order, request.metrics_filter)
+        output_errors = self._build_output_errors(result_ctx)
+        llm_provider, llm_model = self._get_llm_info()
         export_path = self._handle_export(request, result_ctx)
+        stage_entities = self._build_stage_entities(result_ctx, event_order, export_path)
+
+        max_entities_per_stage = 5000
+        if config_provider is not None:
+            try:
+                max_entities_per_stage = config_provider.get("run_artifacts.max_entities_per_stage", 5000)
+            except Exception:
+                pass
 
         has_failures = any(
             s.status == StageExecutionStatus.FAILED for s in stages_executed
@@ -217,12 +348,194 @@ class PipelineOrchestrator:
             export_path=export_path,
             _framework_detected=getattr(self, "_framework_detected", ""),
             canonical_model=result_ctx.canonical_model,
+            metric_results=metric_results,
+            stage_entities=stage_entities,
+            stage_details=stage_details,
+            output_errors=output_errors,
+            llm_provider=llm_provider,
+            llm_model=llm_model,
+            _max_entities_per_stage=max_entities_per_stage,
         )
+
+    def _build_stage_entities(
+        self,
+        ctx: PipelineContext,
+        event_order: list[EventType],
+        export_path: Path | None,
+    ) -> dict[str, list[dict]]:
+        entities: dict[str, list[dict]] = {}
+        valid_stage_names = {s.value for s in StageName}
+
+        for event_type in event_order:
+            stage_name = _stage_name_from_event(event_type)
+            if stage_name not in valid_stage_names:
+                continue
+
+            stage_entities: list[dict] = []
+
+            if stage_name == "discover":
+                adapter_data = getattr(ctx, "adapter_result", None) or {}
+                for doc in adapter_data.get("documents", []):
+                    stage_entities.append({
+                        "id": str(getattr(doc, "id", "")),
+                        "document_type": str(getattr(doc, "document_type", "")),
+                        "path": str(getattr(doc, "path", "")),
+                    })
+
+            elif stage_name == "extract":
+                extract_data = getattr(ctx, "extraction_result", None) or {}
+                results_dict = extract_data.get("results", {})
+                for provider_id, provider_result in results_dict.items():
+                    for elem in provider_result.get("elements", []):
+                        evidence = getattr(elem, "evidence", None)
+                        stage_entities.append({
+                            "id": str(getattr(elem, "id", "")),
+                            "type": str(getattr(elem, "type", "")),
+                            "content": _truncate_text(getattr(elem, "content", None)),
+                            "confidence": float(getattr(elem, "confidence", 0.0)),
+                            "evidence": {
+                                "document_id": str(getattr(evidence, "document_id", "")),
+                                "section_id": str(getattr(evidence, "section_id", None)),
+                                "text": _truncate_text(getattr(evidence, "text", None)),
+                            } if evidence else {},
+                        })
+                docs_proc = extract_data.get("documents_processed", 0)
+                docs_skip = extract_data.get("documents_skipped", 0)
+                stage_entities.append({
+                    "type": "documents_processed",
+                    "count": docs_proc,
+                })
+                stage_entities.append({
+                    "type": "documents_skipped",
+                    "count": docs_skip,
+                })
+
+            elif stage_name == "graph":
+                graph_data = getattr(ctx, "evidence_graph", None) or {}
+                if isinstance(graph_data, dict):
+                    for node in graph_data.get("nodes", []):
+                        if isinstance(node, dict):
+                            stage_entities.append({
+                                "id": node.get("id", ""),
+                                "node_type": node.get("node_type", ""),
+                                "semantic_type": node.get("semantic_type"),
+                                "document_id": node.get("document_id"),
+                                "section_id": node.get("section_id"),
+                                "text": _truncate_text(node.get("text")),
+                            })
+                    stage_entities.append({
+                        "node_type": "graph_summary",
+                        "edge_count": graph_data.get("edge_count", 0),
+                        "run_id": graph_data.get("run_id", ""),
+                    })
+
+            elif stage_name == "csm":
+                csm = getattr(ctx, "canonical_spec_model", None)
+                if isinstance(csm, CanonicalSpecificationModel):
+                    category_map = {
+                        "specification_activity": csm.specification_activities,
+                        "decision": csm.decisions,
+                        "assumption": csm.assumptions,
+                        "constraint": csm.constraints,
+                        "risk": csm.risks,
+                        "open_question": csm.open_questions,
+                        "acceptance_criterion": csm.acceptance_criteria,
+                        "glossary_term": csm.glossary_terms,
+                        "reference": csm.references,
+                    }
+                    for cat_name, cat_dict in category_map.items():
+                        for element in cat_dict.values():
+                            dumped = element.model_dump(mode="json")
+                            dumped["type"] = cat_name
+                            if "description" in dumped:
+                                dumped["description"] = _truncate_text(dumped["description"])
+                            stage_entities.append(dumped)
+
+            elif stage_name == "cfm":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    category_map = {
+                        "actor": cfm.actors,
+                        "functional_process": cfm.functional_processes,
+                        "business_rule": cfm.business_rules,
+                        "data_group": cfm.data_groups,
+                        "operation": cfm.operations,
+                        "unclassified": cfm.unclassified,
+                    }
+                    for cat_name, cat_dict in category_map.items():
+                        for element in cat_dict.values():
+                            dumped = element.model_dump(mode="json")
+                            dumped["type"] = cat_name
+                            stage_entities.append(dumped)
+                    for rel in cfm.relationships:
+                        dumped = rel.model_dump(mode="json")
+                        dumped["type"] = "relationship"
+                        stage_entities.append(dumped)
+
+            elif stage_name == "rule":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    for rule_pack in getattr(cfm.metadata, "applied_rules", []):
+                        if isinstance(rule_pack, dict):
+                            stage_entities.append({
+                                "type": "applied_rule_pack",
+                                "rule_pack_name": rule_pack.get("name", ""),
+                                "description": rule_pack.get("description", ""),
+                                "version": rule_pack.get("version", ""),
+                            })
+                    stage_entities.append({
+                        "type": "modification_summary",
+                        "entities_modified": sum(cfm.metadata.element_counts.values()) if hasattr(cfm.metadata, "element_counts") else 0,
+                        "vaf_applied": getattr(cfm.metadata, "vaf", None),
+                    })
+
+            elif stage_name == "measure":
+                mr = getattr(ctx, "measurement_result", None) or {}
+                if isinstance(mr, dict):
+                    metric_ids = list(METRIC_NAME_MAP.values())
+                    key_map = {
+                        "function_points": ("fpa_total_function_points", "fpa_breakdown"),
+                        "simplified_function_points": ("sfp_total_components", None),
+                        "business_complexity_points": ("bcp_measured_items", None),
+                        "token_points": ("token_total_score", None),
+                        "cognitive_points": ("cognitive_total_cognitive_points", None),
+                        "story_points": ("storypoints_estimated_items", None),
+                        "snap": ("snap_total_items", None),
+                        "tshirt": ("tshirt", None),
+                    }
+                    for metric_name in metric_ids:
+                        total_key, breakdown_key = key_map.get(metric_name, (None, None))
+                        total = mr.get(total_key, 0) if total_key else 0
+                        entry: dict = {
+                            "metric": metric_name,
+                            "total": total,
+                            "status": "completed",
+                            "duration_ms": 0,
+                        }
+                        if breakdown_key and breakdown_key in mr:
+                            entry["breakdown"] = mr[breakdown_key]
+                        stage_entities.append(entry)
+
+            elif stage_name == "export":
+                if export_path:
+                    try:
+                        rel = export_path.relative_to(ctx.repository)
+                    except (ValueError, AttributeError):
+                        rel = export_path
+                    stage_entities.append({
+                        "format": "json",
+                        "path": str(rel),
+                    })
+
+            entities[stage_name] = stage_entities
+
+        return entities
 
     def _build_stage_results(
         self,
         ctx: PipelineContext,
         event_order: list[EventType],
+        metrics_filter: list[str] | None = None,
     ) -> list[StageResult]:
         if not ctx.diagnostics:
             return []
@@ -297,17 +610,7 @@ class PipelineOrchestrator:
                 if isinstance(cfm, CanonicalFunctionalModel):
                     entities_found = sum(cfm.metadata.element_counts.values())
             elif stage_name == "measure":
-                mr = getattr(ctx, "measurement_result", None) or {}
-                if isinstance(mr, dict):
-                    entities_found = (
-                        mr.get("fpa_total_function_points", 0)
-                        or mr.get("sfp_total_components", 0)
-                        or mr.get("bcp_measured_items", 0)
-                        or mr.get("token_total_score", 0)
-                        or mr.get("cognitive_total_cognitive_points", 0)
-                        or mr.get("storypoints_estimated_items", 0)
-                        or mr.get("snap_total_items", 0)
-                    )
+                entities_found = len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
 
             results.append(
                 StageResult(
@@ -336,6 +639,198 @@ class PipelineOrchestrator:
             )
         return MeasurementResult()
 
+    def _build_metric_results(
+        self,
+        ctx: PipelineContext,
+        metrics_filter: list[str] | None,
+    ) -> list[MetricOutputItem]:
+        mr = ctx.measurement_result
+        if not isinstance(mr, dict):
+            return []
+
+        metric_ids = metrics_filter or list(METRIC_NAME_MAP.keys())
+        results: list[MetricOutputItem] = []
+
+        for mid in metric_ids:
+            json_name = METRIC_NAME_MAP.get(mid, mid)
+            key_map = {
+                "fpa": "fpa_total_function_points",
+                "sfp": "sfp_total_components",
+                "bcp": "bcp_measured_items",
+                "token_points": "token_total_score",
+                "cognitive_points": "cognitive_total_cognitive_points",
+                "storypoints": "storypoints_estimated_items",
+                "snap": "snap_total_items",
+            }
+            total_key = key_map.get(mid)
+            total = mr.get(total_key, 0) if total_key else 0
+
+            results.append(
+                MetricOutputItem(
+                    name=json_name,
+                    total=total,
+                    status="completed",
+                    duration_ms=0,
+                )
+            )
+
+        return results
+
+    def _build_stage_details(
+        self,
+        ctx: PipelineContext,
+        event_order: list[EventType],
+        metrics_filter: list[str] | None = None,
+    ) -> list[StageOutputItem]:
+        if not ctx.diagnostics:
+            return []
+
+        details: list[StageOutputItem] = []
+        valid_stage_names = {s.value for s in StageName}
+
+        for event_type in event_order:
+            stage_name = _stage_name_from_event(event_type)
+            if stage_name not in valid_stage_names:
+                continue
+
+            timing = ctx.diagnostics.stage_timings.get(stage_name)
+            if timing is None:
+                alt_names = _STAGE_NAME_TO_HANDLER_NAMES.get(stage_name, [])
+                for alt_name in alt_names:
+                    timing = ctx.diagnostics.stage_timings.get(alt_name)
+                    if timing is not None:
+                        break
+
+            duration_ms = timing.duration_ms if timing and timing.duration_ms is not None else 0
+
+            count = 0
+            count_type = "items"
+            if stage_name == "discover":
+                adapter_data = getattr(ctx, "adapter_result", None) or {}
+                count = len(adapter_data.get("documents", []))
+                count_type = "documents"
+            elif stage_name == "extract":
+                extract_data = getattr(ctx, "extraction_result", None) or {}
+                count = extract_data.get("total_elements", 0)
+            elif stage_name == "graph":
+                graph_data = getattr(ctx, "evidence_graph", None) or {}
+                if isinstance(graph_data, dict):
+                    count = graph_data.get("node_count", 0)
+            elif stage_name == "csm":
+                csm = getattr(ctx, "canonical_spec_model", None)
+                if isinstance(csm, CanonicalSpecificationModel):
+                    count = sum(csm.metadata.element_counts.values())
+            elif stage_name == "cfm":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    count = sum(cfm.metadata.element_counts.values())
+            elif stage_name == "rule":
+                cfm = getattr(ctx, "canonical_model", None)
+                if isinstance(cfm, CanonicalFunctionalModel):
+                    count = sum(cfm.metadata.element_counts.values())
+            elif stage_name == "measure":
+                mr = getattr(ctx, "measurement_result", None) or {}
+                if isinstance(mr, dict):
+                    count = len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
+                count_type = "metrics"
+
+            details.append(
+                StageOutputItem(
+                    name=stage_name,
+                    count=count,
+                    count_type=count_type,
+                    duration_ms=duration_ms,
+                )
+            )
+
+        return details
+
+    def _build_output_errors(
+        self, ctx: PipelineContext
+    ) -> list[ErrorOutputItem]:
+        if not ctx.diagnostics or not ctx.diagnostics.errors:
+            return []
+        return [
+            ErrorOutputItem(
+                stage=str(getattr(err, "stage_name", "")),
+                message=getattr(err, "message", str(err)),
+            )
+            for err in ctx.diagnostics.errors
+        ]
+
+    def _get_llm_info(self) -> tuple[str, str]:
+        provider = "none"
+        model = ""
+        if self._config_system is not None:
+            try:
+                cfg = self._config_system.load()
+                if cfg:
+                    provider = getattr(cfg, "llm_provider", "") or "none"
+                    model = getattr(cfg, "llm_model", "") or ""
+            except Exception:
+                pass
+        return provider, model
+
+    def _write_json_output(
+        self,
+        request: PipelineRequest,
+        ctx: PipelineContext,
+        export_dir: Path,
+        metric_results: list[MetricOutputItem],
+        stage_details: list[StageOutputItem],
+        output_errors: list[ErrorOutputItem],
+    ) -> Path:
+        export_file = export_dir / "specmetrics-output.json"
+
+        llm_provider, llm_model = self._get_llm_info()
+
+        llm_info: dict[str, str] = {"provider": llm_provider}
+        if llm_model:
+            llm_info["model"] = llm_model
+
+        measure_meta = MeasureMetadata(
+            id=request.measure_id,
+            id_path=request.measure_id,
+            sdd_framework=getattr(self, "_framework_detected", "") or "unknown",
+            created=datetime.now(timezone.utc).isoformat(),
+            llm=llm_info,
+            project_path=str(request.project_path),
+        )
+
+        output = MeasureOutput(
+            measure=measure_meta,
+            results=[
+                OutputMetricResult(
+                    name=r.name,
+                    total=r.total,
+                    status=r.status,
+                    duration_ms=r.duration_ms,
+                )
+                for r in metric_results
+            ],
+            stages=[
+                OutputStageInfo(
+                    name=s.name,
+                    count=s.count,
+                    count_type=s.count_type,
+                    duration_ms=s.duration_ms,
+                )
+                for s in stage_details
+            ],
+            errors=[
+                ErrorRecord(
+                    stage=e.stage,
+                    message=e.message,
+                    details=e.details,
+                )
+                for e in output_errors
+            ],
+        )
+
+        export_file.write_text(output.model_dump_json(indent=2))
+        logger.info("json_export_written", path=str(export_file))
+        return export_file
+
     def _handle_export(
         self, request: PipelineRequest, ctx: PipelineContext
     ) -> Path | None:
@@ -352,22 +847,13 @@ class PipelineOrchestrator:
         if request.output_format in (OutputFormat.JSON, OutputFormat.CSV, OutputFormat.XML):
             return self._handle_structured_export(request, ctx, export_dir)
 
-        ext = request.output_format.value
-        export_file = export_dir / f"specmetrics-output.{ext}"
+        export_file = export_dir / "specmetrics-output.json"
 
-        result_data: dict[str, Any] = {
-            "total_function_points": (
-                ctx.measurement_result.get("fpa_total_function_points")
-                or ctx.measurement_result.get("total_function_points", 0)
-            ) if isinstance(ctx.measurement_result, dict) else 0,
-            "status": "completed" if ctx.diagnostics and not ctx.diagnostics.errors else "failed",
-            "duration_ms": (
-                ctx.diagnostics.total_duration_ms
-                if ctx.diagnostics
-                else None
-            ),
-        }
-        export_file.write_text(str(result_data))
+        metric_results = self._build_metric_results(ctx, request.metrics_filter)
+        stage_details = self._build_stage_details(ctx, list(CANONICAL_EVENT_ORDER), request.metrics_filter)
+        output_errors = self._build_output_errors(ctx)
+
+        self._write_json_output(request, ctx, export_dir, metric_results, stage_details, output_errors)
         logger.info("export_written", path=str(export_file))
         return export_file
 

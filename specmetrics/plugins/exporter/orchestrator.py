@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import csv
+import io
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import IO, Optional
 
@@ -39,6 +42,90 @@ def _extract_evidence(cfm: CanonicalFunctionalModel) -> list[EvidenceRef]:
             refs.append(proc.evidence)
             seen.add(key)
     return refs
+
+
+def _ensure_list(data: list | dict) -> list:
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        return [data]
+    return []
+
+
+def _flatten_items(items: list[dict], keys: list[str]) -> list[list]:
+    rows: list[list] = []
+    for item in items:
+        row = [str(item.get(k, "")) for k in keys]
+        rows.append(row)
+    return rows
+
+
+def normalize_discover_stage(stage_data: list | dict) -> str:
+    entries = _ensure_list(stage_data)
+    rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
+    entities_rows = _flatten_items(
+        [e for entry in entries for e in entry.get("entities", [])],
+        ["document_name", "relative_path"],
+    )
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["name", "count", "count_type", "duration_ms"])
+    writer.writerows(rows)
+    writer.writerow([])
+    writer.writerow(["document_name", "relative_path"])
+    writer.writerows(entities_rows)
+    return output.getvalue()
+
+
+def normalize_measure_stage(stage_data: list | dict) -> str:
+    entries = _ensure_list(stage_data)
+    rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
+    entities: list[dict] = [e for entry in entries for e in entry.get("entities", [])]
+    entity_rows = _flatten_items(entities, ["metric", "total", "status", "duration_ms"])
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["name", "count", "count_type", "duration_ms"])
+    writer.writerows(rows)
+    writer.writerow([])
+    writer.writerow(["metric", "total", "status", "duration_ms"])
+    writer.writerows(entity_rows)
+    return output.getvalue()
+
+
+def normalize_items_stage(stage_data: list | dict) -> str:
+    entries = _ensure_list(stage_data)
+    rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["name", "count", "count_type", "duration_ms"])
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def stage_to_csv(stage_name: str, stage_data: list | dict) -> str:
+    if stage_name == "discover":
+        return normalize_discover_stage(stage_data)
+    if stage_name == "measure":
+        return normalize_measure_stage(stage_data)
+    return normalize_items_stage(stage_data)
+
+
+def _dict_to_xml(parent: ET.Element, data: dict) -> None:
+    for key, value in data.items():
+        child = ET.SubElement(parent, str(key))
+        if isinstance(value, dict):
+            _dict_to_xml(child, value)
+        else:
+            child.text = str(value) if value is not None else ""
+
+
+def stage_to_xml(stage_name: str, stage_data: list | dict) -> str:
+    root = ET.Element("stage", name=stage_name)
+    entries = _ensure_list(stage_data)
+    for entry in entries:
+        item = ET.SubElement(root, "entry")
+        _dict_to_xml(item, entry)
+    return ET.tostring(root, encoding="unicode", xml_declaration=True)
 
 
 BATCH_SIZE = 5000
