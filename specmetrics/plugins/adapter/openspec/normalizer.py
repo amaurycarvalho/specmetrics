@@ -46,9 +46,7 @@ def _parse_sections(content: str) -> list[DocumentSection]:
     return _build_hierarchy(sections)
 
 
-def _attach_section(
-    sections: list[dict[str, Any]], current: dict[str, Any]
-) -> None:
+def _attach_section(sections: list[dict[str, Any]], current: dict[str, Any]) -> None:
     sec = current["section"]
     body = "\n".join(current["body_lines"]).strip()
     sections.append({"section": sec, "body": body, "level": current["level"]})

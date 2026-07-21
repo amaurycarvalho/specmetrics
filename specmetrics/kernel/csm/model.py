@@ -39,10 +39,11 @@ class CsmElement(BaseModel):
 
 class SpecificationActivity(CsmElement):
     activity_type: Literal[
-        "exploration", "clarification", "refinement",
-        "review", "validation"
+        "exploration", "clarification", "refinement", "review", "validation"
     ]
-    activity_status: Literal["open", "in_progress", "completed", "superseded"] = "completed"
+    activity_status: Literal["open", "in_progress", "completed", "superseded"] = (
+        "completed"
+    )
     linked_decisions: list[str] = []
     linked_questions: list[str] = []
     linked_assumptions: list[str] = []

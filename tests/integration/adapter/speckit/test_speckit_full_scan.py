@@ -8,18 +8,34 @@ from specmetrics.plugins.adapter.speckit.plugin import SpecKitAdapter
 
 def _make_repo(root: Path) -> None:
     (root / ".specify" / "memory").mkdir(parents=True)
-    (root / ".specify" / "memory" / "constitution.md").write_text("# Constitution\n\nWe the people...\n")
+    (root / ".specify" / "memory" / "constitution.md").write_text(
+        "# Constitution\n\nWe the people...\n"
+    )
     (root / "specs" / "feature-a").mkdir(parents=True)
-    (root / "specs" / "feature-a" / "spec.md").write_text("# Feature A\n\n## Overview\n\nThis is feature A\n")
-    (root / "specs" / "feature-a" / "plan.md").write_text("# Plan\n\n## Steps\n\n1. Do thing\n")
+    (root / "specs" / "feature-a" / "spec.md").write_text(
+        "# Feature A\n\n## Overview\n\nThis is feature A\n"
+    )
+    (root / "specs" / "feature-a" / "plan.md").write_text(
+        "# Plan\n\n## Steps\n\n1. Do thing\n"
+    )
     (root / "specs" / "feature-a" / "tasks.md").write_text("# Tasks\n\n- [ ] Task 1\n")
-    (root / "specs" / "feature-a" / "research.md").write_text("# Research\n\n## Findings\n\nInteresting...\n")
-    (root / "specs" / "feature-a" / "data-model.md").write_text("# Data Model\n\n## Entities\n\nUser\n")
+    (root / "specs" / "feature-a" / "research.md").write_text(
+        "# Research\n\n## Findings\n\nInteresting...\n"
+    )
+    (root / "specs" / "feature-a" / "data-model.md").write_text(
+        "# Data Model\n\n## Entities\n\nUser\n"
+    )
     (root / "specs" / "feature-a" / "checklists").mkdir()
-    (root / "specs" / "feature-a" / "checklists" / "ux.md").write_text("# UX Checklist\n\n- [ ] Login\n")
-    (root / "specs" / "feature-a" / "notes.md").write_text("# Notes\n\nRandom thoughts\n")
+    (root / "specs" / "feature-a" / "checklists" / "ux.md").write_text(
+        "# UX Checklist\n\n- [ ] Login\n"
+    )
+    (root / "specs" / "feature-a" / "notes.md").write_text(
+        "# Notes\n\nRandom thoughts\n"
+    )
     (root / "specs" / "feature-b").mkdir(parents=True)
-    (root / "specs" / "feature-b" / "spec.md").write_text("# Feature B\n\n## Details\n\nThis is feature B\n")
+    (root / "specs" / "feature-b" / "spec.md").write_text(
+        "# Feature B\n\n## Details\n\nThis is feature B\n"
+    )
 
 
 class TestFullScan:

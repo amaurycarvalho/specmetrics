@@ -83,7 +83,9 @@ def handle_explain_measurement(arguments: dict) -> list[TextContent]:
     spec_path_arg = str(run_dir / "spec.md") if run_dir_str else None
 
     try:
-        explanation = service.explain(run_id, metric_name=metric, cfm=cfm, graph=graph, spec_path=spec_path_arg)
+        explanation = service.explain(
+            run_id, metric_name=metric, cfm=cfm, graph=graph, spec_path=spec_path_arg
+        )
         result = json.loads(format_explanation(explanation))
 
         if compare:
@@ -95,7 +97,11 @@ def handle_explain_measurement(arguments: dict) -> list[TextContent]:
     except ValueError as exc:
         return [TextContent(type="text", text=json.dumps({"error": str(exc)}))]
     except Exception as exc:
-        return [TextContent(type="text", text=json.dumps({"error": f"Explanation failed: {exc}"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"error": f"Explanation failed: {exc}"})
+            )
+        ]
 
 
 def handle_explain_compare(arguments: dict) -> list[TextContent]:
@@ -115,11 +121,19 @@ def handle_explain_compare(arguments: dict) -> list[TextContent]:
     spec_path_arg = str(run_dir / "spec.md") if run_dir_str else None
 
     try:
-        _ = service.explain(baseline_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg)
-        _ = service.explain(comparison_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg)
+        _ = service.explain(
+            baseline_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg
+        )
+        _ = service.explain(
+            comparison_run_id, cfm=cfm, graph=graph, spec_path=spec_path_arg
+        )
         comparison = service.compare(baseline_run_id, comparison_run_id)
         return [TextContent(type="text", text=format_comparison(comparison))]
     except ValueError as exc:
         return [TextContent(type="text", text=json.dumps({"error": str(exc)}))]
     except Exception as exc:
-        return [TextContent(type="text", text=json.dumps({"error": f"Comparison failed: {exc}"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"error": f"Comparison failed: {exc}"})
+            )
+        ]

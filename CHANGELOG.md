@@ -8,104 +8,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [0.4.0] — 2026-07-20
+## [0.5.0] — 2026-07-21
 
-### [030-measure-metric-filter](specs/030-measure-metric-filter) Metric Filtering for `specmetrics measure` — filter by metric ID and migrate output to structured JSON
-
-#### Added
-
-- Add `metrics` positional argument to `measure` command — accepts `all`, `bcp`, `fpa`, `sfp`, `snap`, `sp`, `tshirt`, `tp`, `cp` as comma-separated values
-- Add `_parse_metrics()` validation — deduplication, whitespace trimming, `all` override, invalid ID reporting
-- Add `metrics_filter` field on `PipelineRequest` — passed through orchestrator to plugin discovery
-- Add metric filtering in `PluginRegistry.install_handlers()` — skips measurement plugins not in the filter
-- Add `_build_metric_results()`, `_build_stage_details()`, `_build_output_errors()`, `_get_llm_info()` helper methods on `PipelineOrchestrator`
-- Add `_write_json_output()` — serializes `MeasureOutput` Pydantic model to `.specmetrics/output/specmetrics-output.json`
-- Add Pydantic output models: `MeasureOutput`, `MeasureMetadata`, `MetricResult`, `StageInfo`, `ErrorRecord`
-- Add `METRIC_NAME_MAP` and `METRIC_DISPLAY_MAP` constants for metric ID ↔ display name mapping
-- Add `MetricOutputItem`, `StageOutputItem`, `ErrorOutputItem` dataclasses on `PipelineResult`
-- Add 23 tests: `TestParseMetrics` (11), CLI argument (1), orchestrator filtering/output (7), contract schema (4)
-
-#### Changed
-
-- `run_measure()` accepts `metrics` parameter and passes `metrics_filter` to `PipelineRequest`
-- `discover_plugins()` passes `metrics_filter` to handler installation
-- `format_text_result()` displays all selected metrics with human-readable labels
-- `_handle_export()` writes `specmetrics-output.json` instead of `specmetrics-output.text`
-
-#### Fixed
-
-- Fix plugin filtering mismatch — `CLI_ID_TO_PLUGIN_ID` reverse map converts `sp/tp/cp` to `storypoints/token_points/cognitive_points` so metric filter matches actual plugin registration IDs
-- Fix `_build_stage_details` measure count — uses `metrics_filter` length instead of hardcoded `len(METRIC_NAME_MAP)` when filtering is active
-- Fix `_get_llm_info` — defaults provider to `"none"` when no LLM configured; model key is omitted from JSON output when empty (deterministic mode)
-
-### [029-deterministic-fallback-specialists](specs/029-deterministic-fallback-specialists) Specialized Deterministic Fallbacks — framework-specific rule packs for Speckit and OpenSpec repositories
+### [034-improve-deterministic-extraction](specs/034-improve-deterministic-extraction) Improve Deterministic Extraction Engine — operation extraction, SNAP semantic markers, and actor identification
 
 #### Added
 
-- Create `speckit_rules.yaml` and `openspec_rules.yaml` with rich regex patterns for full CFM and CSM extraction
-- Create Speckit extraction rules: User Story headings, priority justification, GIVEN/WHEN/THEN acceptance scenarios, FR-NNN/SC-NNN requirement identifiers, Key Entities, Assumptions, Constitution Check, Edge Cases, task line activities, Actor extraction
-- Create OpenSpec extraction rules: Requirement headings, DEVE/SHALL statements, Scenario/GIVEN/WHEN/THEN, capability IDs, Decision records, Risk/Trade-off markers, proposal context sections, delta spec detection, domain entity recognition
-- Implement per-rule failure isolation — regex exceptions are caught per-rule without halting the pipeline
-- Add per-document extraction success rate tracking with WARN logging below 99%
-- Create cross-spec entity coverage validation script
-- Add semver version metadata to both framework rule packs
-- Generate rule pack documentation from YAML schemas
+- Add `gwt-given-operation`, `gwt-when-operation`, `gwt-then-operation` rules with `type: "operation"` in `default_rule_pack.yaml`
+- Change 4 Speckit GWT rules from `type: "fact"` to `type: "operation"` in `speckit_rules.yaml`
+- Add `_infer_semantic_marker()` function in CFM builder — maps elements to SNAP categories via section context
+- Expand `ACTOR_PATTERNS` with stakeholder, moderator, subscriber, visitor, guest, consumer, provider, vendor, partner keywords
+- Add section-context actor detection in classifier — entities from Actor/Role/User/Persona sections classified as actors
+- Add key-phrase actor detection — entity text containing "acts as", "is a user", "represents a person", or "external system" classified as actor
+- Make section-to-semantic-marker mappings overridable via rule packs
 
-#### Changed
-
-- Replace minimal heading-only rule packs with full framework-specific specialist content
-
-### [031-measure-id-export](specs/031-measure-id-export) Measure ID & Export Commands — run tracking, persistence, and export from stored runs
+### [035-openspec-operation-rules](specs/035-openspec-operation-rules) OpenSpec Operation Extraction Rules — repurpose 9 fact rules to operation type
 
 #### Added
 
-- Add `measure_id` and `measure_id_path` fields to `MeasureMetadata` output model
-- Create `generate_measure_id()` utility producing timestamp-prefixed UUIDs (`YYYYMMDD-HHMMSS-<short-uuid>`)
-- Create `save_run_artifacts()` function persisting per-stage JSON to `.specmetrics/runs/<measure-id>/`
-- Create `read_run_artifacts()` and `list_measure_runs()` helpers for loading and discovering runs
-- Implement tabular normalization helpers for CSV and XML export formats
-- Wire measure ID generation and run persistence into `specmetrics measure` — prints Measure ID to stdout
-- Inject `measure.id` and `measure.id_path` into `specmetrics-output.json`
-- Add `export list` subcommand displaying available run IDs ordered by recency
-- Implement `export run <measure-id>` with JSON (copy), CSV, and XML format support
-- Implement `export run` (without arguments) auto-selecting the most recent run
-- Add `--export` and `--format` flags to `specmetrics measure` for automatic post-measurement export
-- Add error handling for nonexistent run IDs with available-run listing
+- Change `openspec-then-assertion`, `openspec-and-clause`, `openspec-shall-statement`, `openspec-deve-statement`, `openspec-req-heading`, `openspec-task-item`, `openspec-task-category`, `openspec-decision-colon`, `openspec-what-changes` from `type: "fact"` to `type: "operation"` in `openspec_rules.yaml`
+- Fix regex patterns in 7 non-matching OpenSpec rules to align with observation-based extraction format
 
-### [032-populate-stage-entities](specs/032-populate-stage-entities) Populate Stage Entities on Run Artifacts — per-stage entity data in `.specmetrics/runs/<id>/*.json`
+### [036-measure-metrics-breakdown](specs/036-measure-metrics-breakdown) Measure Metrics Breakdown — per-entity score breakdowns in `metrics.json`
 
 #### Added
 
-- Add `RunArtifactsSettings` to config schema with configurable `max_entities_per_stage` (default 5000)
-- Add `stage_entities` field to `PipelineResult` data model
-- Create `_build_stage_entities()` method mapping `PipelineContext` data to per-stage entity dicts
-- Implement discover entities: discovered documents with id, document_type, and relative path
-- Implement extract entities: extracted elements with type, content (200-char truncated), confidence, and evidence references
-- Implement graph entities: graph nodes with node_type, semantic_type, document_id, section_id, text; summary with edge_count and run_id
-- Implement CSM entities: 9 categories (decisions, assumptions, constraints, risks, etc.) with per-category truncation
-- Implement CFM entities: 7 categories (actors, functional_processes, business_rules, data_groups, etc.) with per-category truncation
-- Implement rule entities: applied Rule Pack info with modification summary
-- Implement measure entities: breakdown per-complexity-level and per-function-type
-- Implement export entities: exported file paths with format
-- Add 200-char truncation helper for description/text/content fields
-- Handle skipped/failed stages with empty entities array
-- Add logging for truncation events when entities exceed max limit
+- Add `MetricBreakdownEntry` and `EntityScore` Pydantic models with `CanonicalEntityType` Literal
+- Add `measurement_result_raw` field to `PipelineResult` dataclass
+- Create `EntityScoreBuilder` class with per-metric build methods for all 8 metrics
+- Create `MetricBreakdownBuilder.build_all()` producing `list[MetricBreakdownEntry]`
+- Create `save_metrics_json()` function writing `metrics.json` with UTF-8 pretty-printed JSON
+- Add entity serialization to all 8 measurement handler payloads (fpa, sfp, snap, bcp, storypoints, token_points, cognitive_points, tshirt)
+- Enrich entity metadata with metric-specific details (complexity ratings, factor breakdowns, bloom levels, weights)
+- Implement schema validation ensuring uniform top-level and entity-level keys across all metric types
+- Handle edge cases: empty project, missing measurement_result_raw, metric filter exclusion
+- Create unit and integration tests for `EntityScoreBuilder`, `MetricBreakdownBuilder`, and schema validation
 
-### [033-clean-command](specs/033-clean-command) Clean Command for Runs Housekeeping — automatic removal of old `.specmetrics/runs/` folders
+### [037-llm-batch-rate-limit](specs/037-llm-batch-rate-limit) LLM Batch Processing & Rate Limiting — unified gateway with batching, rate limiting, and JSON structured output
 
 #### Added
 
-- Create `RunFolder` and `RetentionPolicy` dataclasses for run folder metadata
-- Implement `discover_run_folders()` with naming pattern filtering (`YYYYMMDD-HHMMSS-*`) and timestamp-sorted ordering
-- Implement `compute_retention()` with `keep_runs` + `keep_days` intersection logic (AND when both active, standalone when one is zero)
-- Implement `delete_run_folders()` using `shutil.rmtree` with per-folder permission error handling
-- Implement `dry_run()` with preview output listing each run-to-delete and summary counts
-- Implement `clean_runs()` orchestration tying discovery, retention computation, and deletion into a single callable
-- Create `specmetrics clean` CLI command with `--keep-runs` (default 90), `--keep-days` (default 30), `--dry-run`, `--verbose`, `--quiet`, and `--project-path` options
-- Handle missing or empty `.specmetrics/runs/` directory with graceful message and exit 0
-- Create 29 unit and CLI integration tests covering default behavior, custom retention, dry-run, edge cases
+- Create `LLMGateway` class with `complete()` and `complete_batch()` methods — unified gateway for all LLM calls
+- Create `RateLimiter` class with sliding-window deque algorithm and configurable RPM limit (default 15)
+- Create `LLMCallRecord`, `BatchRequest`, `DocumentPayload` models for call tracking and batch assembly
+- Implement batch size splitting when `batch_max_chars` exceeded
+- Implement partial batch failure handling — retry missing documents individually
+- Add `--llm-rpm-limit` CLI parameter to `measure` command (0 = unlimited)
+- Read `SPECMETRICS_LLM_RPM_LIMIT` environment variable as fallback config
+- Implement JSON structured output mode — `response_format={"type": "json_object"}` for OpenAI-compatible providers
+- Implement JSON mode fallback for non-OpenAI providers with system prompt instruction
+- Remove `_strip_code_fence()` calls and regex-based response cleaning
+- Handle JSON parse failure with retry and fallback to deterministic extraction
+- Handle Ctrl+C during rate-limited wait with clean exit
+- Add LLM call summary stats (total calls, total tokens, total duration) to `PipelineResult`
 
-[Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.4.0
+### [038-token-points-improvements](specs/038-token-points-improvements) Token Points Improvements — content-based token estimation with tiktoken integration
+
+#### Added
+
+- Add `content_token_count` and `content_score` fields to `TokenContribution` model
+- Add `content_multiplier` field to `CalibrationProfile` (default 0.1)
+- Add non-zero default weights for Specification Activities and References in calibration
+- Create `count_tokens()` function with tiktoken (`cl100k_base`) and character-count fallback
+- Implement content-based scoring formula: `score = type_weight + (content_tokens × content_multiplier)`
+- Extract content text per element: `name + " " + description` for CSM/CFM elements
+- Add content token counts and content multiplier to handler payload
+
+### [039-cognitive-points-improvements](specs/039-cognitive-points-improvements) Cognitive Points Improvements — content-based cognitive effort estimation and sub-type Bloom classification
+
+#### Added
+
+- Add `content_token_count` and `content_score` fields to `CognitiveContribution` model
+- Add `content_multiplier` field to `CognitiveCalibrationProfile` (default 0.1)
+- Implement sub-type Bloom classification with 3-tier lookup (sub-type → base type → default)
+- Add sub-type Bloom mappings for 4 BusinessRule sub-types and 4 Operation sub-types
+- Change default Bloom level from "analyze" (4.0) to "understand" (2.0) for conservative scoring
+- Implement content-based scoring: `score = bloom_weight + (content_tokens × content_multiplier)`
+- Extract `count_tokens()` into shared `kernel/token_utils.py` utility
+
+### [040-story-points-improvements](specs/040-story-points-improvements) Story Points Improvements — content-aware estimation with CSM coverage and relative ranking
+
+#### Added
+
+- Rename `FunctionalWorkItem` to `WorkItem` with new fields: `element_type`, `source_model`, `structural_score`, `content_tokens`, `content_score`, `rank_position`, `base_weight`
+- Add `total_raw_score`, `specification_effort_total`, `implementation_effort_total`, `content_multiplier`, `content_tokens_by_type`, `calibration_version` to `StoryPointMeasurementResult`
+- Create `StoryPointsCalibrationProfile` model with all configurable fields and defaults
+- Implement `load_calibration()` loading and merging YAML calibration files
+- Implement content-based estimation: `raw_score = structural_score + content_score`
+- Implement relative ranking normalization — entities sorted by raw score and mapped proportionally to Modified Fibonacci scale
+- Expose cross-specification comparability data in output payload
+
+### [041-tshirt-sizing](specs/041-tshirt-sizing) T-Shirt Sizing Improvements — corrected mapping table and output fixes
+
+#### Added
+
+- Update `DEFAULT_MAPPING` in classifier: M=(5,5), L=(8,13), XL=(20,40), XXL=(100,100) — all 9 Fibonacci values covered without gaps
+- Fix `measure.json` output: `total` shows actual entity count (was 0), add `breakdown` with per-size counts
+- Fix `metrics.json` output: use `unit: "entities"` and include per-entity T-shirt classifications with mapping metadata
+- Fix CLI display to show entity count and per-size breakdown line
+
+[Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.5.0
 
 See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.

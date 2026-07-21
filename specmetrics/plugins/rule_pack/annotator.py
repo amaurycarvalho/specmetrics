@@ -26,6 +26,7 @@ class RuleAnnotator:
         rule_id: str,
         rule_type: str,
         description: str,
+        methodology: str = "",
         before_state: dict[str, object] | None = None,
         after_state: dict[str, object] | None = None,
     ) -> AppliedRuleRecord:
@@ -34,6 +35,7 @@ class RuleAnnotator:
             rule_id=rule_id,
             rule_type=rule_type,
             description=description,
+            methodology=methodology,
             before_state=before_state or {},
             after_state=after_state or {},
         )

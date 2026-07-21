@@ -29,12 +29,16 @@ Beyond functional measurement, SpecMetrics provides a foundation for engineering
 - [Simplified Function Point (IFPUG/SFP)](https://ifpug.org/ifpug-standards/sfp);
 - [Software Non-Functional Assessment Process (IFPUG/SNAP)](https://ifpug.org/ifpug-standards/snap);
 - [Business Complexity Points (CI&T/Itaú/BCP)](https://ciandt.com/us/en-us/complexitypoints)
-- [Story Points (Modified Fibonacci)](https://framework.scaledagile.com/blog/glossary_term/modified-fibonacci-sequence);
-- [T-shirt Sizing](https://asana.com/pt/resources/t-shirt-sizing);
+- [Story Points (Modified Fibonacci)](docs/rfcs/RFC-041%20-%20Story%20Points%20Measurement%20Engine.md);
+- [T-shirt Sizing](docs/rfcs/RFC-042%20-%20T-Shirt%20Sizing.md);
 - [Token Points](docs/rfcs/RFC-028%20-%20Token%20Points%20Measurement%20Engine.md);
 - [Cognitive Points](docs/rfcs/RFC-029%20-%20Cognitive%20Points%20Measurement%20Engine.md).
 
-> **Note:** The current implementations of **BCP**, **FPA**, **SFP**, and **SNAP** are **draft prototypes** intended solely for demonstration and validation purposes. They provide a highly simplified approximation of their respective measurement methodologies and **do not constitute complete or standards-compliant implementations**. Full conformance with the official specifications requires additional counting rules, validation logic, and methodological details beyond the scope of these prototype implementations.
+> **Note:**
+>
+> 1. The current implementations of **BCP**, **FPA**, **SFP**, and **SNAP** are **draft prototypes** intended solely for demonstration and validation purposes. They provide a highly simplified approximation of their respective measurement methodologies and **do not constitute complete or standards-compliant implementations**. Full conformance with the official specifications requires additional counting rules, validation logic, and methodological details beyond the scope of these prototype implementations;
+> 2. **BCP** support requires SDK installed (`pip install bcp-calculator`);
+> 3. **LLM** support requires LiteLLM installed (`pip install litellm`).
 
 ### Output Formats
 
@@ -94,94 +98,13 @@ export SPECMETRICS_LLM_API_KEY=sk-...
 ```bash
 # Measurement syntax
 specmetrics measure [PROJECT_PATH] [OPTIONS]
-
-  --metrics, -m: bcp,fpa,sfp,snap,sp,tshirt,tp,cp (comma-separated, defaults to all)
-  --export:          Automatically run export after measurement
-  --format:          Export format(s) when --export is used (json, csv, xml; comma-separated)
-
-# Full pipeline measurement (all metrics, current path)
-specmetrics measure
-
-# Run specific measurements at current path
-specmetrics measure --metrics sp,tp,cp
-
-# Run specific stages
-specmetrics measure --stage extract
-specmetrics measure --from measure
-
-# Measure and export in one command
-specmetrics measure --export
-specmetrics measure --export --format json,csv
-
-# Output formats
-specmetrics measure --output json
-specmetrics measure --output json:./results.json
-
-# Verbose or quiet mode
-specmetrics measure --verbose
-specmetrics measure --quiet
-
-# Plugin management
-specmetrics plugins list
-specmetrics plugins list --verbose
-specmetrics plugins list --type measurement
-
-# Configuration
-specmetrics config dump
-specmetrics config llm list
-specmetrics config llm set deepseek --api-key sk-...
-specmetrics config llm show
-
-# Specification validation
-specmetrics validate specs/
-
-# Export results
-specmetrics export list
-specmetrics export run [MEASURE_ID] [PROJECT_PATH] [--format json,csv,xml]
-specmetrics export run --format json,csv
-
-# Explain a measurement run
-specmetrics explain <run-id>
-
-# Housekeeping: clean old measurement runs
-specmetrics clean
-specmetrics clean --keep-runs 30 --keep-days 7
-specmetrics clean --dry-run
-
-# MCP server (for AI agent integration)
-specmetrics mcp start
-specmetrics mcp status
-specmetrics mcp stop
 ```
 
-### CLI Parameters
+### CLI Reference
 
-| Command                        | Description                                                                         |
-| ------------------------------ | ----------------------------------------------------------------------------------- |
-| `clean [options]`              | Remove old measurement run folders from `.specmetrics/runs/` (`--keep-runs`, `--keep-days`, `--dry-run`) |
-| `measure [path] [options]`     | Execute full measurement pipeline (`--metrics` to select, `--export` to auto-export) |
-| `version`                      | Print platform and plugin versions                                                  |
-| `plugins list`                 | List discovered plugins                                                             |
-| `plugins verify`               | Verify plugin compatibility                                                         |
-| `plugins list-formats`         | List export formats and publishers                                                  |
-| `export list`                  | List all measure runs with IDs and timestamps                                       |
-| `export run [id] [path]`       | Export measurement results to `.specmetrics/exports/` (JSON, CSV, XML; latest run if no ID; runs pipeline if no runs exist) |
-| `export list-formats`          | List exporter plugins                                                               |
-| `export publisher-status`      | Show publisher status                                                               |
-| `config dump`                  | Show all resolved configuration                                                     |
-| `config llm set <provider>`    | Configure LLM provider (chatgpt, gemini, copilot, claude, deepseek, ollama, custom) |
-| `config llm list`              | List LLM providers                                                                  |
-| `config llm show`              | Show current LLM configuration                                                      |
-| `config llm set-model <model>` | Change LLM model                                                                    |
-| `config llm set-api-key <key>` | Change LLM API key                                                                  |
-| `config llm test`              | Test LLM current provider                                                           |
-| `explain <run-id>`             | Explain a measurement result                                                        |
-| `mcp start`                    | Start MCP server for AI agents                                                      |
-| `mcp stop`                     | Stop MCP server                                                                     |
-| `mcp status`                   | Check MCP server status                                                             |
-| `validate <paths...>`          | Validate specification documents                                                    |
+Run `specmetrics --help` or `specmetrics <command> --help` for detailed options on any command.
 
-**Common options across commands:**
+#### Global Flags
 
 | Flag               | Description               |
 | ------------------ | ------------------------- |
@@ -189,7 +112,144 @@ specmetrics mcp stop
 | `--quiet` / `-q`   | Suppress non-error output |
 | `--help`           | Show help for any command |
 
-Run `specmetrics --help` or `specmetrics <command> --help` for detailed options on any command.
+#### `specmetrics measure`
+
+Execute the full measurement pipeline on a specification project.
+
+```bash
+specmetrics measure [PATH] [OPTIONS]
+```
+
+| Parameter          | Type       | Default | Description                                                                                      |
+| ------------------ | ---------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `PATH`             | positional | `"."`   | Path to the SpecMetrics project                                                                  |
+| `--metrics`, `-m`  | str        | all     | Comma-separated: `bcp,fpa,sfp,snap,sp,tshirt,tp,cp`                                              |
+| `--output`, `-o`   | str        | text    | Format: `json`, `csv`, `xml`, `text`, or `json:./path.json`                                      |
+| `--stage`, `-s`    | str        | —       | Run only this stage: `discover`, `extract`, `graph`, `cfm`, `rule`, `measure`, `export`          |
+| `--from`           | str        | —       | Start from this stage: `discover`, `extract`, `graph`, `csm`, `cfm`, `rule`, `measure`, `export` |
+| `--export`         | flag       | off     | Auto-export after measurement                                                                    |
+| `--format`         | str        | json    | Export format(s) when `--export` is used: `json,csv,xml`                                         |
+| `--log-file`, `-l` | str        | —       | Persist logs to `.specmetrics/logs/<filename>`                                                   |
+| `--llm-rpm-limit`  | int        | 15      | LLM requests per minute limit (0 = unlimited)                                                    |
+| `--config`, `-c`   | path       | —       | Path to configuration file (supports `$ENV_VAR` expansion)                                       |
+| `--verbose`, `-v`  | flag       | off     | Show detailed per-stage progress                                                                 |
+| `--quiet`, `-q`    | flag       | off     | Suppress non-error output                                                                        |
+
+Examples:
+
+```bash
+specmetrics measure                                          # All metrics, current path
+specmetrics measure --metrics sp,tp,cp                       # Specific metrics
+specmetrics measure --stage extract                          # Single stage
+specmetrics measure --from measure                           # Skip to measurement
+specmetrics measure --export --format json,csv               # Measure and export
+specmetrics measure --llm-rpm-limit 10                       # Limit LLM calls
+specmetrics measure --output json:./results.json             # Output to file
+specmetrics measure --verbose                                # Detailed output
+```
+
+#### `specmetrics clean`
+
+Remove old measurement run folders.
+
+```bash
+specmetrics clean [OPTIONS]
+```
+
+| Parameter         | Type | Default | Description                            |
+| ----------------- | ---- | ------- | -------------------------------------- |
+| `--project-path`  | path | `"."`   | Path to the SpecMetrics project        |
+| `--keep-runs`     | int  | 90      | Max recent runs to retain (0 disables) |
+| `--keep-days`     | int  | 30      | Max age in days (0 disables)           |
+| `--dry-run`       | flag | off     | Preview without deleting               |
+| `--verbose`, `-v` | flag | off     | Detailed progress output               |
+| `--quiet`, `-q`   | flag | off     | Suppress non-error output              |
+
+#### `specmetrics version`
+
+Print platform version, Python version, and discovered plugins.
+
+```bash
+specmetrics version
+```
+
+#### `specmetrics plugins`
+
+Manage and inspect plugins.
+
+| Subcommand     | Description                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `list`         | List discovered plugins (`--type` filter: `adapter`, `measurement`, `export`, `publisher`; `--verbose`) |
+| `verify`       | Check all discovered plugins for compatibility                                                          |
+| `list-formats` | List discovered export formats and publishers                                                           |
+
+#### `specmetrics export`
+
+Export measurement results to various formats.
+
+| Subcommand                | Description                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| `run [id] [path]`         | Export results (`--format json,csv,xml`; `--output-dir`; `--publish`; `--otel-endpoint`) |
+| `list [path]`             | List all measure runs with IDs and timestamps                                            |
+| `list-formats`            | List available exporter plugins                                                          |
+| `publisher-status [path]` | Show publisher connection state and metrics                                              |
+
+#### `specmetrics config`
+
+Inspect and manage configuration.
+
+| Subcommand              | Description                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dump`                  | Show all resolved configuration (`--format text\|json`)                                                                                    |
+| `llm list`              | List all available LLM providers                                                                                                           |
+| `llm set <provider>`    | Configure provider: `chatgpt`, `gemini`, `copilot`, `claude`, `deepseek`, `ollama`, `none`, `custom` (`--model`, `--api-key`, `--api-url`) |
+| `llm show`              | Show current LLM configuration                                                                                                             |
+| `llm set-model <model>` | Change LLM model                                                                                                                           |
+| `llm set-api-key <key>` | Change LLM API key                                                                                                                         |
+| `llm test`              | Test LLM connection                                                                                                                        |
+
+#### `specmetrics explain`
+
+Explain a measurement result with evidence traces and rule effects.
+
+```bash
+specmetrics explain <run-id> [OPTIONS]
+```
+
+| Parameter   | Description                                  |
+| ----------- | -------------------------------------------- |
+| `run-id`    | Identifier of the measurement run (required) |
+| `--metric`  | Specific metric to explain                   |
+| `--format`  | Output format: `text` or `json`              |
+| `--compare` | Compare with another run ID                  |
+| `--run-dir` | Directory containing run artifacts           |
+
+#### `specmetrics mcp`
+
+Manage the SpecMetrics MCP server for AI agent integration.
+
+| Subcommand | Description                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| `start`    | Start MCP server (`--host`, `--port`, `--transport stdio\|sse`, `--max-connections`, `--log-level`, `--config`) |
+| `stop`     | Stop MCP server (`--timeout` seconds)                                                                           |
+| `status`   | Show MCP server status (PID, uptime)                                                                            |
+
+#### `specmetrics validate`
+
+Validate specification documents for correctness and compliance.
+
+```bash
+specmetrics validate <paths...> [OPTIONS]
+```
+
+| Parameter             | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| `paths...`            | Specification file(s) or director(ies) (required) |
+| `--rules`             | Path to custom validation rules configuration     |
+| `--format`            | Output format: `text`, `json`, `quiet`            |
+| `--batch`             | Treat paths as a batch                            |
+| `--constitution-only` | Only run constitutional compliance checks         |
+| `--structural-only`   | Only run structural checks                        |
 
 ---
 
@@ -223,6 +283,6 @@ make lint test
 
 ### Know More
 
-You can find more information [here](docs/PRD.md) and [here](docs/system%20designs/Foundation.md).
+You can find more information [here](docs/PRD.md), [here](docs/adrs/ADR-001%20-%20SpecMetrics.md) and [here](docs/system%20designs/Foundation.md).
 
 All specs can be found [here](specs/).

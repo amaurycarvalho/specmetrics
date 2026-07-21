@@ -14,7 +14,9 @@ from specmetrics.kernel.engine_visitors import (
 )
 
 
-def _make_token(type_: str, tag: str = "", content: str = "", nesting: int = 0, **kwargs: object):
+def _make_token(
+    type_: str, tag: str = "", content: str = "", nesting: int = 0, **kwargs: object
+):
     from types import SimpleNamespace
 
     tok = SimpleNamespace(

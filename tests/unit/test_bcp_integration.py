@@ -19,9 +19,7 @@ def _uid() -> str:
 
 
 def _make_cfm() -> CanonicalFunctionalModel:
-    ev = EvidenceRef(
-        graph_node_id="gn-001", document_id="doc-001", text="ev"
-    )
+    ev = EvidenceRef(graph_node_id="gn-001", document_id="doc-001", text="ev")
     fp1_id = _uid()
     fp2_id = _uid()
     return CanonicalFunctionalModel(
@@ -43,9 +41,7 @@ def _make_cfm() -> CanonicalFunctionalModel:
                 evidence=ev,
             ),
         },
-        metadata=BuildMetadata(
-            run_id="test-cfm", version="1.0", source="test"
-        ),
+        metadata=BuildMetadata(run_id="test-cfm", version="1.0", source="test"),
     )
 
 

@@ -26,9 +26,7 @@ def _uid() -> str:
 
 
 def _make_evidence() -> EvidenceRef:
-    return EvidenceRef(
-        graph_node_id="gn-001", document_id="doc-001", text="evidence"
-    )
+    return EvidenceRef(graph_node_id="gn-001", document_id="doc-001", text="evidence")
 
 
 def _make_cfm_with_fp(
@@ -54,9 +52,7 @@ def _make_cfm_with_fp(
 
     for i in range(data_group_count):
         dgid = _uid()
-        data_groups[dgid] = DataGroup(
-            id=dgid, name=f"DG {i}", evidence=ev
-        )
+        data_groups[dgid] = DataGroup(id=dgid, name=f"DG {i}", evidence=ev)
 
     for i in range(operation_count):
         oid = _uid()
@@ -117,9 +113,7 @@ def _make_cfm_with_fp(
 def _make_empty_cfm() -> CanonicalFunctionalModel:
     return CanonicalFunctionalModel(
         run_id="empty",
-        metadata=BuildMetadata(
-            run_id="empty", version="1.0", source="test"
-        ),
+        metadata=BuildMetadata(run_id="empty", version="1.0", source="test"),
     )
 
 
@@ -139,9 +133,7 @@ class TestBusinessInteractions:
 
 class TestLogicalInformation:
     def test_counts_data_groups_and_operations(self):
-        cfm, fp_id = _make_cfm_with_fp(
-            data_group_count=2, operation_count=3
-        )
+        cfm, fp_id = _make_cfm_with_fp(data_group_count=2, operation_count=3)
         fp = cfm.functional_processes[fp_id]
         score = score_factor("logical_information", fp_id, cfm, fp)
         assert score == 5.0
@@ -197,17 +189,13 @@ class TestWorkflowBreadth:
 
 class TestExceptionHandling:
     def test_detects_exception_operation(self):
-        cfm, fp_id = _make_cfm_with_fp(
-            operation_count=1, has_exception=True
-        )
+        cfm, fp_id = _make_cfm_with_fp(operation_count=1, has_exception=True)
         fp = cfm.functional_processes[fp_id]
         score = score_factor("exception_handling", fp_id, cfm, fp)
         assert score == 1.0
 
     def test_zero_when_no_exception(self):
-        cfm, fp_id = _make_cfm_with_fp(
-            operation_count=2, has_exception=False
-        )
+        cfm, fp_id = _make_cfm_with_fp(operation_count=2, has_exception=False)
         fp = cfm.functional_processes[fp_id]
         score = score_factor("exception_handling", fp_id, cfm, fp)
         assert score == 0.0
@@ -226,7 +214,10 @@ class TestScoreAllFactors:
         assert "business_interactions" in factors
         assert "logical_information" in factors
         assert "workflow_breadth" in factors
-        assert factors["business_interactions"] == 1.0 * DEFAULT_FACTOR_COEFFICIENTS["business_interactions"]
+        assert (
+            factors["business_interactions"]
+            == 1.0 * DEFAULT_FACTOR_COEFFICIENTS["business_interactions"]
+        )
 
     def test_custom_coefficients(self):
         cfm, fp_id = _make_cfm_with_fp(

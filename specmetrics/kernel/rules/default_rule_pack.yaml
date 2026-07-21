@@ -25,6 +25,33 @@ rules:
     confidence: 0.85
     priority: 70
 
+  - id: "gwt-given-operation"
+    name: "GIVEN as Input Operation"
+    pattern:
+      keywords: ["**GIVEN**", "**Given**"]
+      min_matches: 1
+    type: "operation"
+    confidence: 0.85
+    priority: 72
+
+  - id: "gwt-when-operation"
+    name: "WHEN as Input Operation"
+    pattern:
+      keywords: ["**WHEN**", "**When**"]
+      min_matches: 1
+    type: "operation"
+    confidence: 0.85
+    priority: 72
+
+  - id: "gwt-then-operation"
+    name: "THEN as Output Operation"
+    pattern:
+      keywords: ["**THEN**", "**Then**"]
+      min_matches: 1
+    type: "operation"
+    confidence: 0.85
+    priority: 72
+
   - id: "requirement-shall"
     name: "Requirement Statement"
     pattern:

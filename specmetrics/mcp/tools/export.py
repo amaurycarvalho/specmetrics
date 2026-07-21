@@ -52,7 +52,11 @@ def handle_export_results(arguments: dict) -> list[TextContent]:
     result = orch.execute(request)
 
     if result.canonical_model is None:
-        return [TextContent(type="text", text=json.dumps({"error": "No measurement data available"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"error": "No measurement data available"})
+            )
+        ]
 
     exporters: list[ExporterPlugin] = []
     for ep in entry_points(group="specmetrics.exporters"):
@@ -64,9 +68,17 @@ def handle_export_results(arguments: dict) -> list[TextContent]:
             pass
 
     if not exporters:
-        return [TextContent(type="text", text=json.dumps({"error": "No exporter plugins found"}))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"error": "No exporter plugins found"})
+            )
+        ]
 
-    out_dir = Path(output_path_str) if output_path_str else (project_path / ".specmetrics" / "exports")
+    out_dir = (
+        Path(output_path_str)
+        if output_path_str
+        else (project_path / ".specmetrics" / "exports")
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
 
     export_orch = ExportOrchestrator(exporters)

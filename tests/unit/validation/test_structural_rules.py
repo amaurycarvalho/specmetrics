@@ -66,7 +66,13 @@ class TestMandatorySectionsExist:
     def test_all_missing_sections_reported(self):
         result = mandatory_sections_exist(_doc("test.md", ""))
         assert not result.passed
-        for section in ["User Scenarios", "Constitution Check", "Requirements", "Success Criteria", "Assumptions"]:
+        for section in [
+            "User Scenarios",
+            "Constitution Check",
+            "Requirements",
+            "Success Criteria",
+            "Assumptions",
+        ]:
             assert section in result.message
 
 

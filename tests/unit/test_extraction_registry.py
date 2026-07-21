@@ -11,7 +11,9 @@ from specmetrics.kernel.extraction_registry import ProviderRouter
 
 
 class _MockProvider:
-    def __init__(self, provider_id: str, supported_types: Optional[list[str]] = None) -> None:
+    def __init__(
+        self, provider_id: str, supported_types: Optional[list[str]] = None
+    ) -> None:
         self._provider_id = provider_id
         self._supported_types = supported_types or []
 

@@ -57,12 +57,14 @@ class FPACounter:
             complexity = classify_data_function_complexity(ret_count, det_count)
             weight = get_ufp_weight(ft, complexity, weight_overrides)
 
-            refs = [EvidenceRef(
-                graph_node_id=dg.evidence.graph_node_id,
-                document_id=dg.evidence.document_id,
-                section_id=dg.evidence.section_id,
-                text=dg.evidence.text,
-            )]
+            refs = [
+                EvidenceRef(
+                    graph_node_id=dg.evidence.graph_node_id,
+                    document_id=dg.evidence.document_id,
+                    section_id=dg.evidence.section_id,
+                    text=dg.evidence.text,
+                )
+            ]
 
             fn = MeasuredFunction(
                 id=f"fn-{dg.id}",
@@ -82,11 +84,13 @@ class FPACounter:
             direction = op.metadata.get("direction", "")
             ft = self._classify_operation(direction)
             if ft is None:
-                warnings.append(MeasurementWarning(
-                    code="UNCLASSIFIED_OPERATION",
-                    message=f"Operation '{op.name}' has no direction metadata; skipped",
-                    cfm_element_id=op.id,
-                ))
+                warnings.append(
+                    MeasurementWarning(
+                        code="UNCLASSIFIED_OPERATION",
+                        message=f"Operation '{op.name}' has no direction metadata; skipped",
+                        cfm_element_id=op.id,
+                    )
+                )
                 continue
 
             if ft in excluded:
@@ -105,12 +109,14 @@ class FPACounter:
             complexity = classify_transactional_complexity(ft, ftr_count, det_count)
             weight = get_ufp_weight(ft, complexity, weight_overrides)
 
-            refs = [EvidenceRef(
-                graph_node_id=op.evidence.graph_node_id,
-                document_id=op.evidence.document_id,
-                section_id=op.evidence.section_id,
-                text=op.evidence.text,
-            )]
+            refs = [
+                EvidenceRef(
+                    graph_node_id=op.evidence.graph_node_id,
+                    document_id=op.evidence.document_id,
+                    section_id=op.evidence.section_id,
+                    text=op.evidence.text,
+                )
+            ]
 
             fn = MeasuredFunction(
                 id=f"fn-{op.id}",

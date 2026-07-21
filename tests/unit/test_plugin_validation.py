@@ -27,7 +27,9 @@ def _make_metadata(**overrides) -> PluginMetadata:
 
 class TestPluginValidator:
     def test_rejects_incompatible_major_api_version(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(api_version="2.0.0")
             result = validator.validate(meta)
@@ -36,7 +38,9 @@ class TestPluginValidator:
         assert any("major version mismatch" in e for e in result.errors)
 
     def test_accepts_compatible_api_version(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(api_version="1.5.2")
             result = validator.validate(meta)
@@ -44,7 +48,9 @@ class TestPluginValidator:
         assert result.is_valid
 
     def test_accepts_exact_api_version_match(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(api_version="1.0.0")
             result = validator.validate(meta)
@@ -52,7 +58,9 @@ class TestPluginValidator:
         assert result.is_valid
 
     def test_rejects_unparseable_version_string(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(api_version="not-a-version")
             result = validator.validate(meta)
@@ -61,7 +69,9 @@ class TestPluginValidator:
         assert any("Unparseable" in e for e in result.errors)
 
     def test_rejects_missing_required_fields(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(id="", api_version="")
             result = validator.validate(meta)
@@ -71,7 +81,9 @@ class TestPluginValidator:
         assert any("api_version" in e for e in result.errors)
 
     def test_rejects_unspecified_plugin_type(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(plugin_type=PluginType.UNSPECIFIED)
             result = validator.validate(meta)
@@ -80,7 +92,9 @@ class TestPluginValidator:
         assert any("Plugin type must be specified" in e for e in result.errors)
 
     def test_rejects_missing_handler_factory_when_handled_events_declared(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(
                 handled_event_types=(EventType.REPOSITORY_LOADED,),
@@ -92,7 +106,9 @@ class TestPluginValidator:
         assert any("handler_factory" in e for e in result.errors)
 
     def test_accepts_handler_factory_when_handled_events_declared(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(
                 handled_event_types=(EventType.REPOSITORY_LOADED,),
@@ -103,14 +119,18 @@ class TestPluginValidator:
         assert result.is_valid
 
     def test_accepts_plugin_with_satisfied_dependencies(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(id="dependent", dependencies=("dep-a", "dep-b"))
             result = validator.validate(meta, known_plugin_ids={"dep-a", "dep-b"})
         assert result.is_valid
 
     def test_rejects_plugin_with_missing_dependency(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata(id="dependent", dependencies=("missing-dep",))
             result = validator.validate(meta, known_plugin_ids={"other-plugin"})
@@ -118,7 +138,9 @@ class TestPluginValidator:
         assert any("Missing plugin dependency" in e for e in result.errors)
 
     def test_accepts_plugin_no_dependencies_when_known_ids_provided(self) -> None:
-        with patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
             validator = PluginValidator()
             meta = _make_metadata()
             result = validator.validate(meta, known_plugin_ids={"some-plugin"})

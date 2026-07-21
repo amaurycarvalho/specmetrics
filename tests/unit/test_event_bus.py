@@ -1,6 +1,13 @@
 import pytest
 
-from specmetrics.kernel import EventType, HandlerNotFoundError, HandlerRegistry, PipelineContext, PipelineEvent, StageError
+from specmetrics.kernel import (
+    EventType,
+    HandlerNotFoundError,
+    HandlerRegistry,
+    PipelineContext,
+    PipelineEvent,
+    StageError,
+)
 from specmetrics.kernel.event_bus import EventBus
 
 
@@ -34,7 +41,9 @@ class TestEventBus:
 
     def test_wraps_non_stage_error_into_stage_error(self) -> None:
         registry = HandlerRegistry()
-        handler = ExceptionRaisingHandler(EventType.REPOSITORY_LOADED, "raise_handler", "RaiseStage")
+        handler = ExceptionRaisingHandler(
+            EventType.REPOSITORY_LOADED, "raise_handler", "RaiseStage"
+        )
         registry.register(handler)
         bus = EventBus(registry)
         event = PipelineEvent(

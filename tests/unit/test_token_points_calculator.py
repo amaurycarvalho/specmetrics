@@ -51,11 +51,15 @@ def _make_default_calibration() -> CalibrationProfile:
 
 
 def _make_cfm_evidence() -> CfmEvidenceRef:
-    return CfmEvidenceRef(graph_node_id="gn-cfm-001", document_id="doc-001", text="cfm evidence")
+    return CfmEvidenceRef(
+        graph_node_id="gn-cfm-001", document_id="doc-001", text="cfm evidence"
+    )
 
 
 def _make_csm_evidence() -> CsmEvidenceRef:
-    return CsmEvidenceRef(graph_node_id="gn-csm-001", document_id="doc-001", text="csm evidence")
+    return CsmEvidenceRef(
+        graph_node_id="gn-csm-001", document_id="doc-001", text="csm evidence"
+    )
 
 
 def _make_cfm() -> CanonicalFunctionalModel:
@@ -67,14 +71,20 @@ def _make_cfm() -> CanonicalFunctionalModel:
         },
         functional_processes={
             _uid(): FunctionalProcess(
-                id=_uid(), name="Login", description="User login",
-                actor_ids=[], operation_ids=[], evidence=ev,
+                id=_uid(),
+                name="Login",
+                description="User login",
+                actor_ids=[],
+                operation_ids=[],
+                evidence=ev,
             ),
         },
         business_rules={
             _uid(): BusinessRule(
-                id=_uid(), name="Password Policy",
-                description="Min 8 chars", evidence=ev,
+                id=_uid(),
+                name="Password Policy",
+                description="Min 8 chars",
+                evidence=ev,
             ),
         },
         data_groups={
@@ -82,14 +92,19 @@ def _make_cfm() -> CanonicalFunctionalModel:
         },
         relationships=[
             Relationship(
-                id=_uid(), source_id=_uid(), target_id=_uid(),
-                relationship_type="triggers", evidence=ev,
+                id=_uid(),
+                source_id=_uid(),
+                target_id=_uid(),
+                relationship_type="triggers",
+                evidence=ev,
             ),
         ],
         operations={
             _uid(): Operation(
-                id=_uid(), name="Authenticate",
-                parent_process_id=_uid(), evidence=ev,
+                id=_uid(),
+                name="Authenticate",
+                parent_process_id=_uid(),
+                evidence=ev,
             ),
         },
         metadata=CfmBuildMetadata(run_id="cfm-test-001", version="1.0", source="test"),
@@ -102,47 +117,62 @@ def _make_csm() -> CanonicalSpecificationModel:
         run_id="csm-test-001",
         specification_activities={
             _uid(): SpecificationActivity(
-                id=_uid(), description="Initial exploration",
-                activity_type="exploration", evidence_references=[ev],
+                id=_uid(),
+                description="Initial exploration",
+                activity_type="exploration",
+                evidence_references=[ev],
             ),
             _uid(): SpecificationActivity(
-                id=_uid(), description="Requirements clarification",
-                activity_type="clarification", evidence_references=[ev],
+                id=_uid(),
+                description="Requirements clarification",
+                activity_type="clarification",
+                evidence_references=[ev],
             ),
         },
         decisions={
             _uid(): Decision(
-                id=_uid(), description="Use PostgreSQL",
+                id=_uid(),
+                description="Use PostgreSQL",
                 evidence_references=[ev],
             ),
         },
         assumptions={
             _uid(): Assumption(
-                id=_uid(), description="Users have internet",
+                id=_uid(),
+                description="Users have internet",
                 evidence_references=[ev],
             ),
         },
         constraints={
             _uid(): Constraint(
-                id=_uid(), description="GDPR compliance",
-                constraint_type="regulatory", evidence_references=[ev],
+                id=_uid(),
+                description="GDPR compliance",
+                constraint_type="regulatory",
+                evidence_references=[ev],
             ),
         },
         risks={
-            _uid(): Risk(id=_uid(), description="Performance risk", evidence_references=[ev]),
+            _uid(): Risk(
+                id=_uid(), description="Performance risk", evidence_references=[ev]
+            ),
         },
         open_questions={
-            _uid(): OpenQuestion(id=_uid(), description="Scaling strategy", evidence_references=[ev]),
+            _uid(): OpenQuestion(
+                id=_uid(), description="Scaling strategy", evidence_references=[ev]
+            ),
         },
         acceptance_criteria={
             _uid(): AcceptanceCriterion(
-                id=_uid(), description="Login works",
-                verification_method="test", evidence_references=[ev],
+                id=_uid(),
+                description="Login works",
+                verification_method="test",
+                evidence_references=[ev],
             ),
         },
         glossary_terms={
             _uid(): GlossaryTerm(
-                id=_uid(), description="SLA definition",
+                id=_uid(),
+                description="SLA definition",
                 evidence_references=[ev],
             ),
         },
@@ -224,7 +254,8 @@ class TestCalibrationWeights:
         custom_cal = CalibrationProfile(
             version="1.0",
             specification_cost=SpecificationCostWeights(
-                decisions=10.0, assumptions=10.0,
+                decisions=10.0,
+                assumptions=10.0,
             ),
             code_generation_cost=CodeGenerationCostWeights(
                 functional_processes=20.0,
@@ -240,6 +271,7 @@ class TestAggregation:
         from specmetrics.plugins.measurement.token_points.models import (
             aggregate,
         )
+
         cal = _make_default_calibration()
         cfm = _make_cfm()
         csm = _make_csm()
@@ -263,8 +295,10 @@ class TestPerformance:
         for i in range(250):
             uid = _uid()
             ops[uid] = Operation(
-                id=uid, name=f"Process {i}",
-                parent_process_id=_uid(), evidence=ev,
+                id=uid,
+                name=f"Process {i}",
+                parent_process_id=_uid(),
+                evidence=ev,
             )
         cfm = CanonicalFunctionalModel(
             run_id="perf-test",
@@ -276,13 +310,16 @@ class TestPerformance:
         for i in range(250):
             uid = _uid()
             decisions[uid] = Decision(
-                id=uid, description=f"Decision {i}",
+                id=uid,
+                description=f"Decision {i}",
                 evidence_references=[csm_ev],
             )
         csm = CanonicalSpecificationModel(
             run_id="perf-test-csm",
             decisions=decisions,
-            metadata=CsmBuildMetadata(run_id="perf-test-csm", version="1.0", source="test"),
+            metadata=CsmBuildMetadata(
+                run_id="perf-test-csm", version="1.0", source="test"
+            ),
         )
         start = time.monotonic()
         calculate(cfm, csm, _make_default_calibration(), run_id="perf")

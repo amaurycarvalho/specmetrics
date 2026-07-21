@@ -3,7 +3,12 @@ from __future__ import annotations
 
 import pytest
 
-from specmetrics.kernel import Document, HandlerRegistry, PipelineContext, PipelineEngine
+from specmetrics.kernel import (
+    Document,
+    HandlerRegistry,
+    PipelineContext,
+    PipelineEngine,
+)
 from specmetrics.kernel.extraction_provider import (
     EvidenceReference,
     ExtractedElement,
@@ -15,7 +20,9 @@ from specmetrics.kernel.extraction_stage import ExtractionStage
 
 
 class _MockPipelineProvider:
-    def __init__(self, provider_id: str, supported_types: list[str] | None = None) -> None:
+    def __init__(
+        self, provider_id: str, supported_types: list[str] | None = None
+    ) -> None:
         self._provider_id = provider_id
         self._supported_types = supported_types or ["section"]
 

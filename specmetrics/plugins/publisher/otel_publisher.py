@@ -165,12 +165,14 @@ def _build_evidence_refs(measurements: list[Measurement]) -> list[dict[str, str]
             key = f"{ref.document_id}|{ref.section_id or ''}|{ref.graph_node_id or ''}"
             if key not in seen:
                 seen.add(key)
-                refs.append({
-                    "spec_document": ref.document_id,
-                    "spec_section": ref.section_id or "",
-                    "spec_element_id": ref.graph_node_id or "",
-                    "extracted_text": ref.text or "",
-                })
+                refs.append(
+                    {
+                        "spec_document": ref.document_id,
+                        "spec_section": ref.section_id or "",
+                        "spec_element_id": ref.graph_node_id or "",
+                        "extracted_text": ref.text or "",
+                    }
+                )
     return refs
 
 

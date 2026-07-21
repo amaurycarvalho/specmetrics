@@ -49,7 +49,9 @@ class CsvExporter(ExporterPlugin):
                         "category": m.category,
                         "complexity": m.complexity,
                         "functional_size": m.functional_size,
-                        "evidence_document_id": m.evidence[0].document_id if m.evidence else "",
+                        "evidence_document_id": m.evidence[0].document_id
+                        if m.evidence
+                        else "",
                         "evidence_text": evidence_str,
                     }
                 )

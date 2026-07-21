@@ -33,7 +33,9 @@ def test_speckit_confidence_scores(rules_dir: Path):
     path = rules_dir / "speckit_rules.yaml"
     rules = RulePackLoader.load(path)
     for r in rules:
-        assert 0.0 <= r.confidence <= 1.0, f"{r.id} has invalid confidence {r.confidence}"
+        assert 0.0 <= r.confidence <= 1.0, (
+            f"{r.id} has invalid confidence {r.confidence}"
+        )
     scores = {r.confidence for r in rules}
     expected = {1.0, 0.95, 0.90, 0.85, 0.80}
     assert scores.issubset(expected), f"Unexpected scores: {scores - expected}"
@@ -43,7 +45,9 @@ def test_openspec_confidence_scores(rules_dir: Path):
     path = rules_dir / "openspec_rules.yaml"
     rules = RulePackLoader.load(path)
     for r in rules:
-        assert 0.0 <= r.confidence <= 1.0, f"{r.id} has invalid confidence {r.confidence}"
+        assert 0.0 <= r.confidence <= 1.0, (
+            f"{r.id} has invalid confidence {r.confidence}"
+        )
     scores = {r.confidence for r in rules}
     expected = {1.0, 0.95, 0.90, 0.85, 0.80}
     assert scores.issubset(expected), f"Unexpected scores: {scores - expected}"
@@ -65,6 +69,7 @@ def test_openspec_unique_rule_ids(rules_dir: Path):
 
 def test_speckit_version_metadata(rules_dir: Path):
     from specmetrics.kernel.engine_rule import RulePackLoader as Loader
+
     path = rules_dir / "speckit_rules.yaml"
     meta = Loader.load_meta(path)
     assert meta.version != ""
@@ -73,6 +78,7 @@ def test_speckit_version_metadata(rules_dir: Path):
 
 def test_openspec_version_metadata(rules_dir: Path):
     from specmetrics.kernel.engine_rule import RulePackLoader as Loader
+
     path = rules_dir / "openspec_rules.yaml"
     meta = Loader.load_meta(path)
     assert meta.version != ""
@@ -80,8 +86,24 @@ def test_openspec_version_metadata(rules_dir: Path):
 
 
 def test_all_fourteen_entity_categories_represented():
-    cfm_categories = {"actor", "functional_process", "business_rule", "data_group", "operation", "relationship"}
-    csm_categories = {"decision", "assumption", "constraint", "risk", "open_question", "acceptance_criterion", "glossary_term", "specification_activity"}
+    cfm_categories = {
+        "actor",
+        "functional_process",
+        "business_rule",
+        "data_group",
+        "operation",
+        "relationship",
+    }
+    csm_categories = {
+        "decision",
+        "assumption",
+        "constraint",
+        "risk",
+        "open_question",
+        "acceptance_criterion",
+        "glossary_term",
+        "specification_activity",
+    }
     all_categories = cfm_categories | csm_categories
     assert len(all_categories) == 14
 

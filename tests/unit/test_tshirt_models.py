@@ -39,9 +39,7 @@ def _sample_result() -> TShirtMeasurementResult:
             ),
         ],
         distribution={"S": 1, "M": 1, "XL": 1},
-        execution_metadata=ExecutionMetadata(
-            duration_ms=1.0, total_fps_processed=3
-        ),
+        execution_metadata=ExecutionMetadata(duration_ms=1.0, total_fps_processed=3),
     )
 
 
@@ -183,9 +181,7 @@ class TestMeasurementWarning:
         assert warn.element_id is None
 
     def test_with_element_id(self):
-        warn = MeasurementWarning(
-            code="NO_SP", message="no sp", element_id="fp-001"
-        )
+        warn = MeasurementWarning(code="NO_SP", message="no sp", element_id="fp-001")
         assert warn.element_id == "fp-001"
 
 

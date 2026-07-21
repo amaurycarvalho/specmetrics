@@ -79,3 +79,14 @@ class TestDeterministicPipeline:
         engine = DeterministicSemanticEngine()
         result = engine.extract([doc])
         assert len(result.elements) >= 1
+
+    def test_operation_extraction_from_gwt(self):
+        doc = _make_doc(
+            "gwt-1",
+            "## User Story 1\n\n**GIVEN** a user is logged in\n**WHEN** they click submit\n**THEN** the form is saved\n",
+            doc_type="speckit:specification",
+        )
+        engine = DeterministicSemanticEngine()
+        result = engine.extract([doc])
+        ops = [e for e in result.elements if e.type == "operation"]
+        assert len(ops) >= 1

@@ -29,6 +29,12 @@ def validate_calibration_profile(
     else:
         _validate_code_cost(code_cost, errors)
 
+    content_multiplier = data.get("content_multiplier", 0.1)
+    if content_multiplier is not None and (
+        not isinstance(content_multiplier, (int, float)) or content_multiplier < 0
+    ):
+        errors.append("content_multiplier must be a non-negative number")
+
     return errors
 
 

@@ -55,7 +55,11 @@ class PatternLibrary:
 
                 heading_match = pat.get("heading", "")
                 if heading_match:
-                    match_values = [heading_match] if isinstance(heading_match, str) else heading_match
+                    match_values = (
+                        [heading_match]
+                        if isinstance(heading_match, str)
+                        else heading_match
+                    )
                     for h_candidate in candidates:
                         for m in match_values:
                             if isinstance(m, str) and m.lower() == h_candidate.lower():

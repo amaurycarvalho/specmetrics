@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 
-
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.deterministic_engine import DeterministicSemanticEngine
 from specmetrics.kernel.semantic_extraction_engine import (
@@ -15,7 +14,9 @@ def _make_doc(
     content: str = "# Test\nHello",
     doc_type: str = "specification",
 ) -> Document:
-    return Document(id=doc_id, path=f"/tmp/{doc_id}.md", document_type=doc_type, content=content)
+    return Document(
+        id=doc_id, path=f"/tmp/{doc_id}.md", document_type=doc_type, content=content
+    )
 
 
 class TestProtocolConformance:
@@ -96,7 +97,9 @@ class TestEdgeCases:
 
     def test_no_recognizable_patterns_returns_empty(self) -> None:
         engine = DeterministicSemanticEngine()
-        result = engine.extract([_make_doc(content="Just some plain text with no patterns.")])
+        result = engine.extract(
+            [_make_doc(content="Just some plain text with no patterns.")]
+        )
         assert len(result.elements) == 0
 
     def test_empty_document_list(self) -> None:

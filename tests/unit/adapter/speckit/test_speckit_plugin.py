@@ -17,9 +17,13 @@ class TestSupports:
         adapter = SpecKitAdapter()
         assert adapter.supports(tmp_path) is True
 
-    def test_supports_returns_true_when_constitution_exists(self, tmp_path: Path) -> None:
+    def test_supports_returns_true_when_constitution_exists(
+        self, tmp_path: Path
+    ) -> None:
         (tmp_path / ".specify" / "memory").mkdir(parents=True)
-        (tmp_path / ".specify" / "memory" / "constitution.md").write_text("# Constitution")
+        (tmp_path / ".specify" / "memory" / "constitution.md").write_text(
+            "# Constitution"
+        )
         adapter = SpecKitAdapter()
         assert adapter.supports(tmp_path) is True
 
@@ -42,7 +46,9 @@ class TestSupports:
 
 class TestDataClasses:
     def test_scan_error_creation(self) -> None:
-        err = ScanError(file_path="test.md", error_code="UNREADABLE", message="Could not read")
+        err = ScanError(
+            file_path="test.md", error_code="UNREADABLE", message="Could not read"
+        )
         assert err.file_path == "test.md"
         assert err.error_code == "UNREADABLE"
         assert err.message == "Could not read"

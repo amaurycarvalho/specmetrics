@@ -38,6 +38,7 @@ class TestMeasurementAPIContract:
             MeasurementMetadata,
             SpecificationCost,
         )
+
         m = TokenPointsMeasurement(
             run_id="contract-test",
             total_score=10.0,

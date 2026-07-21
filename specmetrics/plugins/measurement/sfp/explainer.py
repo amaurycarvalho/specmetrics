@@ -8,7 +8,9 @@ from .models import (
 
 
 class MeasurementExplainer:
-    def build_explanations(self, result: SFPMeasurementResult) -> list[MeasurementExplanation]:
+    def build_explanations(
+        self, result: SFPMeasurementResult
+    ) -> list[MeasurementExplanation]:
         explanations: list[MeasurementExplanation] = []
         for component in result.measured_components:
             explanation = self._explain_component(component, result)
@@ -23,10 +25,7 @@ class MeasurementExplainer:
         identification_reason = self._build_identification_reason(component)
         contribution_reason = self._build_contribution_reason(component)
         evidence_chain = self._build_evidence_chain(component)
-        rule_exceptions = [
-            r for r in [component.rule_applied]
-            if r is not None
-        ]
+        rule_exceptions = [r for r in [component.rule_applied] if r is not None]
         return MeasurementExplanation(
             component_id=component.id,
             cfm_element_id=component.cfm_element_id,

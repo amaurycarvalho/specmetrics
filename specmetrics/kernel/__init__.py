@@ -18,7 +18,12 @@ from .cfm.classifier import classify_node, strip_framework_labels
 from .cfm.metadata import BuildMetadata, ClassificationConflict
 from .adapter_interface import Document, DocumentSection, SpecificationAdapter
 from .adapter_registry import AdapterRegistry
-from .diagnostics import Diagnostics, StageError as StageErrorRecord, StageStatus, StageTiming
+from .diagnostics import (
+    Diagnostics,
+    StageError as StageErrorRecord,
+    StageStatus,
+    StageTiming,
+)
 from .extraction_provider import (
     EvidenceReference,
     ExtractedElement,

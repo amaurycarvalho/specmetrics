@@ -151,7 +151,9 @@ class CategoryDefinition(BaseModel):
     def validate_version(self) -> CategoryDefinition:
         pattern = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
         if not re.match(pattern, self.version):
-            raise ValueError(f"Invalid SemVer version for category '{self.id}': '{self.version}'")
+            raise ValueError(
+                f"Invalid SemVer version for category '{self.id}': '{self.version}'"
+            )
         return self
 
 

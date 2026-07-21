@@ -81,7 +81,9 @@ class TestTokenContribution:
         assert contrib.model_source == "cfm"
 
     def test_with_evidence_ref(self):
-        ref = EvidenceRef(graph_node_id="gn-001", document_id="doc-001", text="evidence")
+        ref = EvidenceRef(
+            graph_node_id="gn-001", document_id="doc-001", text="evidence"
+        )
         contrib = TokenContribution(
             element_id="elem-001",
             element_type="decision",
@@ -104,8 +106,12 @@ class TestSpecificationCost:
     def test_with_contributions(self):
         contribs = [
             TokenContribution(
-                element_id="e1", element_type="decision", element_name="D1",
-                model_source="csm", applied_weight=1.5, partial_score=1.5,
+                element_id="e1",
+                element_type="decision",
+                element_name="D1",
+                model_source="csm",
+                applied_weight=1.5,
+                partial_score=1.5,
             ),
         ]
         cost = SpecificationCost(total=1.5, contributions=contribs)
@@ -141,6 +147,8 @@ class TestMeasurementWarning:
 
     def test_with_details(self):
         warn = MeasurementWarning(
-            code="TEST", message="test", details={"key": "value"},
+            code="TEST",
+            message="test",
+            details={"key": "value"},
         )
         assert warn.details == {"key": "value"}

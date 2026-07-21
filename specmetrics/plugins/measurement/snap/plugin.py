@@ -54,7 +54,12 @@ class SNAPMeasurementPlugin:
         return "SNAP (Software Non-functional Assessment Process)"
 
     def supported_function_types(self) -> list[str]:
-        return ["presentation", "data_operations", "operational_capabilities", "technical_interaction"]
+        return [
+            "presentation",
+            "data_operations",
+            "operational_capabilities",
+            "technical_interaction",
+        ]
 
     def measure(
         self,
@@ -144,19 +149,27 @@ class SNAPMeasurementHandler:
         cfm = ctx.canonical_model
 
         if not isinstance(cfm, CanonicalFunctionalModel):
-            logger.warning("snap_measurement_no_cfm", execution_id=str(ctx.execution_id))
+            logger.warning(
+                "snap_measurement_no_cfm", execution_id=str(ctx.execution_id)
+            )
             return ctx
 
         plugin = SNAPMeasurementPlugin()
         result = plugin.measure(cfm)
 
+        snap_entities = [a.model_dump(mode="json") for a in result.assessed_items]
+
         payload: dict[str, Any] = {
             "snap_total_snap": result.summary.total_snap,
             "snap_total_items": result.summary.total_item_count,
             "snap_by_category": {
-                cat.category_id: {"count": len(cat.items), "total_contribution": cat.total_contribution}
+                cat.category_id: {
+                    "count": len(cat.items),
+                    "total_contribution": cat.total_contribution,
+                }
                 for cat in result.categories
             },
+            "snap_entities": snap_entities,
         }
 
         return ctx.merge_stage_output("measurement_result", payload)

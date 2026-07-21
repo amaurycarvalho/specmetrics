@@ -23,7 +23,9 @@ class Loader:
     def _get_xdg_config_home(self) -> Path:
         return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 
-    def discover_sources(self, project_root: Path, cli_config_path: Path | None = None) -> list[ConfigurationSource]:
+    def discover_sources(
+        self, project_root: Path, cli_config_path: Path | None = None
+    ) -> list[ConfigurationSource]:
         sources: list[ConfigurationSource] = []
         config_files = ["config.yml", "config.yaml", "config.json"]
 
@@ -39,8 +41,14 @@ class Loader:
                 sources.append(FileSource(path, SourceLevel.USER))
                 break
 
-        for basename in ["specmetrics.yml", "specmetrics.yaml", "specmetrics.json",
-                         ".specmetrics.yml", ".specmetrics.yaml", ".specmetrics.json"]:
+        for basename in [
+            "specmetrics.yml",
+            "specmetrics.yaml",
+            "specmetrics.json",
+            ".specmetrics.yml",
+            ".specmetrics.yaml",
+            ".specmetrics.json",
+        ]:
             path = project_root / basename
             if path.exists():
                 sources.append(FileSource(path, SourceLevel.PROJECT))
@@ -69,7 +77,9 @@ class Loader:
 
 
 class ConfigurationSystem:
-    def __init__(self, project_root: Path | None = None, config_path: Path | None = None) -> None:
+    def __init__(
+        self, project_root: Path | None = None, config_path: Path | None = None
+    ) -> None:
         self._project_root = project_root or Path.cwd()
         self._config_path = config_path or self._resolve_env_config_path()
         self._loader = Loader()
@@ -115,11 +125,18 @@ class ConfigurationSystem:
         try:
             validator.validate(resolved_dict)
         except ConfigValidationError as exc:
-            logger.error("config_validation_failed", field=exc.field, value=exc.value, expected=exc.expected_type)
-            warnings.append(ConfigWarning(
-                message=str(exc),
-                key=exc.field,
-            ))
+            logger.error(
+                "config_validation_failed",
+                field=exc.field,
+                value=exc.value,
+                expected=exc.expected_type,
+            )
+            warnings.append(
+                ConfigWarning(
+                    message=str(exc),
+                    key=exc.field,
+                )
+            )
 
         config = CoreConfig()
         for key, value in resolved_dict.items():
@@ -142,7 +159,11 @@ class ConfigurationSystem:
         )
 
         source_names = [s.name for s in sources]
-        logger.info("Configuration loaded from %d source(s): %s", len(sources), ", ".join(source_names))
+        logger.info(
+            "Configuration loaded from %d source(s): %s",
+            len(sources),
+            ", ".join(source_names),
+        )
 
         return _ConfigProviderImpl(self._config)
 
@@ -158,7 +179,9 @@ class ConfigurationSystem:
         if hasattr(current, last):
             field_type = type(getattr(current, last))
             try:
-                coerced = field_type(value) if not isinstance(value, field_type) else value
+                coerced = (
+                    field_type(value) if not isinstance(value, field_type) else value
+                )
             except (ValueError, TypeError):
                 coerced = value
             setattr(current, last, coerced)
@@ -188,6 +211,7 @@ class _ConfigProviderImpl:
     @property
     def dump(self):
         from .introspection import build_dump
+
         return build_dump(self._config)
 
     @property

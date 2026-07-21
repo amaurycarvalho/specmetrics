@@ -8,8 +8,12 @@ import structlog
 from specmetrics.application.config import AppConfig
 from specmetrics.application.enums import OutputFormat, StageName
 from specmetrics.application.measure_id import generate_measure_id
+from specmetrics.application.metrics_json import save_metrics_json
 from specmetrics.application.models import PipelineRequest
-from specmetrics.application.orchestrator import PipelineOrchestrator, save_run_artifacts
+from specmetrics.application.orchestrator import (
+    PipelineOrchestrator,
+    save_run_artifacts,
+)
 from specmetrics.infrastructure.config.loader import ConfigurationSystem
 
 from .formatters import format_json_result, format_text_result
@@ -23,6 +27,7 @@ VALID_METRICS = {"all", "bcp", "fpa", "sfp", "snap", "sp", "tshirt", "tp", "cp"}
 
 def _setup_log_file(project_path: Path, filename: str) -> str | None:
     import re
+
     logs_dir = project_path / ".specmetrics" / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     path = str(logs_dir / filename)
@@ -62,7 +67,7 @@ def _run_auto_export(project_path: Path, measure_id: str, export_fmt: str) -> No
     for fmt in selected_formats:
         if fmt == "json":
             for src in runs_dir.glob("*.json"):
-                if src.name == "metadata.json":
+                if src.name in ("metadata.json", "metrics.json"):
                     continue
                 dst = out_dir / src.name
                 shutil.copy2(src, dst)
@@ -131,6 +136,7 @@ def run_measure(
     quiet: bool = False,
     log_file: str | None = None,
     config_path: Path | None = None,
+    llm_rpm_limit: int = 15,
 ) -> int:
     config = AppConfig.load(project_path)
 
@@ -143,7 +149,9 @@ def run_measure(
 
     cfg_system = get_config_system()
     if config_path is not None:
-        cfg_system = ConfigurationSystem(project_root=project_path, config_path=config_path)
+        cfg_system = ConfigurationSystem(
+            project_root=project_path, config_path=config_path
+        )
         cfg_system.load()
 
     if output:
@@ -186,6 +194,7 @@ def run_measure(
         verbose=verbose,
         quiet=quiet,
         measure_id=measure_id,
+        llm_rpm_limit=llm_rpm_limit,
     )
 
     orchestrator = PipelineOrchestrator()
@@ -202,6 +211,13 @@ def run_measure(
         max_entities_per_stage=getattr(result, "_max_entities_per_stage", 5000),
     )
 
+    save_metrics_json(
+        project_path.resolve(),
+        measure_id,
+        result,
+        metrics_filter=metrics_filter,
+    )
+
     if quiet:
         if result.status.value == "failed":
             print(result.error)
@@ -214,9 +230,15 @@ def run_measure(
 
     if export_run:
         export_fmt = export_format or "json"
-        invalid = [f for f in export_fmt.split(",") if f.strip() and f.strip() not in ("json", "csv", "xml")]
+        invalid = [
+            f
+            for f in export_fmt.split(",")
+            if f.strip() and f.strip() not in ("json", "csv", "xml")
+        ]
         if invalid:
-            print(f"Error: Invalid export format(s): {', '.join(invalid)}. Use json, csv, xml.")
+            print(
+                f"Error: Invalid export format(s): {', '.join(invalid)}. Use json, csv, xml."
+            )
         else:
             _run_auto_export(project_path.resolve(), measure_id, export_fmt)
 

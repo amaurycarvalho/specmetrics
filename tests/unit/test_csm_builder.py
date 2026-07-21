@@ -65,11 +65,23 @@ def _make_graph(
 class TestBuild:
     def test_build_from_openspec_graph(self):
         nodes = {
-            _uid(1): _make_element_node(_uid(1), "We decided to use Python", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "Assume 99.9% uptime", semantic_type="fact"),
-            _uid(3): _make_element_node(_uid(3), "What is the target latency?", semantic_type="fact"),
-            _uid(4): _make_element_node(_uid(4), "Given user is authenticated, when they request data, then return 200", semantic_type="fact"),
-            _uid(5): _make_element_node(_uid(5), "Explore authentication options", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "We decided to use Python", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "Assume 99.9% uptime", semantic_type="fact"
+            ),
+            _uid(3): _make_element_node(
+                _uid(3), "What is the target latency?", semantic_type="fact"
+            ),
+            _uid(4): _make_element_node(
+                _uid(4),
+                "Given user is authenticated, when they request data, then return 200",
+                semantic_type="fact",
+            ),
+            _uid(5): _make_element_node(
+                _uid(5), "Explore authentication options", semantic_type="fact"
+            ),
         }
         graph = _make_graph(nodes)
         csm = build(graph)
@@ -84,12 +96,20 @@ class TestBuild:
 
     def test_framework_normalization(self):
         openspec_nodes = {
-            _uid(1): _make_element_node(_uid(1), "We decided to use Python", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "Explore requirements", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "We decided to use Python", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "Explore requirements", semantic_type="fact"
+            ),
         }
         speckit_nodes = {
-            _uid(1): _make_element_node(_uid(1), "We decided to use Python", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "Explore requirements", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "We decided to use Python", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "Explore requirements", semantic_type="fact"
+            ),
         }
 
         openspec_csm = build(_make_graph(openspec_nodes, run_id="openspec-run"))
@@ -124,8 +144,12 @@ class TestBuild:
 
     def test_unclassifiable_elements_preserved(self):
         nodes = {
-            _uid(1): _make_element_node(_uid(1), "Some random description text", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "More arbitrary content here", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "Some random description text", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "More arbitrary content here", semantic_type="fact"
+            ),
         }
         edges = [
             GraphEdge(source=_uid(1), target=_uid(2), edge_type="references"),
@@ -140,9 +164,15 @@ class TestBuild:
 
     def test_specification_activity_linking(self):
         nodes = {
-            _uid(1): _make_element_node(_uid(1), "Explore and analyze requirements", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "We decided to use Python", semantic_type="fact"),
-            _uid(3): _make_element_node(_uid(3), "Assume 99% uptime SLA", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "Explore and analyze requirements", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "We decided to use Python", semantic_type="fact"
+            ),
+            _uid(3): _make_element_node(
+                _uid(3), "Assume 99% uptime SLA", semantic_type="fact"
+            ),
         }
         edges = [
             GraphEdge(source=_uid(1), target=_uid(2), edge_type="derived_from"),
@@ -157,8 +187,12 @@ class TestBuild:
 
     def test_build_metadata_populated(self):
         nodes = {
-            _uid(1): _make_element_node(_uid(1), "We decided to use Python", semantic_type="fact"),
-            _uid(2): _make_element_node(_uid(2), "Some random unclassifiable text", semantic_type="fact"),
+            _uid(1): _make_element_node(
+                _uid(1), "We decided to use Python", semantic_type="fact"
+            ),
+            _uid(2): _make_element_node(
+                _uid(2), "Some random unclassifiable text", semantic_type="fact"
+            ),
         }
         graph = _make_graph(nodes)
         csm = build(graph)
@@ -195,4 +229,6 @@ class TestBuild:
         elapsed = time.time() - start
 
         assert isinstance(csm, CanonicalSpecificationModel)
-        assert elapsed < 3.0, f"Performance benchmark failed: {elapsed:.3f}s (limit: 3.0s)"
+        assert elapsed < 3.0, (
+            f"Performance benchmark failed: {elapsed:.3f}s (limit: 3.0s)"
+        )

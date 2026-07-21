@@ -24,16 +24,13 @@ class ExporterConfig(BaseModel):
 
 class ExporterPlugin(ABC):
     @abstractmethod
-    def format_id(self) -> str:
-        ...
+    def format_id(self) -> str: ...
 
     @abstractmethod
-    def file_extension(self) -> str:
-        ...
+    def file_extension(self) -> str: ...
 
     @abstractmethod
-    def content_type(self) -> str:
-        ...
+    def content_type(self) -> str: ...
 
     @classmethod
     def config_schema(cls) -> type[BaseModel]:
@@ -46,5 +43,4 @@ class ExporterPlugin(ABC):
         evidence_refs: list[EvidenceRef],
         metadata: ExportMetadata,
         output: IO,
-    ) -> None:
-        ...
+    ) -> None: ...

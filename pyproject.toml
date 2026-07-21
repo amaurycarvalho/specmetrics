@@ -1,6 +1,6 @@
 [project]
 name = "specmetrics"
-version = "0.4.0"
+version = "0.5.0"
 description = "A Functional Measurement Engine for Specification Driven Development"
 requires-python = ">=3.12"
 dependencies = [

@@ -213,6 +213,68 @@ Examples include:
 
 ---
 
+# Content-Based Estimation (v2)
+
+Token Points v2 introduces content-based estimation, replacing the flat-weight-per-element approach with a formula that accounts for the actual text volume of each specification element.
+
+## Scoring Formula
+
+```
+score = type_weight + (content_tokens × content_multiplier)
+```
+
+Where:
+- **type_weight**: The element type's base weight from the calibration profile (unchanged from v1).
+- **content_tokens**: Number of tokens in the element's text content, counted using the configured tokenizer.
+- **content_multiplier**: A global multiplier (default 0.1) that scales the content contribution relative to type weights.
+
+With the default multiplier of 0.1, a 100-token description contributes 10.0 to the score—comparable to a functional_process type weight of 5.0. Organizations can tune this value via calibration YAML.
+
+## Token Counting Method
+
+Token counting uses tiktoken (`cl100k_base`, the GPT-4/GPT-3.5 tokenizer) if installed. If tiktoken is not available, the engine falls back to a character-count heuristic of `max(1, len(text) // 4)`. A warning is logged when the fallback is active.
+
+The fallback ensures the measurement runs without additional dependencies while providing reasonable estimates.
+
+## Content Sources per Element Type
+
+Content is extracted as the concatenation of the element's name and description fields:
+
+**CSM Elements** (SpecificationActivity, Decision, Assumption, Constraint, Risk, OpenQuestion, AcceptanceCriterion, GlossaryTerm): Content = `name + " " + description` (elements inherit `description` from CsmElement base class).
+
+**CSM References**: Content = `title + " " + url` (References have no `description` field; the `title` and `url` fields are used).
+
+**CFM Elements** (FunctionalProcess, BusinessRule, Operation, DataGroup, Actor): Content = `name + " " + description`.
+
+**CFM Relationships**: Content = `name` only (no `description` field).
+
+**Edge Cases**: Elements with empty name and empty description receive `content_tokens = 0` and `content_score = 0.0`, producing a score equal to the type_weight alone. When `content_multiplier = 0.0`, the formula produces identical results to the v1 flat-weight approach, providing a backward-compatibility escape hatch.
+
+## Updated Calibration Defaults
+
+The default calibration profile has been updated to produce sensible non-zero values out of the box:
+
+**SpecificationCostWeights**:
+- `activities`: `{"exploration": 2.0, "clarification": 3.0, "refinement": 3.0, "review": 1.5, "validation": 2.0}` (previously empty — specification cost was 0 without custom YAML).
+- `references`: `1.0` (previously absent — references were excluded from the calculation).
+
+**CalibrationProfile**:
+- `content_multiplier`: `0.1` (new field enabling the content-based estimation formula).
+
+**Backward Compatibility**: Old calibration YAML files that lack `content_multiplier`, `activities`, or `references` load correctly — Pydantic defaults fill in the missing values. Organizations relying on the old flat-weight behavior can set `content_multiplier: 0.0` to disable content-based estimation entirely.
+
+## Usage Recommendations
+
+Token Points v2 values are comparable across specifications because the score is grounded in content volume. A specification with 2× the content volume produces approximately 2× the Token Points score (within a 1.5:1 to 2.5:1 tolerance). This enables:
+
+- **Cross-specification comparability**: Compare the AI computational cost of different specifications on the same scale.
+- **Kanban work item sizing**: Group specifications into size buckets based on Token Points values as a conceptual heuristic (e.g., Small: < 100 TP, Medium: 100–500 TP, Large: > 500 TP). These thresholds are organizational conventions, not a software feature — teams calibrate them to their own velocity and budget.
+- **Portfolio planning**: Aggregate Token Points across a backlog to forecast AI budget requirements for upcoming increments.
+
+The `token_content_tokens` and `token_content_multiplier` fields in the measurement payload provide auditability: consumers can verify exactly which multiplier was used and how many content tokens were counted per element type.
+
+---
+
 # Calibration
 
 The methodology intentionally avoids embedding hardcoded values.

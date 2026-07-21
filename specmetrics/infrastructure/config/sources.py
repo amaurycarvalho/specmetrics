@@ -23,8 +23,7 @@ class ConfigurationSource(abc.ABC):
         self.precedence = precedence
 
     @abc.abstractmethod
-    def load(self) -> dict[str, Any]:
-        ...
+    def load(self) -> dict[str, Any]: ...
 
 
 class FileSource(ConfigurationSource):
@@ -42,7 +41,9 @@ class FileSource(ConfigurationSource):
         if data is None:
             return {}
         if not isinstance(data, dict):
-            raise ValueError(f"Config file {self.path} must contain a mapping, got {type(data).__name__}")
+            raise ValueError(
+                f"Config file {self.path} must contain a mapping, got {type(data).__name__}"
+            )
         return _flatten_dict(data, prefix="")
 
 
@@ -55,7 +56,7 @@ class EnvironmentSource(ConfigurationSource):
         result: dict[str, Any] = {}
         for key, value in os.environ.items():
             if key.startswith(self.prefix):
-                suffix = key[len(self.prefix):].lower()
+                suffix = key[len(self.prefix) :].lower()
                 parts = suffix.split("_")
                 config_key = ".".join(parts) if len(parts) > 1 else suffix
                 result[config_key] = value

@@ -21,9 +21,7 @@ def _uid() -> str:
 
 
 def _make_evidence(text: str = "ev") -> EvidenceRef:
-    return EvidenceRef(
-        graph_node_id="gn-001", document_id="doc-001", text=text
-    )
+    return EvidenceRef(graph_node_id="gn-001", document_id="doc-001", text=text)
 
 
 def _make_cfm() -> tuple[CanonicalFunctionalModel, str]:
@@ -35,9 +33,7 @@ def _make_cfm() -> tuple[CanonicalFunctionalModel, str]:
     br_id = _uid()
     rel_id = _uid()
 
-    actors = {
-        actor_id: Actor(id=actor_id, name="Customer", evidence=ev)
-    }
+    actors = {actor_id: Actor(id=actor_id, name="Customer", evidence=ev)}
     operations = {
         op_id: Operation(
             id=op_id,
@@ -46,9 +42,7 @@ def _make_cfm() -> tuple[CanonicalFunctionalModel, str]:
             evidence=ev,
         )
     }
-    data_groups = {
-        dg_id: DataGroup(id=dg_id, name="Order Data", evidence=ev)
-    }
+    data_groups = {dg_id: DataGroup(id=dg_id, name="Order Data", evidence=ev)}
     business_rules = {
         br_id: BusinessRule(
             id=br_id,
@@ -86,9 +80,7 @@ def _make_cfm() -> tuple[CanonicalFunctionalModel, str]:
         data_groups=data_groups,
         operations=operations,
         relationships=relationships,
-        metadata=BuildMetadata(
-            run_id="test", version="1.0", source="test"
-        ),
+        metadata=BuildMetadata(run_id="test", version="1.0", source="test"),
     )
 
     return cfm, fp_id
@@ -140,9 +132,7 @@ class TestStoryGenerator:
     def test_empty_cfm_fp(self):
         ev = _make_evidence()
         fp_id = _uid()
-        fp = FunctionalProcess(
-            id=fp_id, name="Empty", evidence=ev
-        )
+        fp = FunctionalProcess(id=fp_id, name="Empty", evidence=ev)
         cfm = CanonicalFunctionalModel(
             run_id="test",
             actors={},
@@ -151,9 +141,7 @@ class TestStoryGenerator:
             data_groups={},
             operations={},
             relationships=[],
-            metadata=BuildMetadata(
-                run_id="test", version="1.0", source="test"
-            ),
+            metadata=BuildMetadata(run_id="test", version="1.0", source="test"),
         )
         story = generate_story(fp, cfm)
         assert "# User Story: Empty" in story

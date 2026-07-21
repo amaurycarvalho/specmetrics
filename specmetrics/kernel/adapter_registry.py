@@ -31,7 +31,10 @@ class AdapterRegistry:
         descriptors = self._plugin_registry.get_by_type(PluginType.ADAPTER.value)
         adapters: list[SpecificationAdapter] = []
         for d in descriptors:
-            if d.status.value == "registered" and d.metadata.handler_factory is not None:
+            if (
+                d.status.value == "registered"
+                and d.metadata.handler_factory is not None
+            ):
                 handler = d.metadata.handler_factory()
                 if _is_adapter(handler):
                     adapters.append(handler)
@@ -66,5 +69,9 @@ class AdapterRegistry:
                 if adapter.supports(path):
                     result[descriptor.metadata.id] = adapter.scan(path)
             except Exception:
-                logger.warning("adapter_scan_all_supports_failed", adapter_id=descriptor.metadata.id, path=str(path))
+                logger.warning(
+                    "adapter_scan_all_supports_failed",
+                    adapter_id=descriptor.metadata.id,
+                    path=str(path),
+                )
         return result

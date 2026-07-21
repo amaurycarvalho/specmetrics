@@ -88,7 +88,9 @@ class SFPMeasurementResult(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate measured_component ids")
         if self.summary.total_component_count != len(self.measured_components):
-            raise ValueError("summary.total_component_count must match len(measured_components)")
+            raise ValueError(
+                "summary.total_component_count must match len(measured_components)"
+            )
         return self
 
 

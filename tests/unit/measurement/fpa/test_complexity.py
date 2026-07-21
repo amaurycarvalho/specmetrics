@@ -1,4 +1,3 @@
-
 from specmetrics.plugins.measurement.fpa.complexity import (
     classify_data_function_complexity,
     classify_transactional_complexity,

@@ -14,7 +14,15 @@ class TestBuildMetadata:
         spec.parent.mkdir(parents=True)
         spec.write_text("# Auth")
         meta = build_metadata(spec, tmp_path)
-        required = {"framework", "repository_root", "artifact_type", "domain", "change", "status", "relative_path"}
+        required = {
+            "framework",
+            "repository_root",
+            "artifact_type",
+            "domain",
+            "change",
+            "status",
+            "relative_path",
+        }
         assert required.issubset(meta.keys())
 
     def test_spec_domain_metadata(self, tmp_path: Path) -> None:
@@ -46,7 +54,9 @@ class TestBuildMetadata:
             f = tmp_path / filename
             f.write_text("# Test")
             meta = build_metadata(f, tmp_path)
-            assert meta["artifact_type"] == expected_type, f"{filename} should map to {expected_type}"
+            assert meta["artifact_type"] == expected_type, (
+                f"{filename} should map to {expected_type}"
+            )
 
     def test_unknown_file_handling(self, tmp_path: Path) -> None:
         unknown = tmp_path / "openspec" / "specs" / "auth" / "readme.md"
@@ -71,7 +81,9 @@ class TestBuildMetadata:
         assert meta["status"] == "active"
 
     def test_delta_spec_kind(self, tmp_path: Path) -> None:
-        delta = tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        delta = (
+            tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        )
         delta.parent.mkdir(parents=True)
         delta.write_text("# Delta")
         meta = build_metadata(delta, tmp_path)
@@ -112,7 +124,9 @@ class TestBuildMetadata:
         assert meta["domain"] is None
 
     def test_domain_for_delta_spec(self, tmp_path: Path) -> None:
-        delta = tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        delta = (
+            tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        )
         delta.parent.mkdir(parents=True)
         delta.write_text("# Delta")
         meta = build_metadata(delta, tmp_path)

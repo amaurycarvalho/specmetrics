@@ -10,7 +10,9 @@ from .metadata import BuildMetadata
 ActorType = Literal["person", "system", "role"]
 RuleType = Literal["constraint", "condition", "policy", "derivation"]
 DataType = Literal["internal", "external", "shared"]
-RelationshipType = Literal["triggers", "composed_of", "governs", "uses", "communicates_with"]
+RelationshipType = Literal[
+    "triggers", "composed_of", "governs", "uses", "communicates_with"
+]
 
 
 class EvidenceRef(BaseModel):

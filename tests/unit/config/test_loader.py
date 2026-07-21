@@ -9,7 +9,9 @@ class TestLoader:
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / ".config"))
         loader = Loader()
         sources = loader.discover_sources(tmp_path)
-        assert len(sources) == 0  # no files in temp dir, env added by ConfigurationSystem
+        assert (
+            len(sources) == 0
+        )  # no files in temp dir, env added by ConfigurationSystem
 
     def test_expand_env_vars(self, monkeypatch):
         monkeypatch.setenv("HOME", "/home/test")

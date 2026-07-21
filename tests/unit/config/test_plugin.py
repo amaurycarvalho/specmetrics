@@ -28,7 +28,5 @@ class TestPluginConfigCollector:
             api_key: str
 
         collector.register("my_plugin", MyConfig)
-        result = collector.validate_plugin_config(
-            "my_plugin", {"api_key": "test-key"}
-        )
+        result = collector.validate_plugin_config("my_plugin", {"api_key": "test-key"})
         assert result.api_key == "test-key"

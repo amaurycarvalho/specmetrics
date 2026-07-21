@@ -14,7 +14,9 @@ from specmetrics.plugins.measurement.snap.models import (
 )
 
 
-def _ev(doc_id: str = "doc-1", section: str = "sec-1", text: str = "evidence") -> CFMEvidenceRef:
+def _ev(
+    doc_id: str = "doc-1", section: str = "sec-1", text: str = "evidence"
+) -> CFMEvidenceRef:
     return CFMEvidenceRef(
         graph_node_id="graph-node-1",
         document_id=doc_id,
@@ -58,18 +60,36 @@ class TestFullAssessment:
     def test_basic_assessment_with_multiple_categories(self):
         cfm = _cfm(
             operations=[
-                ("op-1", Operation(
-                    id="op-1", name="Login Screen", parent_process_id="fp-1",
-                    evidence=_ev(), metadata={"semantic_marker": "presentation_interface"},
-                )),
-                ("op-2", Operation(
-                    id="op-2", name="Save Record", parent_process_id="fp-1",
-                    evidence=_ev(), metadata={"semantic_marker": "data_operation"},
-                )),
-                ("op-3", Operation(
-                    id="op-3", name="Auto-Update", parent_process_id="fp-1",
-                    evidence=_ev(doc_id="doc-2"), metadata={"semantic_marker": "operational_feature"},
-                )),
+                (
+                    "op-1",
+                    Operation(
+                        id="op-1",
+                        name="Login Screen",
+                        parent_process_id="fp-1",
+                        evidence=_ev(),
+                        metadata={"semantic_marker": "presentation_interface"},
+                    ),
+                ),
+                (
+                    "op-2",
+                    Operation(
+                        id="op-2",
+                        name="Save Record",
+                        parent_process_id="fp-1",
+                        evidence=_ev(),
+                        metadata={"semantic_marker": "data_operation"},
+                    ),
+                ),
+                (
+                    "op-3",
+                    Operation(
+                        id="op-3",
+                        name="Auto-Update",
+                        parent_process_id="fp-1",
+                        evidence=_ev(doc_id="doc-2"),
+                        metadata={"semantic_marker": "operational_feature"},
+                    ),
+                ),
             ]
         )
         assessor = SNAPAssessor()
@@ -80,16 +100,27 @@ class TestFullAssessment:
         assert result.summary.total_snap == 4.0 + 4.0 + 7.0
         assert len(result.categories) == 3
         cat_ids = {c.category_id for c in result.categories}
-        assert cat_ids == {"presentation", "data_operations", "operational_capabilities"}
+        assert cat_ids == {
+            "presentation",
+            "data_operations",
+            "operational_capabilities",
+        }
 
     def test_assessment_with_evidence_refs(self):
         cfm = _cfm(
             operations=[
-                ("op-1", Operation(
-                    id="op-1", name="Report", parent_process_id="fp-1",
-                    evidence=_ev(doc_id="spec.pdf", section="3.2", text="report generation"),
-                    metadata={"semantic_marker": "presentation_interface"},
-                )),
+                (
+                    "op-1",
+                    Operation(
+                        id="op-1",
+                        name="Report",
+                        parent_process_id="fp-1",
+                        evidence=_ev(
+                            doc_id="spec.pdf", section="3.2", text="report generation"
+                        ),
+                        metadata={"semantic_marker": "presentation_interface"},
+                    ),
+                ),
             ]
         )
         assessor = SNAPAssessor()
@@ -113,14 +144,26 @@ class TestFullAssessment:
     def test_rule_pack_exclusion(self):
         cfm = _cfm(
             operations=[
-                ("op-1", Operation(
-                    id="op-1", name="UI", parent_process_id="fp-1",
-                    evidence=_ev(), metadata={"semantic_marker": "presentation_interface"},
-                )),
-                ("op-2", Operation(
-                    id="op-2", name="Batch", parent_process_id="fp-1",
-                    evidence=_ev(doc_id="doc-2"), metadata={"semantic_marker": "data_operation"},
-                )),
+                (
+                    "op-1",
+                    Operation(
+                        id="op-1",
+                        name="UI",
+                        parent_process_id="fp-1",
+                        evidence=_ev(),
+                        metadata={"semantic_marker": "presentation_interface"},
+                    ),
+                ),
+                (
+                    "op-2",
+                    Operation(
+                        id="op-2",
+                        name="Batch",
+                        parent_process_id="fp-1",
+                        evidence=_ev(doc_id="doc-2"),
+                        metadata={"semantic_marker": "data_operation"},
+                    ),
+                ),
             ]
         )
         rule_pack = RulePack(
@@ -136,10 +179,16 @@ class TestFullAssessment:
     def test_rule_pack_contribution_override(self):
         cfm = _cfm(
             operations=[
-                ("op-1", Operation(
-                    id="op-1", name="UI", parent_process_id="fp-1",
-                    evidence=_ev(), metadata={"semantic_marker": "presentation_interface"},
-                )),
+                (
+                    "op-1",
+                    Operation(
+                        id="op-1",
+                        name="UI",
+                        parent_process_id="fp-1",
+                        evidence=_ev(),
+                        metadata={"semantic_marker": "presentation_interface"},
+                    ),
+                ),
             ]
         )
         rule_pack = RulePack(
@@ -154,14 +203,26 @@ class TestFullAssessment:
     def test_item_exclusion_by_id(self):
         cfm = _cfm(
             operations=[
-                ("op-1", Operation(
-                    id="op-1", name="UI", parent_process_id="fp-1",
-                    evidence=_ev(), metadata={"semantic_marker": "presentation_interface"},
-                )),
-                ("op-2", Operation(
-                    id="op-2", name="Data", parent_process_id="fp-1",
-                    evidence=_ev(doc_id="doc-2"), metadata={"semantic_marker": "data_operation"},
-                )),
+                (
+                    "op-1",
+                    Operation(
+                        id="op-1",
+                        name="UI",
+                        parent_process_id="fp-1",
+                        evidence=_ev(),
+                        metadata={"semantic_marker": "presentation_interface"},
+                    ),
+                ),
+                (
+                    "op-2",
+                    Operation(
+                        id="op-2",
+                        name="Data",
+                        parent_process_id="fp-1",
+                        evidence=_ev(doc_id="doc-2"),
+                        metadata={"semantic_marker": "data_operation"},
+                    ),
+                ),
             ]
         )
         rule_pack = RulePack(
@@ -177,4 +238,3 @@ class TestFullAssessment:
         assert excluded[0].contribution == 0.0
         active = [i for i in result.assessed_items if not i.excluded]
         assert len(active) == 1
-

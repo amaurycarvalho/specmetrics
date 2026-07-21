@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Optional, Protocol
+from typing import Any, Literal, Optional, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -75,7 +75,10 @@ class SemanticEngineFactory:
 
     @classmethod
     def create(
-        cls, provider: str, config: dict | None = None
+        cls,
+        provider: str,
+        config: dict | None = None,
+        gateway: Any | None = None,
     ) -> SemanticExtractionEngine:
         engine_name = cls._ENGINE_MAP.get(provider)
         if engine_name is None:
@@ -91,4 +94,6 @@ class SemanticEngineFactory:
         resolved_config = dict(config or {})
         if "model" not in resolved_config:
             resolved_config["model"] = cls._MODEL_MAP.get(provider, "gpt-4")
+        if gateway is not None:
+            resolved_config["gateway"] = gateway
         return LiteLLMSemanticEngine(**resolved_config)

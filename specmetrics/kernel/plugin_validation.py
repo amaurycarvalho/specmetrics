@@ -25,7 +25,11 @@ def _parse_semver(version_str: str) -> tuple[int, int, int] | None:
     match = _SEMVER_RE.match(version_str)
     if not match:
         return None
-    return (int(match.group("major")), int(match.group("minor")), int(match.group("patch")))
+    return (
+        int(match.group("major")),
+        int(match.group("minor")),
+        int(match.group("patch")),
+    )
 
 
 _REQUIRED_TEXT_FIELDS = ["id", "api_version"]

@@ -8,7 +8,9 @@ from .models import (
 
 
 class MeasurementExplainer:
-    def build_explanations(self, result: FPAMeasurementResult) -> list[MeasurementExplanation]:
+    def build_explanations(
+        self, result: FPAMeasurementResult
+    ) -> list[MeasurementExplanation]:
         explanations: list[MeasurementExplanation] = []
 
         for fn in result.measured_functions:
@@ -26,8 +28,11 @@ class MeasurementExplainer:
         complexity_reason = self._build_complexity_reason(fn)
         evidence_chain = self._build_evidence_chain(fn)
 
-        rule_exceptions = [exp.rule_applied for exp in result.measured_functions
-                          if exp.id == fn.id and exp.rule_applied]
+        rule_exceptions = [
+            exp.rule_applied
+            for exp in result.measured_functions
+            if exp.id == fn.id and exp.rule_applied
+        ]
         rule_exceptions = [r for r in rule_exceptions if r is not None]
 
         return MeasurementExplanation(
@@ -83,5 +88,7 @@ class MeasurementExplainer:
                 f"measured function '{fn.id}'"
             )
         if not chain:
-            chain.append(f"CFM element '{fn.cfm_element_id}' → measured function '{fn.id}' (no evidence graph refs)")
+            chain.append(
+                f"CFM element '{fn.cfm_element_id}' → measured function '{fn.id}' (no evidence graph refs)"
+            )
         return chain

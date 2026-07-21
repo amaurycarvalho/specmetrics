@@ -50,7 +50,9 @@ class InvalidGraphDataError(EvidenceGraphError):
 class GraphNode(BaseModel):
     id: str
     node_type: Literal["extracted_element", "evidence"]
-    semantic_type: Optional[Literal["fact", "entity", "relationship", "operation"]] = None
+    semantic_type: Optional[Literal["fact", "entity", "relationship", "operation"]] = (
+        None
+    )
     document_id: str
     section_id: Optional[str] = None
     text: str
@@ -105,13 +107,15 @@ class GraphBackend(Protocol):
     def from_serializable(self, data: dict) -> None: ...
 
 
-def fingerprint_node(document_id: str, section_id: str | None, text: str, semantic_type: str | None) -> str:
+def fingerprint_node(
+    document_id: str, section_id: str | None, text: str, semantic_type: str | None
+) -> str:
     import hashlib
     import uuid
 
     raw = f"{document_id}|{section_id or ''}|{text}|{semantic_type or ''}"
     full_hash = hashlib.sha256(raw.encode("utf-8")).digest()
     b = bytearray(full_hash[:16])
-    b[6] = (b[6] & 0x0f) | 0x40
-    b[8] = (b[8] & 0x3f) | 0x80
+    b[6] = (b[6] & 0x0F) | 0x40
+    b[8] = (b[8] & 0x3F) | 0x80
     return str(uuid.UUID(bytes=bytes(b)))

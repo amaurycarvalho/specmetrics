@@ -114,7 +114,14 @@ class TestAdapterRegistry:
                 return ["use_case"]
 
             def scan(self, path: Path) -> list[Document]:
-                return [Document(id="first", path="first.md", document_type="use_case", content="first")]
+                return [
+                    Document(
+                        id="first",
+                        path="first.md",
+                        document_type="use_case",
+                        content="first",
+                    )
+                ]
 
             def supports(self, path: Path) -> bool:
                 return True
@@ -125,7 +132,14 @@ class TestAdapterRegistry:
                 return ["business_rule"]
 
             def scan(self, path: Path) -> list[Document]:
-                return [Document(id="second", path="second.md", document_type="business_rule", content="second")]
+                return [
+                    Document(
+                        id="second",
+                        path="second.md",
+                        document_type="business_rule",
+                        content="second",
+                    )
+                ]
 
             def supports(self, path: Path) -> bool:
                 return True
@@ -159,7 +173,11 @@ class TestAdapterRegistry:
                 return ["use_case"]
 
             def scan(self, path: Path) -> list[Document]:
-                return [Document(id="all", path="all.md", document_type="use_case", content="all")]
+                return [
+                    Document(
+                        id="all", path="all.md", document_type="use_case", content="all"
+                    )
+                ]
 
             def supports(self, path: Path) -> bool:
                 return True

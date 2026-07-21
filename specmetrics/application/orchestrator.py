@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
 import structlog
@@ -14,6 +15,7 @@ from specmetrics.kernel.diagnostics import StageStatus as KernelStageStatus
 from specmetrics.kernel.events import EventType
 from specmetrics.kernel.exceptions import PipelineError
 from specmetrics.kernel.handler_registry import HandlerRegistry
+from specmetrics.kernel.llm_gateway import LLMGateway, LLMGatewayConfig
 from specmetrics.kernel.pipeline_context import PipelineContext
 from specmetrics.kernel.pipeline_engine import CANONICAL_EVENT_ORDER, PipelineEngine
 from specmetrics.kernel.plugin_discovery import load_plugins
@@ -52,7 +54,9 @@ from .models import (
 _TRUNCATE_TEXT_LENGTH = 200
 
 
-def _truncate_text(text: str | None, max_len: int = _TRUNCATE_TEXT_LENGTH) -> str | None:
+def _truncate_text(
+    text: str | None, max_len: int = _TRUNCATE_TEXT_LENGTH
+) -> str | None:
     if text is None:
         return None
     return text[:max_len] if len(text) > max_len else text
@@ -85,6 +89,7 @@ def _truncate_entities(
     truncated.append({"_truncated": True, "_total_count": len(entities)})
     return truncated
 
+
 logger = structlog.get_logger(__name__)
 
 
@@ -104,7 +109,9 @@ def _serialize_stage_data(
         raw_entities = result.stage_entities.get(sd.name, [])
         if raw_entities:
             per_category = sd.name in csm_cfm_stages
-            entry["entities"] = _truncate_entities(raw_entities, max_entities_per_stage, per_category=per_category)
+            entry["entities"] = _truncate_entities(
+                raw_entities, max_entities_per_stage, per_category=per_category
+            )
         else:
             entry["entities"] = []
         stages[sd.name] = [entry]
@@ -125,7 +132,8 @@ def save_run_artifacts(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "sdd_framework": (
             result._framework_detected
-            if getattr(result, "_framework_detected", None) and isinstance(result._framework_detected, str)
+            if getattr(result, "_framework_detected", None)
+            and isinstance(result._framework_detected, str)
             else "unknown"
         ),
         "llm": (
@@ -137,7 +145,9 @@ def save_run_artifacts(
     }
     (runs_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
 
-    stages = _serialize_stage_data(result, max_entities_per_stage=max_entities_per_stage)
+    stages = _serialize_stage_data(
+        result, max_entities_per_stage=max_entities_per_stage
+    )
     for stage_name, entries in stages.items():
         (runs_dir / f"{stage_name}.json").write_text(json.dumps(entries, indent=2))
 
@@ -151,7 +161,7 @@ def read_run_artifacts(run_dir: Path) -> dict:
     if metadata_file.exists():
         artifacts["metadata"] = json.loads(metadata_file.read_text())
     for stage_file in sorted(run_dir.glob("*.json")):
-        if stage_file.name == "metadata.json":
+        if stage_file.name in ("metadata.json", "metrics.json"):
             continue
         artifacts[stage_file.stem] = json.loads(stage_file.read_text())
     return artifacts
@@ -175,9 +185,15 @@ _STAGE_NAME_TO_HANDLER_NAMES: dict[str, list[str]] = {
     "csm": ["canonical_spec_model"],
     "cfm": ["canonical_model"],
     "rule": ["Rule Pack Engine"],
-    "measure": ["FPA Measurement", "SFP Measurement", "SNAP Measurement",
-                 "Story Points Measurement", "Token Points Measurement",
-                 "Cognitive Points Measurement", "BCP Measurement"],
+    "measure": [
+        "FPA Measurement",
+        "SFP Measurement",
+        "SNAP Measurement",
+        "Story Points Measurement",
+        "Token Points Measurement",
+        "Cognitive Points Measurement",
+        "BCP Measurement",
+    ],
     "export": [],
 }
 
@@ -230,7 +246,9 @@ class PipelineOrchestrator:
             registry=self._registry,
             validator=self._plugin_validator,
         )
-        self._registry.install_handlers(self._handler_registry, metrics_filter=metrics_filter)
+        self._registry.install_handlers(
+            self._handler_registry, metrics_filter=metrics_filter
+        )
         if self._config_system is not None:
             for desc in self._registry.list_plugins():
                 factory = desc.metadata.handler_factory
@@ -242,7 +260,8 @@ class PipelineOrchestrator:
                             schema = schema_method()
                             if schema is not None:
                                 self._config_system.register_plugin_schema(
-                                    desc.metadata.id, schema,
+                                    desc.metadata.id,
+                                    schema,
                                 )
                     except Exception:
                         pass
@@ -297,11 +316,14 @@ class PipelineOrchestrator:
             except Exception:
                 logger.warning("config_load_failed")
 
+        llm_gateway = LLMGateway(LLMGatewayConfig(rpm_limit=request.llm_rpm_limit))
+
         context = PipelineContext(
             repository=request.project_path,
             metadata={
                 "adapter_registry": adapter_registry,
                 "config": config_provider,
+                "llm_gateway": llm_gateway,
             },
         )
 
@@ -318,25 +340,40 @@ class PipelineOrchestrator:
 
         elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
 
-        stages_executed = self._build_stage_results(result_ctx, event_order, request.metrics_filter)
+        stages_executed = self._build_stage_results(
+            result_ctx, event_order, request.metrics_filter
+        )
         measurement = self._extract_measurement(result_ctx)
         metric_results = self._build_metric_results(result_ctx, request.metrics_filter)
-        stage_details = self._build_stage_details(result_ctx, event_order, request.metrics_filter)
         output_errors = self._build_output_errors(result_ctx)
         llm_provider, llm_model = self._get_llm_info()
         export_path = self._handle_export(request, result_ctx)
-        stage_entities = self._build_stage_entities(result_ctx, event_order, export_path)
+        stage_entities = self._build_stage_entities(
+            result_ctx, event_order, export_path
+        )
+        stage_details = self._build_stage_details(
+            result_ctx, event_order, request.metrics_filter, export_path
+        )
 
         max_entities_per_stage = 5000
         if config_provider is not None:
             try:
-                max_entities_per_stage = config_provider.get("run_artifacts.max_entities_per_stage", 5000)
+                max_entities_per_stage = config_provider.get(
+                    "run_artifacts.max_entities_per_stage", 5000
+                )
             except Exception:
                 pass
 
         has_failures = any(
             s.status == StageExecutionStatus.FAILED for s in stages_executed
         )
+
+        measurement_result_raw: dict[str, Any] = {}
+        mr = getattr(result_ctx, "measurement_result", None)
+        if isinstance(mr, dict):
+            measurement_result_raw = mr
+
+        llm_call_stats = llm_gateway.get_summary_stats()
 
         return PipelineResult(
             status=PipelineStatus.FAILED if has_failures else PipelineStatus.SUCCESS,
@@ -355,6 +392,8 @@ class PipelineOrchestrator:
             llm_provider=llm_provider,
             llm_model=llm_model,
             _max_entities_per_stage=max_entities_per_stage,
+            measurement_result_raw=measurement_result_raw,
+            llm_call_stats=llm_call_stats,
         )
 
     def _build_stage_entities(
@@ -376,58 +415,105 @@ class PipelineOrchestrator:
             if stage_name == "discover":
                 adapter_data = getattr(ctx, "adapter_result", None) or {}
                 for doc in adapter_data.get("documents", []):
-                    stage_entities.append({
-                        "id": str(getattr(doc, "id", "")),
-                        "document_type": str(getattr(doc, "document_type", "")),
-                        "path": str(getattr(doc, "path", "")),
-                    })
+                    stage_entities.append(
+                        {
+                            "id": str(getattr(doc, "id", "")),
+                            "document_type": str(getattr(doc, "document_type", "")),
+                            "path": str(getattr(doc, "path", "")),
+                        }
+                    )
 
             elif stage_name == "extract":
                 extract_data = getattr(ctx, "extraction_result", None) or {}
                 results_dict = extract_data.get("results", {})
                 for provider_id, provider_result in results_dict.items():
                     for elem in provider_result.get("elements", []):
-                        evidence = getattr(elem, "evidence", None)
-                        stage_entities.append({
-                            "id": str(getattr(elem, "id", "")),
-                            "type": str(getattr(elem, "type", "")),
-                            "content": _truncate_text(getattr(elem, "content", None)),
-                            "confidence": float(getattr(elem, "confidence", 0.0)),
-                            "evidence": {
-                                "document_id": str(getattr(evidence, "document_id", "")),
-                                "section_id": str(getattr(evidence, "section_id", None)),
-                                "text": _truncate_text(getattr(evidence, "text", None)),
-                            } if evidence else {},
-                        })
+                        elem_id = (
+                            str(elem.get("id", ""))
+                            if isinstance(elem, dict)
+                            else str(getattr(elem, "id", ""))
+                        )
+                        elem_type = (
+                            str(elem.get("type", ""))
+                            if isinstance(elem, dict)
+                            else str(getattr(elem, "type", ""))
+                        )
+                        elem_content = (
+                            elem.get("content")
+                            if isinstance(elem, dict)
+                            else getattr(elem, "content", None)
+                        )
+                        if not elem_id and not elem_type and not elem_content:
+                            continue
+                        evidence = (
+                            elem.get("evidence")
+                            if isinstance(elem, dict)
+                            else getattr(elem, "evidence", None)
+                        )
+                        stage_entities.append(
+                            {
+                                "id": elem_id,
+                                "type": elem_type,
+                                "content": _truncate_text(elem_content),
+                                "confidence": float(
+                                    elem.get("confidence", 0.0)
+                                    if isinstance(elem, dict)
+                                    else getattr(elem, "confidence", 0.0)
+                                ),
+                                "evidence": {
+                                    "document_id": str(evidence.get("document_id", ""))
+                                    if isinstance(evidence, dict)
+                                    else str(getattr(evidence, "document_id", "")),
+                                    "section_id": str(evidence.get("section_id", None))
+                                    if isinstance(evidence, dict)
+                                    else str(getattr(evidence, "section_id", None)),
+                                    "text": _truncate_text(
+                                        evidence.get("text")
+                                        if isinstance(evidence, dict)
+                                        else getattr(evidence, "text", None)
+                                    ),
+                                }
+                                if evidence
+                                else {},
+                            }
+                        )
                 docs_proc = extract_data.get("documents_processed", 0)
                 docs_skip = extract_data.get("documents_skipped", 0)
-                stage_entities.append({
-                    "type": "documents_processed",
-                    "count": docs_proc,
-                })
-                stage_entities.append({
-                    "type": "documents_skipped",
-                    "count": docs_skip,
-                })
+                stage_entities.append(
+                    {
+                        "type": "documents_processed",
+                        "count": docs_proc,
+                    }
+                )
+                stage_entities.append(
+                    {
+                        "type": "documents_skipped",
+                        "count": docs_skip,
+                    }
+                )
 
             elif stage_name == "graph":
                 graph_data = getattr(ctx, "evidence_graph", None) or {}
                 if isinstance(graph_data, dict):
                     for node in graph_data.get("nodes", []):
                         if isinstance(node, dict):
-                            stage_entities.append({
-                                "id": node.get("id", ""),
-                                "node_type": node.get("node_type", ""),
-                                "semantic_type": node.get("semantic_type"),
-                                "document_id": node.get("document_id"),
-                                "section_id": node.get("section_id"),
-                                "text": _truncate_text(node.get("text")),
-                            })
-                    stage_entities.append({
-                        "node_type": "graph_summary",
-                        "edge_count": graph_data.get("edge_count", 0),
-                        "run_id": graph_data.get("run_id", ""),
-                    })
+                            stage_entities.append(
+                                {
+                                    "id": node.get("id", ""),
+                                    "node_type": node.get("node_type", ""),
+                                    "semantic_type": node.get("semantic_type"),
+                                    "document_id": node.get("document_id"),
+                                    "section_id": node.get("section_id"),
+                                    "text": _truncate_text(node.get("text")),
+                                }
+                            )
+                    stage_entities.append(
+                        {
+                            "node_type": "graph_summary",
+                            "edge_count": graph_data.get("edge_count", 0),
+                            "run_id": graph_data.get("run_id", ""),
+                        }
+                    )
 
             elif stage_name == "csm":
                 csm = getattr(ctx, "canonical_spec_model", None)
@@ -448,7 +534,9 @@ class PipelineOrchestrator:
                             dumped = element.model_dump(mode="json")
                             dumped["type"] = cat_name
                             if "description" in dumped:
-                                dumped["description"] = _truncate_text(dumped["description"])
+                                dumped["description"] = _truncate_text(
+                                    dumped["description"]
+                                )
                             stage_entities.append(dumped)
 
             elif stage_name == "cfm":
@@ -477,34 +565,50 @@ class PipelineOrchestrator:
                 if isinstance(cfm, CanonicalFunctionalModel):
                     for rule_pack in getattr(cfm.metadata, "applied_rules", []):
                         if isinstance(rule_pack, dict):
-                            stage_entities.append({
-                                "type": "applied_rule_pack",
-                                "rule_pack_name": rule_pack.get("name", ""),
-                                "description": rule_pack.get("description", ""),
-                                "version": rule_pack.get("version", ""),
-                            })
-                    stage_entities.append({
-                        "type": "modification_summary",
-                        "entities_modified": sum(cfm.metadata.element_counts.values()) if hasattr(cfm.metadata, "element_counts") else 0,
-                        "vaf_applied": getattr(cfm.metadata, "vaf", None),
-                    })
+                            stage_entities.append(
+                                {
+                                    "type": "applied_rule_pack",
+                                    "rule_pack_id": rule_pack.get("rule_pack_id", ""),
+                                    "rule_id": rule_pack.get("rule_id", ""),
+                                    "rule_type": rule_pack.get("rule_type", ""),
+                                    "methodology": rule_pack.get("methodology", ""),
+                                    "description": rule_pack.get("description", ""),
+                                }
+                            )
+                    stage_entities.append(
+                        {
+                            "type": "modification_summary",
+                            "entities_modified": sum(
+                                cfm.metadata.element_counts.values()
+                            )
+                            if hasattr(cfm.metadata, "element_counts")
+                            else 0,
+                            "vaf_applied": getattr(cfm.metadata, "vaf", None),
+                        }
+                    )
 
             elif stage_name == "measure":
                 mr = getattr(ctx, "measurement_result", None) or {}
                 if isinstance(mr, dict):
                     metric_ids = list(METRIC_NAME_MAP.values())
                     key_map = {
-                        "function_points": ("fpa_total_function_points", "fpa_breakdown"),
-                        "simplified_function_points": ("sfp_total_components", None),
+                        "function_points": (
+                            "fpa_total_function_points",
+                            "fpa_breakdown",
+                        ),
+                        "simplified_function_points": ("sfp_total_sfp", None),
                         "business_complexity_points": ("bcp_measured_items", None),
                         "token_points": ("token_total_score", None),
-                        "cognitive_points": ("cognitive_total_cognitive_points", None),
-                        "story_points": ("storypoints_estimated_items", None),
-                        "snap": ("snap_total_items", None),
-                        "tshirt": ("tshirt", None),
+                        "cognitive_points": ("cognitive_raw_score", None),
+                        "story_points": ("storypoints_total_story_points", None),
+                        "snap": ("snap_total_snap", None),
+                        "tshirt": ("tshirt", "tshirt_breakdown"),
                     }
+                    metric_name_to_cli = {v: k for k, v in METRIC_NAME_MAP.items()}
                     for metric_name in metric_ids:
-                        total_key, breakdown_key = key_map.get(metric_name, (None, None))
+                        total_key, breakdown_key = key_map.get(
+                            metric_name, (None, None)
+                        )
                         total = mr.get(total_key, 0) if total_key else 0
                         entry: dict = {
                             "metric": metric_name,
@@ -514,6 +618,15 @@ class PipelineOrchestrator:
                         }
                         if breakdown_key and breakdown_key in mr:
                             entry["breakdown"] = mr[breakdown_key]
+                        cli_id = metric_name_to_cli.get(metric_name)
+                        if cli_id:
+                            warning_key = f"{cli_id}_warnings"
+                            raw_warnings = mr.get(warning_key, [])
+                            if isinstance(raw_warnings, list) and raw_warnings:
+                                entry["warnings"] = [
+                                    w.get("message", str(w)) if isinstance(w, dict) else str(w)
+                                    for w in raw_warnings
+                                ]
                         stage_entities.append(entry)
 
             elif stage_name == "export":
@@ -522,10 +635,12 @@ class PipelineOrchestrator:
                         rel = export_path.relative_to(ctx.repository)
                     except (ValueError, AttributeError):
                         rel = export_path
-                    stage_entities.append({
-                        "format": "json",
-                        "path": str(rel),
-                    })
+                    stage_entities.append(
+                        {
+                            "format": "json",
+                            "path": str(rel),
+                        }
+                    )
 
             entities[stage_name] = stage_entities
 
@@ -610,7 +725,9 @@ class PipelineOrchestrator:
                 if isinstance(cfm, CanonicalFunctionalModel):
                     entities_found = sum(cfm.metadata.element_counts.values())
             elif stage_name == "measure":
-                entities_found = len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
+                entities_found = (
+                    len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
+                )
 
             results.append(
                 StageResult(
@@ -622,9 +739,7 @@ class PipelineOrchestrator:
             )
         return results
 
-    def _extract_measurement(
-        self, ctx: PipelineContext
-    ) -> MeasurementResult | None:
+    def _extract_measurement(self, ctx: PipelineContext) -> MeasurementResult | None:
         if ctx.measurement_result is None:
             return None
 
@@ -654,13 +769,14 @@ class PipelineOrchestrator:
         for mid in metric_ids:
             json_name = METRIC_NAME_MAP.get(mid, mid)
             key_map = {
-                "fpa": "fpa_total_function_points",
-                "sfp": "sfp_total_components",
                 "bcp": "bcp_measured_items",
-                "token_points": "token_total_score",
-                "cognitive_points": "cognitive_total_cognitive_points",
-                "storypoints": "storypoints_estimated_items",
-                "snap": "snap_total_items",
+                "fpa": "fpa_total_function_points",
+                "sfp": "sfp_total_sfp",
+                "snap": "snap_total_snap",
+                "sp": "storypoints_total_story_points",
+                "tshirt": "tshirt",
+                "tp": "token_total_score",
+                "cp": "cognitive_raw_score",
             }
             total_key = key_map.get(mid)
             total = mr.get(total_key, 0) if total_key else 0
@@ -681,6 +797,7 @@ class PipelineOrchestrator:
         ctx: PipelineContext,
         event_order: list[EventType],
         metrics_filter: list[str] | None = None,
+        export_path: Path | None = None,
     ) -> list[StageOutputItem]:
         if not ctx.diagnostics:
             return []
@@ -701,7 +818,9 @@ class PipelineOrchestrator:
                     if timing is not None:
                         break
 
-            duration_ms = timing.duration_ms if timing and timing.duration_ms is not None else 0
+            duration_ms = (
+                timing.duration_ms if timing and timing.duration_ms is not None else 0
+            )
 
             count = 0
             count_type = "items"
@@ -731,8 +850,13 @@ class PipelineOrchestrator:
             elif stage_name == "measure":
                 mr = getattr(ctx, "measurement_result", None) or {}
                 if isinstance(mr, dict):
-                    count = len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
+                    count = (
+                        len(metrics_filter) if metrics_filter else len(METRIC_NAME_MAP)
+                    )
                 count_type = "metrics"
+            elif stage_name == "export":
+                count = 1 if export_path else 0
+                count_type = "files"
 
             details.append(
                 StageOutputItem(
@@ -745,9 +869,7 @@ class PipelineOrchestrator:
 
         return details
 
-    def _build_output_errors(
-        self, ctx: PipelineContext
-    ) -> list[ErrorOutputItem]:
+    def _build_output_errors(self, ctx: PipelineContext) -> list[ErrorOutputItem]:
         if not ctx.diagnostics or not ctx.diagnostics.errors:
             return []
         return [
@@ -844,16 +966,24 @@ class PipelineOrchestrator:
         )
         export_dir.mkdir(parents=True, exist_ok=True)
 
-        if request.output_format in (OutputFormat.JSON, OutputFormat.CSV, OutputFormat.XML):
+        if request.output_format in (
+            OutputFormat.JSON,
+            OutputFormat.CSV,
+            OutputFormat.XML,
+        ):
             return self._handle_structured_export(request, ctx, export_dir)
 
         export_file = export_dir / "specmetrics-output.json"
 
         metric_results = self._build_metric_results(ctx, request.metrics_filter)
-        stage_details = self._build_stage_details(ctx, list(CANONICAL_EVENT_ORDER), request.metrics_filter)
+        stage_details = self._build_stage_details(
+            ctx, list(CANONICAL_EVENT_ORDER), request.metrics_filter, export_file
+        )
         output_errors = self._build_output_errors(ctx)
 
-        self._write_json_output(request, ctx, export_dir, metric_results, stage_details, output_errors)
+        self._write_json_output(
+            request, ctx, export_dir, metric_results, stage_details, output_errors
+        )
         logger.info("export_written", path=str(export_file))
         return export_file
 
@@ -872,7 +1002,9 @@ class PipelineOrchestrator:
                 if isinstance(cls, type) and issubclass(cls, ExporterPlugin):
                     exporters.append(cls())
             except Exception as exc:
-                logger.warning("exporter_load_failed", entry_point=ep.name, error=str(exc))
+                logger.warning(
+                    "exporter_load_failed", entry_point=ep.name, error=str(exc)
+                )
 
         if not exporters:
             logger.warning("No exporter plugins available for structured export")

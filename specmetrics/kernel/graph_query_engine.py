@@ -25,9 +25,13 @@ class GraphQueryEngine:
 
     def query_by_evidence(self, text_pattern: str) -> list[dict]:
         all_nodes = self._backend.query_nodes({})
-        return [n for n in all_nodes if text_pattern.lower() in n.get("text", "").lower()]
+        return [
+            n for n in all_nodes if text_pattern.lower() in n.get("text", "").lower()
+        ]
 
-    def traverse_provenance(self, node_id: str, max_depth: int = 10) -> list[list[dict]]:
+    def traverse_provenance(
+        self, node_id: str, max_depth: int = 10
+    ) -> list[list[dict]]:
         return self._backend.traverse(node_id, direction="forward", max_depth=max_depth)
 
     def find_references(self, node_id: str) -> dict[str, list[dict]]:

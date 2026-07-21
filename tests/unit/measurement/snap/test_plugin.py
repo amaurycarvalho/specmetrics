@@ -5,7 +5,10 @@ from specmetrics.kernel.cfm.model import (
     CanonicalFunctionalModel,
     BuildMetadata,
 )
-from specmetrics.plugins.measurement.snap.plugin import SNAPMeasurementPlugin, create_snap_measurement_metadata
+from specmetrics.plugins.measurement.snap.plugin import (
+    SNAPMeasurementPlugin,
+    create_snap_measurement_metadata,
+)
 from specmetrics.plugins.measurement.snap.models import (
     SNAPMeasurementResult,
     AssessedItem,
@@ -42,7 +45,9 @@ class TestExplanationCompleteness:
                 total_item_count=1,
                 total_active_count=1,
                 total_snap=4.0,
-                by_category={"presentation": CategoryBreakdown(item_count=1, total_snap=4.0)},
+                by_category={
+                    "presentation": CategoryBreakdown(item_count=1, total_snap=4.0)
+                },
             ),
             categories=[
                 CategoryAssessment(

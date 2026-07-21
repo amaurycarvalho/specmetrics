@@ -26,7 +26,9 @@ class TestRulePackValidator:
         pack = RulePack(
             id="test-pack",
             rules=[
-                Rule(id="r1", type="exclusion", config=RuleConfig(function_types=["EQ"])),
+                Rule(
+                    id="r1", type="exclusion", config=RuleConfig(function_types=["EQ"])
+                ),
             ],
         )
         report = self.validator.validate_pack(pack, _make_load_result())
@@ -112,6 +114,7 @@ class TestRulePackValidator:
 
     def test_unknown_rule_type_rejected_by_pydantic(self) -> None:
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             Rule(id="r1", type="unknown_type", config=RuleConfig())
 
@@ -119,8 +122,12 @@ class TestRulePackValidator:
         pack = RulePack(
             id="test-pack",
             rules=[
-                Rule(id="dup", type="exclusion", config=RuleConfig(function_types=["EQ"])),
-                Rule(id="dup", type="exclusion", config=RuleConfig(function_types=["EO"])),
+                Rule(
+                    id="dup", type="exclusion", config=RuleConfig(function_types=["EQ"])
+                ),
+                Rule(
+                    id="dup", type="exclusion", config=RuleConfig(function_types=["EO"])
+                ),
             ],
         )
         report = self.validator.validate_pack(pack, _make_load_result())

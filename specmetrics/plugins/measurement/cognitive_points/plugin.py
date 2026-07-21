@@ -57,9 +57,22 @@ class CognitivePointsHandler:
         )
 
         spec_bloom = dict(result.specification_review_effort.bloom_breakdown)
-        func_bloom = dict(
-            result.functional_validation_effort.bloom_breakdown
+        func_bloom = dict(result.functional_validation_effort.bloom_breakdown)
+
+        all_cognitive_contributions = (
+            result.specification_review_effort.contributions
+            + result.functional_validation_effort.contributions
         )
+        cognitive_entities = [
+            c.model_dump(mode="json") for c in all_cognitive_contributions
+        ]
+
+        cognitive_content_tokens: dict[str, int] = {}
+        for c in all_cognitive_contributions:
+            etype = c.element_type
+            cognitive_content_tokens[etype] = (
+                cognitive_content_tokens.get(etype, 0) + c.content_token_count
+            )
 
         payload: dict[str, Any] = {
             "cognitive_total_cognitive_points": result.total_cognitive_points,
@@ -77,6 +90,8 @@ class CognitivePointsHandler:
                 "threshold": result.fibonacci_normalization.threshold_applied,
                 "output": result.fibonacci_normalization.output_value,
             },
+            "cognitive_content_multiplier": calibration.content_multiplier,
+            "cognitive_content_tokens": cognitive_content_tokens,
             "cognitive_element_counts": {
                 "csm": result.measurement_metadata.csm_element_count,
                 "cfm": result.measurement_metadata.cfm_element_count,
@@ -90,6 +105,7 @@ class CognitivePointsHandler:
             "cognitive_warnings": [
                 w.model_dump() for w in result.measurement_metadata.warnings
             ],
+            "cognitive_entities": cognitive_entities,
         }
 
         cognitive_event = PipelineEvent(

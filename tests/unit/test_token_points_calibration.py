@@ -11,7 +11,9 @@ from specmetrics.plugins.calibration.loader import (
 )
 from specmetrics.plugins.calibration.models import CalibrationProfile
 from specmetrics.plugins.calibration.validator import validate_calibration_profile
-from specmetrics.plugins.measurement.token_points.calibration import get_default_calibration
+from specmetrics.plugins.measurement.token_points.calibration import (
+    get_default_calibration,
+)
 
 
 class TestDefaultCalibration:
@@ -25,6 +27,8 @@ class TestDefaultCalibration:
         assert profile.specification_cost.open_questions == 1.0
         assert profile.specification_cost.acceptance_criteria == 1.0
         assert profile.specification_cost.glossary_terms == 0.5
+        assert profile.specification_cost.references == 1.0
+        assert profile.content_multiplier == 0.1
 
         assert profile.code_generation_cost.functional_processes == 5.0
         assert profile.code_generation_cost.business_rules == 3.0
@@ -33,9 +37,15 @@ class TestDefaultCalibration:
         assert profile.code_generation_cost.relationships == 1.0
         assert profile.code_generation_cost.actors == 1.0
 
-    def test_default_activities_empty(self):
+    def test_default_activities(self):
         profile = get_default_calibration()
-        assert profile.specification_cost.activities == {}
+        assert profile.specification_cost.activities == {
+            "exploration": 2.0,
+            "clarification": 3.0,
+            "refinement": 3.0,
+            "review": 1.5,
+            "validation": 2.0,
+        }
 
 
 class TestCalibrationLoading:
@@ -71,9 +81,12 @@ class TestCalibrationLoading:
 
     def test_load_file(self):
         import yaml
+
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp, "profile.yml")
-            path.write_text(yaml.dump({"version": "1.0", "specification_cost": {"decisions": 2.0}}))
+            path.write_text(
+                yaml.dump({"version": "1.0", "specification_cost": {"decisions": 2.0}})
+            )
             data = load_calibration_file(str(path))
             assert data is not None
             assert data["version"] == "1.0"
@@ -85,8 +98,12 @@ class TestCalibrationLoading:
 
     def test_discover_and_load_multiple_files(self):
         with tempfile.TemporaryDirectory() as tmp:
-            Path(tmp, "base.yml").write_text("version: '1.0'\nspecification_cost:\n  decisions: 2.0\n")
-            Path(tmp, "override.yml").write_text("specification_cost:\n  assumptions: 3.0\n")
+            Path(tmp, "base.yml").write_text(
+                "version: '1.0'\nspecification_cost:\n  decisions: 2.0\n"
+            )
+            Path(tmp, "override.yml").write_text(
+                "specification_cost:\n  assumptions: 3.0\n"
+            )
             profile = discover_and_load_calibration(tmp, CalibrationProfile())
             assert profile is not None
             assert profile.specification_cost.decisions == 2.0

@@ -1,4 +1,3 @@
-
 from specmetrics.kernel import (
     EventType,
     HandlerRegistry,
@@ -15,22 +14,34 @@ class TestPipelineIntegration:
 
         class StageA:
             @property
-            def handled_event_type(self) -> EventType: return EventType.REPOSITORY_LOADED
+            def handled_event_type(self) -> EventType:
+                return EventType.REPOSITORY_LOADED
+
             @property
-            def handler_id(self) -> str: return "stage_a"
+            def handler_id(self) -> str:
+                return "stage_a"
+
             @property
-            def stage_name(self) -> str: return "StageA"
+            def stage_name(self) -> str:
+                return "StageA"
+
             def handle(self, event):
                 order.append("A")
                 return event.context
 
         class StageB:
             @property
-            def handled_event_type(self) -> EventType: return EventType.DOCUMENTS_DISCOVERED
+            def handled_event_type(self) -> EventType:
+                return EventType.DOCUMENTS_DISCOVERED
+
             @property
-            def handler_id(self) -> str: return "stage_b"
+            def handler_id(self) -> str:
+                return "stage_b"
+
             @property
-            def stage_name(self) -> str: return "StageB"
+            def stage_name(self) -> str:
+                return "StageB"
+
             def handle(self, event):
                 order.append("B")
                 return event.context
@@ -41,7 +52,9 @@ class TestPipelineIntegration:
         ctx = engine.run(PipelineContext())
 
         assert order == ["A", "B"]
-        assert any(e.event_type == EventType.PIPELINE_COMPLETED for e in ctx.published_events)
+        assert any(
+            e.event_type == EventType.PIPELINE_COMPLETED for e in ctx.published_events
+        )
 
     def test_pipeline_with_failing_stage_halts_before_downstream(self) -> None:
         registry = HandlerRegistry()
@@ -49,21 +62,33 @@ class TestPipelineIntegration:
 
         class FailingStage:
             @property
-            def handled_event_type(self) -> EventType: return EventType.REPOSITORY_LOADED
+            def handled_event_type(self) -> EventType:
+                return EventType.REPOSITORY_LOADED
+
             @property
-            def handler_id(self) -> str: return "failing"
+            def handler_id(self) -> str:
+                return "failing"
+
             @property
-            def stage_name(self) -> str: return "FailingStage"
+            def stage_name(self) -> str:
+                return "FailingStage"
+
             def handle(self, event):
                 raise StageError("FailingStage", "intentional failure")
 
         class DownstreamStage:
             @property
-            def handled_event_type(self) -> EventType: return EventType.DOCUMENTS_DISCOVERED
+            def handled_event_type(self) -> EventType:
+                return EventType.DOCUMENTS_DISCOVERED
+
             @property
-            def handler_id(self) -> str: return "downstream"
+            def handler_id(self) -> str:
+                return "downstream"
+
             @property
-            def stage_name(self) -> str: return "Downstream"
+            def stage_name(self) -> str:
+                return "Downstream"
+
             def handle(self, event):
                 nonlocal downstream_executed
                 downstream_executed = True
@@ -75,8 +100,12 @@ class TestPipelineIntegration:
         ctx = engine.run(PipelineContext())
 
         assert not downstream_executed
-        assert any(e.event_type == EventType.PIPELINE_FAILED for e in ctx.published_events)
-        failed = [e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED][0]
+        assert any(
+            e.event_type == EventType.PIPELINE_FAILED for e in ctx.published_events
+        )
+        failed = [
+            e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED
+        ][0]
         assert "FailingStage" in failed.payload["failed_stage"]
 
     def test_pipeline_context_contains_complete_event_log(self) -> None:
@@ -87,19 +116,29 @@ class TestPipelineIntegration:
                 self._et = et
                 self._hid = hid
                 self._sn = sn
+
             @property
-            def handled_event_type(self): return self._et
+            def handled_event_type(self):
+                return self._et
+
             @property
-            def handler_id(self): return self._hid
+            def handler_id(self):
+                return self._hid
+
             @property
-            def stage_name(self): return self._sn
-            def handle(self, event): return event.context
+            def stage_name(self):
+                return self._sn
+
+            def handle(self, event):
+                return event.context
 
         registry.register(SimpleHandler(EventType.REPOSITORY_LOADED, "a", "S1"))
         engine = PipelineEngine(registry)
         ctx = engine.run(PipelineContext())
 
-        published_types = [e.event_type for e in ctx.published_events if hasattr(e, "event_type")]
+        published_types = [
+            e.event_type for e in ctx.published_events if hasattr(e, "event_type")
+        ]
         assert EventType.REPOSITORY_LOADED in published_types
         assert EventType.PIPELINE_COMPLETED in published_types
         assert ctx.diagnostics is not None
@@ -113,13 +152,21 @@ class TestPipelineIntegration:
                 self._et = et
                 self._hid = hid
                 self._sn = sn
+
             @property
-            def handled_event_type(self): return self._et
+            def handled_event_type(self):
+                return self._et
+
             @property
-            def handler_id(self): return self._hid
+            def handler_id(self):
+                return self._hid
+
             @property
-            def stage_name(self): return self._sn
-            def handle(self, event): return event.context
+            def stage_name(self):
+                return self._sn
+
+            def handle(self, event):
+                return event.context
 
         registry.register(SimpleHandler(EventType.REPOSITORY_LOADED, "a", "S1"))
         engine = PipelineEngine(registry)
@@ -127,6 +174,10 @@ class TestPipelineIntegration:
         result1 = engine.run(PipelineContext())
         result2 = engine.run(PipelineContext())
 
-        types1 = [e.event_type for e in result1.published_events if hasattr(e, "event_type")]
-        types2 = [e.event_type for e in result2.published_events if hasattr(e, "event_type")]
+        types1 = [
+            e.event_type for e in result1.published_events if hasattr(e, "event_type")
+        ]
+        types2 = [
+            e.event_type for e in result2.published_events if hasattr(e, "event_type")
+        ]
         assert types1 == types2

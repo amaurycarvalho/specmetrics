@@ -156,7 +156,9 @@ class ExportOrchestrator:
             pipeline_duration_ms=cfm.metadata.build_duration_ms,
         )
 
-        selected = [e for e in self.exporters if formats is None or e.format_id() in formats]
+        selected = [
+            e for e in self.exporters if formats is None or e.format_id() in formats
+        ]
         results: list[dict] = []
 
         for exporter in selected:
@@ -165,20 +167,37 @@ class ExportOrchestrator:
                 if len(measurements) > BATCH_SIZE:
                     paths: list[str] = []
                     for batch_idx, batch in enumerate(_batched(measurements)):
-                        path = output_dir / f"measurements_{batch_idx}{exporter.file_extension()}"
+                        path = (
+                            output_dir
+                            / f"measurements_{batch_idx}{exporter.file_extension()}"
+                        )
                         with open(path, "w", encoding="utf-8") as f:
                             exporter.export(batch, evidence_refs, metadata, f)
                         paths.append(str(path))
-                    results.append({"format": fmt_id, "paths": paths, "status": "completed"})
-                    logger.info("Export completed (batched)", format=fmt_id, batches=len(paths), count=len(measurements))
+                    results.append(
+                        {"format": fmt_id, "paths": paths, "status": "completed"}
+                    )
+                    logger.info(
+                        "Export completed (batched)",
+                        format=fmt_id,
+                        batches=len(paths),
+                        count=len(measurements),
+                    )
                 else:
                     path = output_dir / f"measurements{exporter.file_extension()}"
                     if path.exists():
                         logger.warning("Overwriting existing file", path=str(path))
                     with open(path, "w", encoding="utf-8") as f:
                         exporter.export(measurements, evidence_refs, metadata, f)
-                    results.append({"format": fmt_id, "path": str(path), "status": "completed"})
-                    logger.info("Export completed", format=fmt_id, path=str(path), count=len(measurements))
+                    results.append(
+                        {"format": fmt_id, "path": str(path), "status": "completed"}
+                    )
+                    logger.info(
+                        "Export completed",
+                        format=fmt_id,
+                        path=str(path),
+                        count=len(measurements),
+                    )
             except ExportError as e:
                 logger.warning("Export failed for format", format=fmt_id, error=str(e))
                 results.append({"format": fmt_id, "status": "failed", "error": str(e)})
@@ -212,6 +231,7 @@ class ExportOrchestrator:
     def _get_version(self) -> str:
         try:
             from importlib.metadata import version as _v
+
             return _v("specmetrics")
         except Exception:
             return "0.1.0"

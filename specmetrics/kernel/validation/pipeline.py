@@ -30,8 +30,12 @@ class ValidationPipeline:
     def __init__(self) -> None:
         self._rules: list[ValidationRule] = list(BUILTIN_STRUCTURAL_RULES)
         self._rule_fns: dict[str, Callable] = dict(STRUCTURAL_RULE_FN)
-        self._constitutional_rules: list[ValidationRule] = list(BUILTIN_CONSTITUTIONAL_RULES)
-        self._constitutional_rule_fns: dict[str, Callable] = dict(CONSTITUTIONAL_RULE_FN)
+        self._constitutional_rules: list[ValidationRule] = list(
+            BUILTIN_CONSTITUTIONAL_RULES
+        )
+        self._constitutional_rule_fns: dict[str, Callable] = dict(
+            CONSTITUTIONAL_RULE_FN
+        )
 
     def register_rule(
         self,

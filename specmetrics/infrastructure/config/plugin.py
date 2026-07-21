@@ -34,5 +34,7 @@ class PluginConfigCollector:
     ) -> BaseModel:
         decl = self._declarations.get(plugin_id)
         if decl is None:
-            raise KeyError(f"No configuration schema registered for plugin: {plugin_id}")
+            raise KeyError(
+                f"No configuration schema registered for plugin: {plugin_id}"
+            )
         return decl.schema_model.model_validate(config_data)

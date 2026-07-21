@@ -33,7 +33,9 @@ def _make_explanation(
     )
 
 
-def _make_metric(name: str, value: int, elements: list | None = None) -> MetricExplanation:
+def _make_metric(
+    name: str, value: int, elements: list | None = None
+) -> MetricExplanation:
     return MetricExplanation(
         metric_name=name,
         metric_value=value,
@@ -43,10 +45,21 @@ def _make_metric(name: str, value: int, elements: list | None = None) -> MetricE
     )
 
 
-def _el(eid: str, etype: str, label: str, complexity: str | None = "Low", weight: int | None = 3) -> ElementContribution:
+def _el(
+    eid: str,
+    etype: str,
+    label: str,
+    complexity: str | None = "Low",
+    weight: int | None = 3,
+) -> ElementContribution:
     return ElementContribution(
-        element_id=eid, element_type=etype, element_label=label,
-        complexity=complexity, weight=weight, evidence=[], applied_rules=[],
+        element_id=eid,
+        element_type=etype,
+        element_label=label,
+        complexity=complexity,
+        weight=weight,
+        evidence=[],
+        applied_rules=[],
     )
 
 
@@ -97,12 +110,30 @@ class TestComparison:
         assert len(result.changed_metrics) == 1 or len(result.unchanged_metrics) == 1
 
     def test_evidence_change_detected(self):
-        ev1 = EvidenceReference(document_id="doc1", section_id="s1", text="text1", node_id="n1")
-        ev2 = EvidenceReference(document_id="doc2", section_id="s2", text="text2", node_id="n2")
-        e1 = ElementContribution(element_id="e1", element_type="ILF", element_label="R",
-                                  complexity="Low", weight=3, evidence=[ev1], applied_rules=[])
-        e2 = ElementContribution(element_id="e1", element_type="ILF", element_label="R",
-                                  complexity="Low", weight=3, evidence=[ev2], applied_rules=[])
+        ev1 = EvidenceReference(
+            document_id="doc1", section_id="s1", text="text1", node_id="n1"
+        )
+        ev2 = EvidenceReference(
+            document_id="doc2", section_id="s2", text="text2", node_id="n2"
+        )
+        e1 = ElementContribution(
+            element_id="e1",
+            element_type="ILF",
+            element_label="R",
+            complexity="Low",
+            weight=3,
+            evidence=[ev1],
+            applied_rules=[],
+        )
+        e2 = ElementContribution(
+            element_id="e1",
+            element_type="ILF",
+            element_label="R",
+            complexity="Low",
+            weight=3,
+            evidence=[ev2],
+            applied_rules=[],
+        )
         b = _make_explanation("run-1", [_make_metric("fp", 10, [e1])])
         c = _make_explanation("run-2", [_make_metric("fp", 10, [e2])])
         result = compare_explanations(b, c)

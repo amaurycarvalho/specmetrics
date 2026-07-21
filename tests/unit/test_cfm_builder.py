@@ -13,12 +13,16 @@ from specmetrics.kernel.evidence_graph import (
 )
 
 
-def make_graph(nodes: list[GraphNode], edges: list[GraphEdge] | None = None) -> EvidenceGraph:
+def make_graph(
+    nodes: list[GraphNode], edges: list[GraphEdge] | None = None
+) -> EvidenceGraph:
     return EvidenceGraph(
         run_id="test_run_001",
         nodes={n.id: n for n in nodes},
         edges=edges or [],
-        metadata=GraphMetadata(run_id="test_run_001", node_count=len(nodes), edge_count=len(edges or [])),
+        metadata=GraphMetadata(
+            run_id="test_run_001", node_count=len(nodes), edge_count=len(edges or [])
+        ),
     )
 
 
@@ -38,11 +42,41 @@ class TestBuild:
 
     def test_build_with_all_categories(self) -> None:
         nodes = [
-            GraphNode(id="n1", node_type="extracted_element", semantic_type="fact", document_id="doc1", text="System validates email"),
-            GraphNode(id="n2", node_type="extracted_element", semantic_type="entity", document_id="doc1", text="Administrator"),
-            GraphNode(id="n3", node_type="extracted_element", semantic_type="entity", document_id="doc1", text="UserAccount"),
-            GraphNode(id="n4", node_type="extracted_element", semantic_type="relationship", document_id="doc1", text="Admin manages users"),
-            GraphNode(id="n5", node_type="extracted_element", semantic_type="operation", document_id="doc1", text="Create user"),
+            GraphNode(
+                id="n1",
+                node_type="extracted_element",
+                semantic_type="fact",
+                document_id="doc1",
+                text="System validates email",
+            ),
+            GraphNode(
+                id="n2",
+                node_type="extracted_element",
+                semantic_type="entity",
+                document_id="doc1",
+                text="Administrator",
+            ),
+            GraphNode(
+                id="n3",
+                node_type="extracted_element",
+                semantic_type="entity",
+                document_id="doc1",
+                text="UserAccount",
+            ),
+            GraphNode(
+                id="n4",
+                node_type="extracted_element",
+                semantic_type="relationship",
+                document_id="doc1",
+                text="Admin manages users",
+            ),
+            GraphNode(
+                id="n5",
+                node_type="extracted_element",
+                semantic_type="operation",
+                document_id="doc1",
+                text="Create user",
+            ),
         ]
         edges = [
             GraphEdge(source="n2", target="n4", edge_type="references"),
@@ -56,7 +90,14 @@ class TestBuild:
         assert len(cfm.operations) == 1
 
     def test_evidence_references_preserved(self) -> None:
-        node = GraphNode(id="n1", node_type="extracted_element", semantic_type="fact", document_id="doc1", section_id="s1", text="rule text")
+        node = GraphNode(
+            id="n1",
+            node_type="extracted_element",
+            semantic_type="fact",
+            document_id="doc1",
+            section_id="s1",
+            text="rule text",
+        )
         graph = make_graph([node])
         cfm = build(graph)
         rule = next(iter(cfm.business_rules.values()))
@@ -66,7 +107,13 @@ class TestBuild:
         assert rule.evidence.text == "rule text"
 
     def test_framework_labels_stripped(self) -> None:
-        node = GraphNode(id="n1", node_type="extracted_element", semantic_type="fact", document_id="doc1", text="OpenSpec Section: Login Rule")
+        node = GraphNode(
+            id="n1",
+            node_type="extracted_element",
+            semantic_type="fact",
+            document_id="doc1",
+            text="OpenSpec Section: Login Rule",
+        )
         graph = make_graph([node])
         cfm = build(graph)
         rule = next(iter(cfm.business_rules.values()))
@@ -74,7 +121,13 @@ class TestBuild:
         assert rule.name == "Login Rule"
 
     def test_unclassifiable_elements_in_references(self) -> None:
-        node = GraphNode(id="n1", node_type="extracted_element", semantic_type=None, document_id="doc1", text="weird element")
+        node = GraphNode(
+            id="n1",
+            node_type="extracted_element",
+            semantic_type=None,
+            document_id="doc1",
+            text="weird element",
+        )
         graph = make_graph([node])
         cfm = build(graph)
         assert len(cfm.unclassified) == 1
@@ -82,8 +135,20 @@ class TestBuild:
 
     def test_conflicting_classifications_flagged(self) -> None:
         nodes = [
-            GraphNode(id="n1", node_type="extracted_element", semantic_type="fact", document_id="doc1", text="Process: do something"),
-            GraphNode(id="n2", node_type="extracted_element", semantic_type="operation", document_id="doc1", text="Process: do something"),
+            GraphNode(
+                id="n1",
+                node_type="extracted_element",
+                semantic_type="fact",
+                document_id="doc1",
+                text="Process: do something",
+            ),
+            GraphNode(
+                id="n2",
+                node_type="extracted_element",
+                semantic_type="operation",
+                document_id="doc1",
+                text="Process: do something",
+            ),
         ]
         edges = [GraphEdge(source="n1", target="n2", edge_type="composed_of")]
         graph = make_graph(nodes, edges)
@@ -91,7 +156,9 @@ class TestBuild:
         assert len(cfm.metadata.conflicts) >= 0
 
     def test_evidence_node_ignored(self) -> None:
-        node = GraphNode(id="n1", node_type="evidence", document_id="doc1", text="source text")
+        node = GraphNode(
+            id="n1", node_type="evidence", document_id="doc1", text="source text"
+        )
         graph = make_graph([node])
         cfm = build(graph)
         assert len(cfm.business_rules) == 0

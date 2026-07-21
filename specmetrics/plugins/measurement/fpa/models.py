@@ -48,10 +48,14 @@ class MeasuredFunction(BaseModel):
     def validate_counts_by_type(self) -> "MeasuredFunction":
         if self.function_type in ("ILF", "EIF"):
             if self.ret_count is None:
-                raise ValueError(f"Data function {self.function_type} requires ret_count")
+                raise ValueError(
+                    f"Data function {self.function_type} requires ret_count"
+                )
         if self.function_type in ("EI", "EO", "EQ"):
             if self.ftr_count is None:
-                raise ValueError(f"Transactional function {self.function_type} requires ftr_count")
+                raise ValueError(
+                    f"Transactional function {self.function_type} requires ftr_count"
+                )
         if self.det_count < 1:
             raise ValueError("det_count must be >= 1")
         return self
@@ -111,7 +115,9 @@ class FPAMeasurementResult(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate measured_function ids")
         if self.summary.total_function_count != len(self.measured_functions):
-            raise ValueError("summary.total_function_count must match len(measured_functions)")
+            raise ValueError(
+                "summary.total_function_count must match len(measured_functions)"
+            )
         return self
 
 

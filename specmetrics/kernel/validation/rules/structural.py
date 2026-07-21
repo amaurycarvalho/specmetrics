@@ -48,7 +48,9 @@ def file_not_empty(document: SpecificationDocument) -> ValidationResult:
             rule_name="file-not-empty",
             passed=False,
             message="Specification document is empty",
-            evidence=[EvidenceRef(detail="Document content is blank or whitespace-only")],
+            evidence=[
+                EvidenceRef(detail="Document content is blank or whitespace-only")
+            ],
         )
     return ValidationResult(
         rule_name="file-not-empty",
@@ -106,7 +108,9 @@ def mandatory_sections_exist(document: SpecificationDocument) -> ValidationResul
         rule_name="mandatory-sections-exist",
         passed=True,
         message="All mandatory sections are present",
-        evidence=[EvidenceRef(detail=f"Found {len(MANDATORY_SECTIONS)} mandatory sections")],
+        evidence=[
+            EvidenceRef(detail=f"Found {len(MANDATORY_SECTIONS)} mandatory sections")
+        ],
     )
 
 

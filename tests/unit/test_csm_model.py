@@ -329,14 +329,19 @@ class TestCanonicalSpecificationModel:
             metadata=metadata,
         )
         with pytest.raises(ValidationError):
-            csm.decisions = {UUID1: Decision(id=UUID1, description="x", evidence_references=refs)}
+            csm.decisions = {
+                UUID1: Decision(id=UUID1, description="x", evidence_references=refs)
+            }
 
 
 class TestCsmConsumer:
     def test_protocol_conformance(self):
         class MockConsumer:
             def consume(self, csm):
-                return {"status": "ok", "element_count": len(csm.get_elements("decisions"))}
+                return {
+                    "status": "ok",
+                    "element_count": len(csm.get_elements("decisions")),
+                }
 
         consumer = MockConsumer()
         assert isinstance(consumer, CsmConsumer)
@@ -345,7 +350,9 @@ class TestCsmConsumer:
         metadata = _make_build_metadata()
         csm = CanonicalSpecificationModel(
             run_id="run-1",
-            decisions={UUID1: Decision(id=UUID1, description="x", evidence_references=refs)},
+            decisions={
+                UUID1: Decision(id=UUID1, description="x", evidence_references=refs)
+            },
             metadata=metadata,
         )
         result = consumer.consume(csm)
@@ -357,7 +364,9 @@ class TestCsmConsumer:
         metadata = _make_build_metadata()
         csm = CanonicalSpecificationModel(
             run_id="run-1",
-            decisions={UUID1: Decision(id=UUID1, description="x", evidence_references=refs)},
+            decisions={
+                UUID1: Decision(id=UUID1, description="x", evidence_references=refs)
+            },
             metadata=metadata,
         )
         json_str = csm.model_dump_json()

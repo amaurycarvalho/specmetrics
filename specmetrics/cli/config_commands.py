@@ -147,7 +147,9 @@ def config_dump(
         json.dump(data, sys.stdout, indent=2, default=str)
         sys.stdout.write("\n")
     else:
-        header = f"{'Key':<40} {'Value':<30} {'Source':<25} {'Level':<15} {'Default':<8}"
+        header = (
+            f"{'Key':<40} {'Value':<30} {'Source':<25} {'Level':<15} {'Default':<8}"
+        )
         print(header)
         print("-" * len(header))
         for entry in dump.entries:
@@ -204,7 +206,10 @@ def llm_set(
 
     preset = PROVIDER_PRESETS.get(provider)
     if preset is None and provider != "custom":
-        print(f"Unknown provider '{provider}'. Available providers:\n{_format_model_list()}", file=sys.stderr)
+        print(
+            f"Unknown provider '{provider}'. Available providers:\n{_format_model_list()}",
+            file=sys.stderr,
+        )
         raise typer.Exit(code=1)
 
     if provider == "custom" and not model:
@@ -214,7 +219,9 @@ def llm_set(
     final_api_url = api_url or (preset["api_url"] if preset else None)
     final_model = model or (preset["model"] if preset else None)
 
-    _write_llm_config(provider=provider, api_url=final_api_url, model=final_model, api_key=api_key)
+    _write_llm_config(
+        provider=provider, api_url=final_api_url, model=final_model, api_key=api_key
+    )
 
     print(f"LLM provider set to '{provider}'")
     if final_api_url:
@@ -245,7 +252,9 @@ def llm_show() -> None:
     else:
         print("  (not configured — will use 'none' / deterministic engine by default)")
         print()
-        print("Set a provider with:  specmetrics config llm set <provider> [--api-key KEY]")
+        print(
+            "Set a provider with:  specmetrics config llm set <provider> [--api-key KEY]"
+        )
         print("Available providers:\n" + _format_model_list())
 
 
@@ -254,7 +263,7 @@ def llm_list() -> None:
     """List all available LLM providers."""
     print("Available providers:\n")
     print(f"  {'Provider':<12} {'Model':<30} {'API URL'}")
-    print(f"  {'-'*12:<12} {'-'*30:<30} {'-'*40}")
+    print(f"  {'-' * 12:<12} {'-' * 30:<30} {'-' * 40}")
     print(_format_model_list())
 
 
@@ -327,9 +336,7 @@ def llm_test() -> None:
     try:
         response = litellm.completion(
             **kwargs,
-            messages=[
-                {"role": "user", "content": "Say exactly: LLM test successful"}
-            ],
+            messages=[{"role": "user", "content": "Say exactly: LLM test successful"}],
             max_tokens=10,
         )
         content = response.choices[0].message.content.strip()

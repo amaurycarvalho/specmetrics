@@ -35,8 +35,12 @@ class SFPCounter:
         modified_element_ids: Optional[list[str]] = None,
     ) -> SFPMeasurementResult:
         excluded = set(excluded_types or [])
-        fp_contribution = (contribution_overrides or {}).get("functional_process", DEFAULT_FP_CONTRIBUTION)
-        lf_contribution = (contribution_overrides or {}).get("logical_function", DEFAULT_LF_CONTRIBUTION)
+        fp_contribution = (contribution_overrides or {}).get(
+            "functional_process", DEFAULT_FP_CONTRIBUTION
+        )
+        lf_contribution = (contribution_overrides or {}).get(
+            "logical_function", DEFAULT_LF_CONTRIBUTION
+        )
 
         fp_criteria = (inclusion_criteria or {}).get("functional_process", {})
         lf_criteria = (inclusion_criteria or {}).get("logical_function", {})
@@ -47,11 +51,19 @@ class SFPCounter:
         warnings: list[MeasurementWarning] = []
         seen_fingerprints: dict[str, str] = {}
 
-        excluded_ids = set(element_exclusions.get("by_id", []) if element_exclusions else [])
-        excluded_patterns = element_exclusions.get("by_pattern", []) if element_exclusions else []
+        excluded_ids = set(
+            element_exclusions.get("by_id", []) if element_exclusions else []
+        )
+        excluded_patterns = (
+            element_exclusions.get("by_pattern", []) if element_exclusions else []
+        )
 
-        included_ids = set(element_inclusions.get("by_id", []) if element_inclusions else [])
-        included_patterns = element_inclusions.get("by_pattern", []) if element_inclusions else []
+        included_ids = set(
+            element_inclusions.get("by_id", []) if element_inclusions else []
+        )
+        included_patterns = (
+            element_inclusions.get("by_pattern", []) if element_inclusions else []
+        )
 
         import fnmatch
 
@@ -59,7 +71,9 @@ class SFPCounter:
             if element_id in excluded_ids:
                 return True
             for pattern in excluded_patterns:
-                if fnmatch.fnmatch(element_id, pattern) or fnmatch.fnmatch(element_name, pattern):
+                if fnmatch.fnmatch(element_id, pattern) or fnmatch.fnmatch(
+                    element_name, pattern
+                ):
                     return True
             return False
 
@@ -67,7 +81,9 @@ class SFPCounter:
             if element_id in included_ids:
                 return True
             for pattern in included_patterns:
-                if fnmatch.fnmatch(element_id, pattern) or fnmatch.fnmatch(element_name, pattern):
+                if fnmatch.fnmatch(element_id, pattern) or fnmatch.fnmatch(
+                    element_name, pattern
+                ):
                     return True
             return False
 
@@ -143,7 +159,11 @@ class SFPCounter:
 
         if previous_result is not None and modified_element_ids is not None:
             modified_set = set(modified_element_ids)
-            kept = [c for c in previous_result.measured_components if c.cfm_element_id not in modified_set]
+            kept = [
+                c
+                for c in previous_result.measured_components
+                if c.cfm_element_id not in modified_set
+            ]
             for c in kept:
                 if c.cfm_element_id not in {x.cfm_element_id for x in components}:
                     components.append(c)
@@ -169,12 +189,14 @@ class SFPCounter:
         contribution: float,
         component_counter: int,
     ) -> MeasuredComponent:
-        refs = [EvidenceRef(
-            graph_node_id=element.evidence.graph_node_id,
-            document_id=element.evidence.document_id,
-            section_id=element.evidence.section_id,
-            text=element.evidence.text,
-        )]
+        refs = [
+            EvidenceRef(
+                graph_node_id=element.evidence.graph_node_id,
+                document_id=element.evidence.document_id,
+                section_id=element.evidence.section_id,
+                text=element.evidence.text,
+            )
+        ]
         return MeasuredComponent(
             id=f"cmp-{component_type}-{component_counter}",
             name=element_name,

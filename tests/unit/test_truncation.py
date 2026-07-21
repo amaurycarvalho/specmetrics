@@ -3,7 +3,9 @@ from __future__ import annotations
 _TRUNCATE_TEXT_LENGTH = 200
 
 
-def _truncate_text(text: str | None, max_len: int = _TRUNCATE_TEXT_LENGTH) -> str | None:
+def _truncate_text(
+    text: str | None, max_len: int = _TRUNCATE_TEXT_LENGTH
+) -> str | None:
     if text is None:
         return None
     return text[:max_len] if len(text) > max_len else text

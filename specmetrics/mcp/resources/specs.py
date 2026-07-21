@@ -30,7 +30,9 @@ def handle_spec_resource(uri: str) -> str:
         try:
             resolved.relative_to(_project_root)
         except ValueError:
-            raise ToolError(-32002, "Path traversal denied: path is outside the project directory")
+            raise ToolError(
+                -32002, "Path traversal denied: path is outside the project directory"
+            )
 
     if not resolved.exists():
         raise ToolError(-32601, f"Spec file not found: {resolved}")

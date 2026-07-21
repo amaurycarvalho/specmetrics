@@ -74,7 +74,13 @@ def explain(
     try:
         if compare:
             _ = service.explain(compare, cfm=cfm, graph=graph, spec_path=spec_path_arg)
-            explanation = service.explain(run_id, metric_name=metric, cfm=cfm, graph=graph, spec_path=spec_path_arg)
+            explanation = service.explain(
+                run_id,
+                metric_name=metric,
+                cfm=cfm,
+                graph=graph,
+                spec_path=spec_path_arg,
+            )
             comparison = service.compare(compare, run_id)
 
             if format == "json":
@@ -88,7 +94,13 @@ def explain(
                 typer.echo("")
                 typer.echo(text_format_comparison(comparison))
         else:
-            explanation = service.explain(run_id, metric_name=metric, cfm=cfm, graph=graph, spec_path=spec_path_arg)
+            explanation = service.explain(
+                run_id,
+                metric_name=metric,
+                cfm=cfm,
+                graph=graph,
+                spec_path=spec_path_arg,
+            )
             if format == "json":
                 typer.echo(json_format_explanation(explanation))
             else:

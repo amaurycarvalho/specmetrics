@@ -1,6 +1,12 @@
 import pytest
 
-from specmetrics.kernel import EventType, HandlerNotFoundError, HandlerRegistry, PipelineContext, PipelineEvent
+from specmetrics.kernel import (
+    EventType,
+    HandlerNotFoundError,
+    HandlerRegistry,
+    PipelineContext,
+    PipelineEvent,
+)
 
 
 class TestHandlerRegistry:
@@ -23,7 +29,10 @@ class TestHandlerRegistry:
         h2 = FakeHandler(EventType.DOCUMENTS_DISCOVERED, "h2", "S2")
         registry.register(h1)
         registry.register(h2)
-        assert registry.registered_types == {EventType.REPOSITORY_LOADED, EventType.DOCUMENTS_DISCOVERED}
+        assert registry.registered_types == {
+            EventType.REPOSITORY_LOADED,
+            EventType.DOCUMENTS_DISCOVERED,
+        }
 
 
 class FakeHandler:
@@ -33,11 +42,16 @@ class FakeHandler:
         self._stage_name = stage_name
 
     @property
-    def handled_event_type(self) -> EventType: return self._event_type
+    def handled_event_type(self) -> EventType:
+        return self._event_type
+
     @property
-    def handler_id(self) -> str: return self._handler_id
+    def handler_id(self) -> str:
+        return self._handler_id
+
     @property
-    def stage_name(self) -> str: return self._stage_name
+    def stage_name(self) -> str:
+        return self._stage_name
 
     def handle(self, event: PipelineEvent) -> PipelineContext:
         return event.context

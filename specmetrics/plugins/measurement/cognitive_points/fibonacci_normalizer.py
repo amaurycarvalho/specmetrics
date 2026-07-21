@@ -14,7 +14,9 @@ class FibonacciNormalizer:
         output_values: list[int] | None = None,
     ) -> None:
         self._thresholds = list(thresholds) if thresholds else list(_DEFAULT_THRESHOLDS)
-        self._output_values = list(output_values) if output_values else list(_DEFAULT_OUTPUT_VALUES)
+        self._output_values = (
+            list(output_values) if output_values else list(_DEFAULT_OUTPUT_VALUES)
+        )
 
         if len(self._output_values) != len(self._thresholds) + 1:
             raise ValueError(

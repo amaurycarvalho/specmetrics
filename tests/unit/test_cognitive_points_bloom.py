@@ -28,22 +28,18 @@ class TestDefaultBloomClassifier:
 
     def test_unknown_type_uses_default(self):
         classifier = DefaultBloomClassifier()
-        assert classifier.classify("unknown_type") == "analyze"
+        assert classifier.classify("unknown_type") == "understand"
 
     def test_custom_default_level(self):
         classifier = DefaultBloomClassifier(default_bloom_level="remember")
         assert classifier.classify("unknown") == "remember"
 
     def test_custom_mapping_overrides_default(self):
-        classifier = DefaultBloomClassifier(
-            bloom_mappings={"decision": "remember"}
-        )
+        classifier = DefaultBloomClassifier(bloom_mappings={"decision": "remember"})
         assert classifier.classify("decision") == "remember"
 
     def test_custom_mapping_adds_new_types(self):
-        classifier = DefaultBloomClassifier(
-            bloom_mappings={"custom_type": "create"}
-        )
+        classifier = DefaultBloomClassifier(bloom_mappings={"custom_type": "create"})
         assert classifier.classify("custom_type") == "create"
 
     def test_default_weights(self):
@@ -90,9 +86,9 @@ class TestDefaultBloomClassifierMappings:
         }
         for element_type, expected_level in expected.items():
             actual = classifier.classify(element_type)
-            assert (
-                actual == expected_level
-            ), f"{element_type} should map to {expected_level}, got {actual}"
+            assert actual == expected_level, (
+                f"{element_type} should map to {expected_level}, got {actual}"
+            )
 
     def test_mappings_immutable(self):
         classifier = DefaultBloomClassifier()

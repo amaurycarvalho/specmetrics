@@ -14,19 +14,13 @@ from specmetrics.plugins.measurement.bcp.plugin import BCPHandler
 
 
 def _make_cfm() -> CanonicalFunctionalModel:
-    ev = EvidenceRef(
-        graph_node_id="gn-001", document_id="doc-001", text="ev"
-    )
+    ev = EvidenceRef(graph_node_id="gn-001", document_id="doc-001", text="ev")
     return CanonicalFunctionalModel(
         run_id="pipeline-test",
         functional_processes={
-            "fp-001": FunctionalProcess(
-                id="fp-001", name="Login", evidence=ev
-            ),
+            "fp-001": FunctionalProcess(id="fp-001", name="Login", evidence=ev),
         },
-        metadata=BuildMetadata(
-            run_id="pipeline-test", version="1.0", source="test"
-        ),
+        metadata=BuildMetadata(run_id="pipeline-test", version="1.0", source="test"),
     )
 
 

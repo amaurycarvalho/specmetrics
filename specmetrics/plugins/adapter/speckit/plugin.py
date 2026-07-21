@@ -124,7 +124,12 @@ class SpecKitAdapter:
                 stats.governance_count += 1
             except UnicodeDecodeError as e:
                 error_code = "ENCODING_ERROR"
-                logger.error("speckit_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -135,7 +140,12 @@ class SpecKitAdapter:
                 stats.total_errors += 1
             except Exception as e:
                 error_code = "UNREADABLE"
-                logger.error("speckit_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -167,7 +177,12 @@ class SpecKitAdapter:
                     stats.unknown_count += 1
             except UnicodeDecodeError as e:
                 error_code = "ENCODING_ERROR"
-                logger.error("speckit_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -178,7 +193,12 @@ class SpecKitAdapter:
                 stats.total_errors += 1
             except Exception as e:
                 error_code = "UNREADABLE"
-                logger.error("speckit_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -218,9 +238,19 @@ class SpecKitAdapter:
             try:
                 documents.append(self.normalize_document(f, path))
             except UnicodeDecodeError as e:
-                logger.error("speckit_file_error", path=str(f), error_code="ENCODING_ERROR", message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(f),
+                    error_code="ENCODING_ERROR",
+                    message=str(e),
+                )
             except Exception as e:
-                logger.error("speckit_file_error", path=str(f), error_code="UNREADABLE", message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(f),
+                    error_code="UNREADABLE",
+                    message=str(e),
+                )
         return documents
 
     def scan_features(self, path: Path) -> list[Document]:
@@ -230,9 +260,19 @@ class SpecKitAdapter:
             try:
                 documents.append(self.normalize_document(f, path))
             except UnicodeDecodeError as e:
-                logger.error("speckit_file_error", path=str(f), error_code="ENCODING_ERROR", message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(f),
+                    error_code="ENCODING_ERROR",
+                    message=str(e),
+                )
             except Exception as e:
-                logger.error("speckit_file_error", path=str(f), error_code="UNREADABLE", message=str(e))
+                logger.error(
+                    "speckit_file_error",
+                    path=str(f),
+                    error_code="UNREADABLE",
+                    message=str(e),
+                )
         return documents
 
     def normalize_document(self, file_path: Path, repo_root: Path) -> Document:

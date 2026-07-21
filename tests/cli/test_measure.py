@@ -58,6 +58,7 @@ class TestGenerateMeasureId:
     def test_format_matches_pattern(self):
         mid = generate_measure_id()
         import re
+
         assert re.match(r"^\d{8}-\d{6}-[a-f0-9]{8}$", mid), f"Unexpected format: {mid}"
 
     def test_unique_ids(self):
@@ -67,14 +68,19 @@ class TestGenerateMeasureId:
     def test_ordering_by_timestamp(self):
         ids = [generate_measure_id() for _ in range(5)]
         timestamps = [mid[:15] for mid in ids]
-        assert timestamps == sorted(timestamps), "Measure IDs should be lexicographically sortable by creation time"
+        assert timestamps == sorted(timestamps), (
+            "Measure IDs should be lexicographically sortable by creation time"
+        )
 
 
 class TestRunMeasure:
     def _make_mock_result(self, status: str = "success"):
         from specmetrics.application.models import MeasurementResult
+
         m = MagicMock()
-        m.status = PipelineStatus.SUCCESS if status == "success" else PipelineStatus.FAILED
+        m.status = (
+            PipelineStatus.SUCCESS if status == "success" else PipelineStatus.FAILED
+        )
         m.project_path = None
         m.llm_provider = "none"
         m.llm_model = None

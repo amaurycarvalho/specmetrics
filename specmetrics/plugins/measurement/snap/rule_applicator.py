@@ -6,45 +6,62 @@ from .models import AssessmentWarning, CategoryId, RulePack
 
 
 class RulePackApplicator:
-    def validate_rule_pack(self, rule_pack: Optional[RulePack]) -> list[AssessmentWarning]:
+    def validate_rule_pack(
+        self, rule_pack: Optional[RulePack]
+    ) -> list[AssessmentWarning]:
         warnings: list[AssessmentWarning] = []
         if rule_pack is None:
             return warnings
         if rule_pack.methodology and rule_pack.methodology != "SNAP":
-            warnings.append(AssessmentWarning(
-                code="RULE_PACK_METHODOLOGY_MISMATCH",
-                message=f"Rule Pack methodology '{rule_pack.methodology}' does not match SNAP; applying defaults for unrecognized fields",
-            ))
+            warnings.append(
+                AssessmentWarning(
+                    code="RULE_PACK_METHODOLOGY_MISMATCH",
+                    message=f"Rule Pack methodology '{rule_pack.methodology}' does not match SNAP; applying defaults for unrecognized fields",
+                )
+            )
         if rule_pack.contribution_overrides:
             for cat_id, val in rule_pack.contribution_overrides.items():
                 if val <= 0:
-                    warnings.append(AssessmentWarning(
-                        code="INVALID_CONTRIBUTION_OVERRIDE",
-                        message=f"Invalid contribution override for {cat_id}: {val}; must be positive. Override ignored.",
-                    ))
+                    warnings.append(
+                        AssessmentWarning(
+                            code="INVALID_CONTRIBUTION_OVERRIDE",
+                            message=f"Invalid contribution override for {cat_id}: {val}; must be positive. Override ignored.",
+                        )
+                    )
         if rule_pack.excluded_categories:
-            valid_ids = {"presentation", "data_operations", "operational_capabilities", "technical_interaction"}
+            valid_ids = {
+                "presentation",
+                "data_operations",
+                "operational_capabilities",
+                "technical_interaction",
+            }
             for cat_id in rule_pack.excluded_categories:
                 if cat_id not in valid_ids:
-                    warnings.append(AssessmentWarning(
-                        code="UNKNOWN_CATEGORY",
-                        message=f"Unknown category '{cat_id}' in excluded_categories; ignored",
-                    ))
+                    warnings.append(
+                        AssessmentWarning(
+                            code="UNKNOWN_CATEGORY",
+                            message=f"Unknown category '{cat_id}' in excluded_categories; ignored",
+                        )
+                    )
         if rule_pack.inclusion_policies:
             for policy in rule_pack.inclusion_policies:
                 if not isinstance(policy, dict):
-                    warnings.append(AssessmentWarning(
-                        code="INVALID_INCLUSION_POLICY",
-                        message="Invalid inclusion policy entry; must be a mapping with 'semantic_marker' and 'category'",
-                    ))
+                    warnings.append(
+                        AssessmentWarning(
+                            code="INVALID_INCLUSION_POLICY",
+                            message="Invalid inclusion policy entry; must be a mapping with 'semantic_marker' and 'category'",
+                        )
+                    )
                     continue
                 marker = policy.get("semantic_marker")
                 category = policy.get("category")
                 if not marker or not category:
-                    warnings.append(AssessmentWarning(
-                        code="INCOMPLETE_INCLUSION_POLICY",
-                        message="Inclusion policy missing 'semantic_marker' or 'category'",
-                    ))
+                    warnings.append(
+                        AssessmentWarning(
+                            code="INCOMPLETE_INCLUSION_POLICY",
+                            message="Inclusion policy missing 'semantic_marker' or 'category'",
+                        )
+                    )
         return warnings
 
     def resolve_contribution_overrides(
@@ -54,7 +71,12 @@ class RulePackApplicator:
         if rule_pack is None or rule_pack.contribution_overrides is None:
             return None
         overrides: dict[CategoryId, float] = {}
-        for cat_id in ("presentation", "data_operations", "operational_capabilities", "technical_interaction"):
+        for cat_id in (
+            "presentation",
+            "data_operations",
+            "operational_capabilities",
+            "technical_interaction",
+        ):
             if cat_id in rule_pack.contribution_overrides:
                 overrides[cat_id] = rule_pack.contribution_overrides[cat_id]
         return overrides if overrides else None

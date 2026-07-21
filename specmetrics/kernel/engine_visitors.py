@@ -84,7 +84,9 @@ class ListVisitor:
                         },
                         location=(
                             doc_id,
-                            "/".join(state.heading_stack) if state.heading_stack else None,
+                            "/".join(state.heading_stack)
+                            if state.heading_stack
+                            else None,
                         ),
                     )
                     state.observations.append(ob)
@@ -143,12 +145,20 @@ class TableVisitor:
 
 
 _CONTAINER_OPEN = {
-    "heading_open", "bullet_list_open", "ordered_list_open",
-    "list_item_open", "blockquote_open", "table_open",
+    "heading_open",
+    "bullet_list_open",
+    "ordered_list_open",
+    "list_item_open",
+    "blockquote_open",
+    "table_open",
 }
 _CONTAINER_CLOSE = {
-    "heading_close", "bullet_list_close", "ordered_list_close",
-    "list_item_close", "blockquote_close", "table_close",
+    "heading_close",
+    "bullet_list_close",
+    "ordered_list_close",
+    "list_item_close",
+    "blockquote_close",
+    "table_close",
 }
 
 
@@ -172,7 +182,9 @@ class ParagraphVisitor:
                         },
                         location=(
                             doc_id,
-                            "/".join(state.heading_stack) if state.heading_stack else None,
+                            "/".join(state.heading_stack)
+                            if state.heading_stack
+                            else None,
                         ),
                     )
                     state.observations.append(ob)
@@ -219,7 +231,9 @@ class QuoteVisitor:
                         },
                         location=(
                             doc_id,
-                            "/".join(state.heading_stack) if state.heading_stack else None,
+                            "/".join(state.heading_stack)
+                            if state.heading_stack
+                            else None,
                         ),
                     )
                     state.observations.append(ob)
@@ -234,7 +248,9 @@ class EmphasisVisitor:
             if tok.type == "inline" and tok.children:
                 for child in tok.children:
                     if child.type in ("strong", "em"):
-                        text = child.content.strip() if hasattr(child, "content") else ""
+                        text = (
+                            child.content.strip() if hasattr(child, "content") else ""
+                        )
                         if text:
                             doc_id = ""
                             ob = Observation(
@@ -260,7 +276,11 @@ class LinkVisitor:
             if tok.type == "inline" and tok.children:
                 for child in tok.children:
                     if child.type == "link_open":
-                        url = child.attrs.get("href", "") if hasattr(child, "attrs") else ""
+                        url = (
+                            child.attrs.get("href", "")
+                            if hasattr(child, "attrs")
+                            else ""
+                        )
                         link_text = ""
                         for j, c in enumerate(tok.children):
                             if c.type == "link_open" and id(c) == id(child):

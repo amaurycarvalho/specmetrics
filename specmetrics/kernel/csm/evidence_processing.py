@@ -6,34 +6,43 @@ from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode
 from .model import EvidenceRef
 
 
-def get_evidence_references(
-    node_id: str, graph: EvidenceGraph
-) -> list[EvidenceRef]:
+def get_evidence_references(node_id: str, graph: EvidenceGraph) -> list[EvidenceRef]:
     refs: list[EvidenceRef] = []
+    seen: set[tuple[str, str, str]] = set()
 
     for edge in graph.edges:
         if edge.source == node_id and edge.edge_type in ("derived_from", "references"):
             target_node = graph.nodes.get(edge.target)
             if target_node is not None:
-                refs.append(
-                    EvidenceRef(
-                        graph_node_id=target_node.id,
-                        document_id=target_node.document_id,
-                        section_id=target_node.section_id,
-                        text=target_node.text,
-                    )
+                key = (
+                    target_node.document_id,
+                    target_node.section_id or "",
+                    target_node.text,
                 )
+                if key not in seen:
+                    seen.add(key)
+                    refs.append(
+                        EvidenceRef(
+                            graph_node_id=target_node.id,
+                            document_id=target_node.document_id,
+                            section_id=target_node.section_id,
+                            text=target_node.text,
+                        )
+                    )
 
     node = graph.nodes.get(node_id)
     if node is not None:
-        refs.append(
-            EvidenceRef(
-                graph_node_id=node.id,
-                document_id=node.document_id,
-                section_id=node.section_id,
-                text=node.text,
+        key = (node.document_id, node.section_id or "", node.text)
+        if key not in seen:
+            seen.add(key)
+            refs.append(
+                EvidenceRef(
+                    graph_node_id=node.id,
+                    document_id=node.document_id,
+                    section_id=node.section_id,
+                    text=node.text,
+                )
             )
-        )
 
     return refs
 
@@ -58,9 +67,5 @@ def get_neighbors(
     return neighbors
 
 
-def get_nodes_by_type(
-    graph: EvidenceGraph, node_type: str
-) -> list[GraphNode]:
-    return [
-        node for node in graph.nodes.values() if node.node_type == node_type
-    ]
+def get_nodes_by_type(graph: EvidenceGraph, node_type: str) -> list[GraphNode]:
+    return [node for node in graph.nodes.values() if node.node_type == node_type]

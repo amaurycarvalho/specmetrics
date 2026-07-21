@@ -55,10 +55,12 @@ class TestRuleApplicator:
         assert len(self.applicator.applied_records) == 0
 
     def test_exclusion_rule_marks_functions(self) -> None:
-        cfm = _make_cfm({
-            "fp-001": {"name": "Inquiry", "function_type": "EQ"},
-            "fp-002": {"name": "Input", "function_type": "EI"},
-        })
+        cfm = _make_cfm(
+            {
+                "fp-001": {"name": "Inquiry", "function_type": "EQ"},
+                "fp-002": {"name": "Input", "function_type": "EI"},
+            }
+        )
         pack = RulePack(
             id="test-pack",
             rules=[
@@ -90,7 +92,9 @@ class TestRuleApplicator:
         )
         result = self.applicator.apply(cfm, [pack])
         assert result.functional_processes["fp-001"].metadata.get("excluded") is True
-        assert result.functional_processes["fp-002"].metadata.get("excluded") is not True
+        assert (
+            result.functional_processes["fp-002"].metadata.get("excluded") is not True
+        )
 
     def test_vaf_computation(self) -> None:
         cfm = _make_cfm()
@@ -126,9 +130,11 @@ class TestRuleApplicator:
         assert isinstance(result.metadata.vaf, float)
 
     def test_complexity_override(self) -> None:
-        cfm = _make_cfm({
-            "fp-001": {"name": "Input", "function_type": "EI"},
-        })
+        cfm = _make_cfm(
+            {
+                "fp-001": {"name": "Input", "function_type": "EI"},
+            }
+        )
         pack = RulePack(
             id="test-pack",
             rules=[
@@ -147,17 +153,21 @@ class TestRuleApplicator:
         assert fp001.metadata.get("complexity_source") == "rule_pack_override"
 
     def test_weight_override(self) -> None:
-        cfm = _make_cfm({
-            "fp-001": {"name": "Input", "function_type": "EI"},
-        })
-        fp001 = cfm.functional_processes["fp-001"]
-        fp001 = fp001.model_copy(update={
-            "metadata": {
-                **fp001.metadata,
-                "function_type": "EI",
-                "complexity_rating": "High",
+        cfm = _make_cfm(
+            {
+                "fp-001": {"name": "Input", "function_type": "EI"},
             }
-        })
+        )
+        fp001 = cfm.functional_processes["fp-001"]
+        fp001 = fp001.model_copy(
+            update={
+                "metadata": {
+                    **fp001.metadata,
+                    "function_type": "EI",
+                    "complexity_rating": "High",
+                }
+            }
+        )
         cfm = cfm.model_copy(update={"functional_processes": {"fp-001": fp001}})
 
         pack = RulePack(
@@ -203,7 +213,11 @@ class TestRuleApplicator:
         pack = RulePack(
             id="multi-pack",
             rules=[
-                Rule(id="ex-eq", type="exclusion", config=RuleConfig(function_types=["EQ"])),
+                Rule(
+                    id="ex-eq",
+                    type="exclusion",
+                    config=RuleConfig(function_types=["EQ"]),
+                ),
                 Rule(
                     id="comp-ei",
                     type="complexity_override",
@@ -213,15 +227,25 @@ class TestRuleApplicator:
                     id="vaf-default",
                     type="vaf",
                     config=RuleConfig(
-                        gsc={k: 2 for k in [
-                            "data_communications", "distributed_data_processing",
-                            "performance", "heavily_used_configuration",
-                            "transaction_rate", "online_data_entry",
-                            "end_user_efficiency", "online_update",
-                            "complex_processing", "reusability",
-                            "installation_ease", "operational_ease",
-                            "multiple_sites", "facilitate_change",
-                        ]}
+                        gsc={
+                            k: 2
+                            for k in [
+                                "data_communications",
+                                "distributed_data_processing",
+                                "performance",
+                                "heavily_used_configuration",
+                                "transaction_rate",
+                                "online_data_entry",
+                                "end_user_efficiency",
+                                "online_update",
+                                "complex_processing",
+                                "reusability",
+                                "installation_ease",
+                                "operational_ease",
+                                "multiple_sites",
+                                "facilitate_change",
+                            ]
+                        }
                     ),
                 ),
             ],

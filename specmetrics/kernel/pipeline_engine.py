@@ -4,7 +4,12 @@ from datetime import datetime, timezone
 
 import structlog
 
-from .diagnostics import Diagnostics, StageError as StageErrorRecord, StageStatus, StageTiming
+from .diagnostics import (
+    Diagnostics,
+    StageError as StageErrorRecord,
+    StageStatus,
+    StageTiming,
+)
 from .event_bus import EventBus
 from .events import EventType, PipelineEvent
 from .exceptions import HandlerNotFoundError, PipelineError, StageError
@@ -31,7 +36,11 @@ CANONICAL_EVENT_ORDER: list[EventType] = [
 
 
 class PipelineEngine:
-    def __init__(self, registry: HandlerRegistry, validation_pipeline: ValidationPipeline | None = None) -> None:
+    def __init__(
+        self,
+        registry: HandlerRegistry,
+        validation_pipeline: ValidationPipeline | None = None,
+    ) -> None:
         self._registry = registry
         self._bus = EventBus(registry)
         self._validation_pipeline = validation_pipeline or ValidationPipeline()
@@ -68,18 +77,29 @@ class PipelineEngine:
                 continue
 
             stage_name = self._resolve_stage_name(event_type)
-            timing = StageTiming(stage_name=stage_name, status=StageStatus.RUNNING, started_at=datetime.now(timezone.utc))
+            timing = StageTiming(
+                stage_name=stage_name,
+                status=StageStatus.RUNNING,
+                started_at=datetime.now(timezone.utc),
+            )
             diagnostics.stage_timings[stage_name] = timing
 
             event = PipelineEvent(
                 event_type=event_type,
-                publisher="pipeline_engine" if event_type in (EventType.REPOSITORY_LOADED, EventType.PIPELINE_COMPLETED) else stage_name,
+                publisher="pipeline_engine"
+                if event_type
+                in (EventType.REPOSITORY_LOADED, EventType.PIPELINE_COMPLETED)
+                else stage_name,
                 payload={},
                 context=ctx,
             )
 
-            if event_type == EventType.DOCUMENTS_VALIDATED and self._validation_pipeline is not None:
+            if (
+                event_type == EventType.DOCUMENTS_VALIDATED
+                and self._validation_pipeline is not None
+            ):
                 from pathlib import Path
+
                 docs_data = getattr(ctx, "adapter_result", None) or {}
                 raw_docs = docs_data.get("documents", [])
                 doc_paths = []
@@ -103,7 +123,9 @@ class PipelineEngine:
 
             try:
                 next_ctx = self._bus.publish(event)
-                ctx = next_ctx.with_stage_output("published_events", next_ctx.published_events + (event,))
+                ctx = next_ctx.with_stage_output(
+                    "published_events", next_ctx.published_events + (event,)
+                )
                 timing.status = StageStatus.COMPLETED
                 timing.completed_at = datetime.now(timezone.utc)
                 if timing.started_at:
@@ -128,7 +150,10 @@ class PipelineEngine:
                 diagnostics.completed_at = datetime.now(timezone.utc)
                 if diagnostics.started_at:
                     diagnostics.total_duration_ms = int(
-                        (diagnostics.completed_at - diagnostics.started_at).total_seconds() * 1000
+                        (
+                            diagnostics.completed_at - diagnostics.started_at
+                        ).total_seconds()
+                        * 1000
                     )
                 failed_event = PipelineEvent(
                     event_type=EventType.PIPELINE_FAILED,
@@ -139,7 +164,9 @@ class PipelineEngine:
                     },
                     context=ctx,
                 )
-                ctx = ctx.with_stage_output("published_events", ctx.published_events + (failed_event,))
+                ctx = ctx.with_stage_output(
+                    "published_events", ctx.published_events + (failed_event,)
+                )
                 logger.error(
                     "pipeline_failed",
                     execution_id=str(ctx.execution_id),
@@ -154,11 +181,14 @@ class PipelineEngine:
             payload={},
             context=ctx,
         )
-        ctx = ctx.with_stage_output("published_events", ctx.published_events + (completed_event,))
+        ctx = ctx.with_stage_output(
+            "published_events", ctx.published_events + (completed_event,)
+        )
         diagnostics.completed_at = datetime.now(timezone.utc)
         if diagnostics.started_at:
             diagnostics.total_duration_ms = int(
-                (diagnostics.completed_at - diagnostics.started_at).total_seconds() * 1000
+                (diagnostics.completed_at - diagnostics.started_at).total_seconds()
+                * 1000
             )
         logger.info(
             "pipeline_completed",

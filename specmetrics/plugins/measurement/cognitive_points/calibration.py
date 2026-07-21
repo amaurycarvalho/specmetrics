@@ -16,7 +16,9 @@ class BloomClassification(BaseModel):
 
 class FibonacciNormalizationProfile(BaseModel):
     thresholds: list[float] = Field(default_factory=lambda: list(_DEFAULT_THRESHOLDS))
-    output_values: list[int] = Field(default_factory=lambda: list(_DEFAULT_OUTPUT_VALUES))
+    output_values: list[int] = Field(
+        default_factory=lambda: list(_DEFAULT_OUTPUT_VALUES)
+    )
 
     @model_validator(mode="after")
     def validate_lengths(self) -> FibonacciNormalizationProfile:
@@ -36,7 +38,8 @@ class CognitiveCalibrationProfile(BaseModel):
     bloom_mappings: dict[str, str] = Field(
         default_factory=lambda: dict(_DEFAULT_BLOOM_MAPPINGS)
     )
-    default_bloom_level: str = "analyze"
+    default_bloom_level: str = "understand"
+    content_multiplier: float = 0.1
     fibonacci_normalization: FibonacciNormalizationProfile = Field(
         default_factory=FibonacciNormalizationProfile
     )
@@ -92,18 +95,15 @@ def _merge_calibration_data(
     if "bloom_mappings" in overrides and isinstance(overrides["bloom_mappings"], dict):
         bloom_mappings.update(overrides["bloom_mappings"])
 
-    default_bloom = overrides.get(
-        "default_bloom_level", base.default_bloom_level
-    )
+    default_bloom = overrides.get("default_bloom_level", base.default_bloom_level)
+    content_multiplier = overrides.get("content_multiplier", base.content_multiplier)
 
     fib_profile = base.fibonacci_normalization
     if "fibonacci_normalization" in overrides:
         fib_data = overrides["fibonacci_normalization"]
         if isinstance(fib_data, dict):
             thresholds = fib_data.get("thresholds", fib_profile.thresholds)
-            output_values = fib_data.get(
-                "output_values", fib_profile.output_values
-            )
+            output_values = fib_data.get("output_values", fib_profile.output_values)
             fib_profile = FibonacciNormalizationProfile(
                 thresholds=thresholds, output_values=output_values
             )
@@ -113,5 +113,6 @@ def _merge_calibration_data(
         bloom_levels=bloom_levels,
         bloom_mappings=bloom_mappings,
         default_bloom_level=default_bloom,
+        content_multiplier=content_multiplier,
         fibonacci_normalization=fib_profile,
     )

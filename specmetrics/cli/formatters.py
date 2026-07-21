@@ -30,13 +30,41 @@ def format_text_result(result: PipelineResult, verbose: bool = False) -> str:
                 status_tag = " (skipped)"
             elif mr.status == "failed":
                 status_tag = " (failed)"
-            lines.append(f"  {display_name}: {mr.total}{status_tag}")
+            if mr.name == "tshirt":
+                lines.append(f"  {display_name}: {mr.total} entities{status_tag}")
+            else:
+                extra_tag = ""
+                if mr.name == "business_complexity_points" and result.measurement_result_raw:
+                    bcp_warnings = result.measurement_result_raw.get("bcp_warnings", [])
+                    if bcp_warnings:
+                        extra_tag = " (SDK is missing)"
+                lines.append(f"  {display_name}: {mr.total}{status_tag}{extra_tag}")
 
-        if result.measurement:
-            m = result.measurement
-            if m.breakdown:
-                for ftype, count in sorted(m.breakdown.items()):
-                    lines.append(f"  \u251c\u2500 {ftype}: {count}")
+            if mr.name == "tshirt" and result.measurement_result_raw:
+                tshirt_breakdown = result.measurement_result_raw.get("tshirt_breakdown")
+                if isinstance(tshirt_breakdown, dict):
+                    parts = [
+                        f"{size}: {info.get('count', info)}"
+                        for size, info in sorted(tshirt_breakdown.items())
+                    ]
+                    if parts:
+                        lines.append(f"    {'  '.join(parts)}")
+
+            if (
+                mr.name == "function_points"
+                and result.measurement
+                and result.measurement.breakdown
+            ):
+                for ftype, info in sorted(result.measurement.breakdown.items()):
+                    if isinstance(info, dict):
+                        count = info.get("count", 0)
+                        subtot = info.get("total_ufp", 0)
+                    else:
+                        count = info
+                        subtot = info
+                    lines.append(
+                        f"    \u251c\u2500 {ftype}: count={count}, subtot={subtot}"
+                    )
         lines.append("")
     elif result.measurement:
         m = result.measurement
@@ -59,7 +87,9 @@ def format_text_result(result: PipelineResult, verbose: bool = False) -> str:
         elif sr.entities_found > 0:
             label = "metrics" if sr.stage.value == "measure" else "items"
             extra = f" ({sr.entities_found} {label})"
-        stage_line = f"  {icon} {sr.stage.value:<12} ({sr.duration_seconds:.1f}s){extra}"
+        stage_line = (
+            f"  {icon} {sr.stage.value:<12} ({sr.duration_seconds:.1f}s){extra}"
+        )
         lines.append(stage_line)
 
     if result.error:
@@ -117,5 +147,5 @@ def _status_icon(status: StageExecutionStatus) -> str:
     if status == StageExecutionStatus.SKIPPED:
         return "\u2014"
     if status == StageExecutionStatus.RUNNING:
-        return "\u25B6"
-    return "\u25CB"
+        return "\u25b6"
+    return "\u25cb"

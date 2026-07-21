@@ -4,7 +4,15 @@ from pydantic import BaseModel, Field
 
 
 class SpecificationCostWeights(BaseModel):
-    activities: dict[str, float] = {}
+    activities: dict[str, float] = Field(
+        default_factory=lambda: {
+            "exploration": 2.0,
+            "clarification": 3.0,
+            "refinement": 3.0,
+            "review": 1.5,
+            "validation": 2.0,
+        }
+    )
     decisions: float = 1.5
     assumptions: float = 1.0
     constraints: float = 1.5
@@ -12,6 +20,7 @@ class SpecificationCostWeights(BaseModel):
     open_questions: float = 1.0
     acceptance_criteria: float = 1.0
     glossary_terms: float = 0.5
+    references: float = 1.0
 
 
 class CodeGenerationCostWeights(BaseModel):
@@ -31,3 +40,4 @@ class CalibrationProfile(BaseModel):
     code_generation_cost: CodeGenerationCostWeights = Field(
         default_factory=CodeGenerationCostWeights
     )
+    content_multiplier: float = 0.1

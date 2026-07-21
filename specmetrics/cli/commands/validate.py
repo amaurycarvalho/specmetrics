@@ -26,7 +26,9 @@ def _format_text_report(report_json: dict) -> str:
         for r in doc.get("results", []):
             if not r.get("passed", True):
                 flag = "WARN" if r.get("severity") == "WARNING" else "FAIL"
-                lines.append(f"    {flag}: {r.get('rule_name', '?')} \u2014 {r.get('message', '')}")
+                lines.append(
+                    f"    {flag}: {r.get('rule_name', '?')} \u2014 {r.get('message', '')}"
+                )
     return "\n".join(lines)
 
 
@@ -96,21 +98,29 @@ def validate(
         report_json = {
             "version": "1.0",
             "overall_passed": single.overall_passed,
-            "documents": [
-                single.model_dump() if hasattr(single, "model_dump") else {}
-            ],
+            "documents": [single.model_dump() if hasattr(single, "model_dump") else {}],
             "summary": {
                 "total_documents": 1,
                 "passed_documents": 1 if single.overall_passed else 0,
                 "failed_documents": 0 if single.overall_passed else 1,
-                "total_rules": single.summary.total_rules if hasattr(single, "summary") else 0,
-                "total_passed": single.summary.passed if hasattr(single, "summary") else 0,
-                "total_failed": single.summary.failed if hasattr(single, "summary") else 0,
-                "duration_ms": single.summary.duration_ms if hasattr(single, "summary") else 0,
+                "total_rules": single.summary.total_rules
+                if hasattr(single, "summary")
+                else 0,
+                "total_passed": single.summary.passed
+                if hasattr(single, "summary")
+                else 0,
+                "total_failed": single.summary.failed
+                if hasattr(single, "summary")
+                else 0,
+                "duration_ms": single.summary.duration_ms
+                if hasattr(single, "summary")
+                else 0,
             },
         }
 
-    overall_pass = report_json.get("overall_passed", report_json.get("summary", {}).get("failed_documents", 0) == 0)
+    overall_pass = report_json.get(
+        "overall_passed", report_json.get("summary", {}).get("failed_documents", 0) == 0
+    )
     if isinstance(overall_pass, int):
         overall_pass = overall_pass == 0
 

@@ -10,9 +10,7 @@ def build_explanation(
         measurement.specification_review_effort.contributions
         + measurement.functional_validation_effort.contributions
     )
-    return sorted(
-        all_contributions, key=lambda c: c.partial_score, reverse=True
-    )
+    return sorted(all_contributions, key=lambda c: c.partial_score, reverse=True)
 
 
 def top_contributors(

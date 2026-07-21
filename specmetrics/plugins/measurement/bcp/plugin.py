@@ -78,6 +78,19 @@ class BCPHandler:
 
         result = self._measure(cfm, str(ctx.execution_id))
 
+        bcp_entities = [
+            {
+                "element_id": item.element_id,
+                "element_name": item.element_name,
+                "bcp_score": item.bcp_score,
+                "component_breakdown": item.component_breakdown,
+                "generated_story": item.generated_story,
+                "status": item.status,
+            }
+            for item in result.items
+            if item.status == "success"
+        ]
+
         payload: dict[str, Any] = {
             "bcp_method": result.method,
             "bcp_sdk_version": result.sdk_version,
@@ -88,6 +101,7 @@ class BCPHandler:
             "bcp_items_failed": result.execution_metadata.items_failed,
             "bcp_duration_ms": result.execution_metadata.duration_ms,
             "bcp_warnings": [w.model_dump() for w in result.warnings],
+            "bcp_entities": bcp_entities,
         }
 
         bcp_event = PipelineEvent(
@@ -104,9 +118,7 @@ class BCPHandler:
             duration_ms=result.execution_metadata.duration_ms,
         )
 
-        return ctx.merge_stage_output(
-            "measurement_result", payload, event=bcp_event
-        )
+        return ctx.merge_stage_output("measurement_result", payload, event=bcp_event)
 
     def _measure(
         self,
@@ -150,7 +162,8 @@ class BCPHandler:
                 warnings=[
                     MeasurementWarning(
                         code="SDK_NOT_AVAILABLE",
-                        message=adapter._import_error or "BCP SDK not available. "
+                        message=adapter._import_error
+                        or "BCP SDK not available. "
                         "Install with: pip install bcp-calculator",
                     )
                 ],
@@ -208,9 +221,7 @@ class BCPHandler:
                         evidence_refs=[
                             MeasurementEvidence(
                                 element_id=fp_id,
-                                document_id=getattr(
-                                    fp.evidence, "document_id", ""
-                                ),
+                                document_id=getattr(fp.evidence, "document_id", ""),
                                 text=getattr(fp.evidence, "text", ""),
                             )
                         ],
@@ -233,18 +244,14 @@ class BCPHandler:
                         evidence_refs=[
                             MeasurementEvidence(
                                 element_id=fp_id,
-                                document_id=getattr(
-                                    fp.evidence, "document_id", ""
-                                ),
+                                document_id=getattr(fp.evidence, "document_id", ""),
                                 text=getattr(fp.evidence, "text", ""),
                             )
                         ],
                     )
                 )
 
-        total_bcp = sum(
-            item.bcp_score for item in items if item.status == "success"
-        )
+        total_bcp = sum(item.bcp_score for item in items if item.status == "success")
         duration_ms = (time.monotonic() - start) * 1000
 
         if _story_gauge is not None:
@@ -376,9 +383,7 @@ class BCPPlugin:
                     )
                 )
 
-        total_bcp = sum(
-            item.bcp_score for item in items if item.status == "success"
-        )
+        total_bcp = sum(item.bcp_score for item in items if item.status == "success")
         duration_ms = (time.monotonic() - start) * 1000
 
         return BCPMeasurementResult(

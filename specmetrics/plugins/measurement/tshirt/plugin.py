@@ -38,6 +38,7 @@ from .models import (
     MeasurementWarning,
     TShirtMeasurementResult,
 )
+
 logger = structlog.get_logger(__name__)
 
 
@@ -159,15 +160,20 @@ class TShirtHandler:
 
         dist_str = {str(k): v for k, v in result.distribution.items()}
 
+        tshirt_entities = [item.model_dump(mode="json") for item in result.items]
+
         payload: dict[str, Any] = {
             "method": result.method,
             "scale": result.scale,
+            "tshirt": result.total_items,
+            "tshirt_breakdown": {k: {"count": v} for k, v in result.distribution.items()},
             "total_items": result.total_items,
             "distribution": dist_str,
             "applied_rule_pack": result.applied_rule_pack,
             "source_measurement_run_id": result.source_measurement_run_id,
             "duration_ms": result.execution_metadata.duration_ms,
             "warnings": [w.model_dump() for w in result.warnings],
+            "tshirt_entities": tshirt_entities,
         }
 
         tshirt_event = PipelineEvent(
@@ -183,15 +189,17 @@ class TShirtHandler:
             duration_ms=result.execution_metadata.duration_ms,
         )
 
-        return ctx.with_stage_output(
-            "measurement_result", payload, event=tshirt_event
-        )
+        return ctx.merge_stage_output("measurement_result", payload, event=tshirt_event)
 
     def _extract_sp_items(self, measurement_result: Any) -> list | None:
         if measurement_result is None:
             return None
         if isinstance(measurement_result, dict):
-            return measurement_result.get("items") or measurement_result.get("estimated_items")
+            return (
+                measurement_result.get("storypoints_entities")
+                or measurement_result.get("items")
+                or measurement_result.get("estimated_items")
+            )
         if hasattr(measurement_result, "items"):
             return measurement_result.items
         return None
@@ -200,14 +208,22 @@ class TShirtHandler:
         if measurement_result is None:
             return None
         if isinstance(measurement_result, dict):
-            return measurement_result.get("run_id")
+            return (
+                measurement_result.get("run_id")
+                or measurement_result.get("storypoints_run_id")
+                or measurement_result.get("execution_id")
+            )
         if hasattr(measurement_result, "run_id"):
             return measurement_result.run_id
         return None
 
     def _get_sp_value(self, item: Any) -> int | None:
         if isinstance(item, dict):
-            val = item.get("normalized_value") or item.get("story_point_value") or item.get("value")
+            val = (
+                item.get("normalized_value")
+                or item.get("story_point_value")
+                or item.get("value")
+            )
             return int(val) if val is not None else None
         for attr in ("normalized_value", "story_point_value", "value"):
             val = getattr(item, attr, None)
@@ -229,7 +245,11 @@ class TShirtHandler:
         metadata = ctx.metadata
         if metadata is None:
             return None
-        extra = metadata if isinstance(metadata, dict) else getattr(metadata, "extra", None) or {}
+        extra = (
+            metadata
+            if isinstance(metadata, dict)
+            else getattr(metadata, "extra", None) or {}
+        )
         raw = extra.get("tshirt_mapping") if isinstance(extra, dict) else None
         if raw is None:
             return None
@@ -294,9 +314,7 @@ class TShirtPlugin:
             total_items=len(items),
             items=items,
             distribution=dist,
-            execution_metadata=ExecutionMetadata(
-                total_fps_processed=len(items)
-            ),
+            execution_metadata=ExecutionMetadata(total_fps_processed=len(items)),
             warnings=warnings,
         )
 

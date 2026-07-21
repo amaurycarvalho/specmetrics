@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+import re
+
+from pydantic import BaseModel, Field, field_validator
 
 from .enums import (
     OutputFormat,
@@ -10,6 +14,82 @@ from .enums import (
     StageExecutionStatus,
     StageName,
 )
+
+
+CanonicalEntityType = Literal[
+    "data_group",
+    "operation",
+    "functional_process",
+    "specification_activity",
+    "business_rule",
+    "actor",
+    "relationship",
+    "decision",
+    "assumption",
+    "constraint",
+    "risk",
+    "open_question",
+    "acceptance_criteria",
+    "glossary_term",
+]
+
+CANONICAL_ENTITY_TYPES: frozenset[str] = frozenset(CanonicalEntityType.__args__)
+
+
+_ENTITY_ID_PATTERN = re.compile(r"^(cfm|csm):[a-z_]+:.+$")
+
+
+def is_valid_entity_id(id_str: str) -> bool:
+    return bool(_ENTITY_ID_PATTERN.match(id_str))
+
+
+def make_entity_id(category: str, name: str, model_source: str = "cfm") -> str:
+    if model_source not in ("cfm", "csm"):
+        model_source = "cfm"
+    safe_name = name.lower()
+    safe_name = re.sub(r'[^\w/-]', '-', safe_name)
+    safe_name = re.sub(r'[-]+', '-', safe_name)
+    safe_name = safe_name.strip("-")
+    safe_name = safe_name[:100]
+    return f"{model_source}:{category}:{safe_name}"
+
+
+def resolve_entity_id(raw_id: str, category: str, name: str, model_source: str = "cfm") -> str:
+    if raw_id and is_valid_entity_id(raw_id):
+        return raw_id
+    return make_entity_id(category, name, model_source)
+
+
+class EntityScore(BaseModel):
+    id: str
+    name: str
+    type: str
+    score: float
+    metadata: dict[str, Any] | None = None
+
+    @field_validator("id")
+    @classmethod
+    def validate_id_format(cls, v: str) -> str:
+        if not _ENTITY_ID_PATTERN.match(v):
+            raise ValueError(
+                f"Entity id '{v}' must match compound URI pattern "
+                f"<source_model>:<category>:<name> where source_model is cfm or csm"
+            )
+        return v
+
+
+class MetricBreakdownEntry(BaseModel):
+    name: str
+    metric: str
+    total: float
+    unit: str
+    entity_count: int
+    entities: list[EntityScore] = Field(default_factory=list)
+    status: str = "success"
+    errors: list[str] | None = None
+    warnings: list[str] | None = None
+    metadata: dict[str, Any] | None = None
+
 
 METRIC_NAME_MAP: dict[str, str] = {
     "bcp": "business_complexity_points",
@@ -55,6 +135,7 @@ class PipelineRequest:
     verbose: bool = False
     quiet: bool = False
     measure_id: str = ""
+    llm_rpm_limit: int = 15
 
 
 @dataclass
@@ -77,7 +158,7 @@ class MeasurementResult:
 @dataclass
 class MetricOutputItem:
     name: str
-    total: int = 0
+    total: float = 0
     status: str = "completed"
     duration_ms: int = 0
 
@@ -116,6 +197,8 @@ class PipelineResult:
     output_errors: list[ErrorOutputItem] = field(default_factory=list)
     llm_provider: str = ""
     llm_model: str = ""
+    measurement_result_raw: dict[str, Any] = field(default_factory=dict)
+    llm_call_stats: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

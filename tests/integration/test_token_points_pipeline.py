@@ -33,16 +33,22 @@ def _make_cfm() -> CanonicalFunctionalModel:
         run_id="pipeline-test-cfm",
         functional_processes={
             _uid(): FunctionalProcess(
-                id=_uid(), name="Login", evidence=ev,
+                id=_uid(),
+                name="Login",
+                evidence=ev,
             ),
         },
         operations={
             _uid(): Operation(
-                id=_uid(), name="Authenticate",
-                parent_process_id=_uid(), evidence=ev,
+                id=_uid(),
+                name="Authenticate",
+                parent_process_id=_uid(),
+                evidence=ev,
             ),
         },
-        metadata=CfmBuildMetadata(run_id="pipeline-test-cfm", version="1.0", source="test"),
+        metadata=CfmBuildMetadata(
+            run_id="pipeline-test-cfm", version="1.0", source="test"
+        ),
     )
 
 
@@ -52,17 +58,22 @@ def _make_csm() -> CanonicalSpecificationModel:
         run_id="pipeline-test-csm",
         specification_activities={
             _uid(): SpecificationActivity(
-                id=_uid(), description="Clarification",
-                activity_type="clarification", evidence_references=[ev],
+                id=_uid(),
+                description="Clarification",
+                activity_type="clarification",
+                evidence_references=[ev],
             ),
         },
         decisions={
             _uid(): Decision(
-                id=_uid(), description="Use Python",
+                id=_uid(),
+                description="Use Python",
                 evidence_references=[ev],
             ),
         },
-        metadata=CsmBuildMetadata(run_id="pipeline-test-csm", version="1.0", source="test"),
+        metadata=CsmBuildMetadata(
+            run_id="pipeline-test-csm", version="1.0", source="test"
+        ),
     )
 
 

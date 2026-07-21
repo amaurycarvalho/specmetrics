@@ -11,11 +11,9 @@ class TestSpecificationAdapterProtocol:
     def test_valid_adapter_passes_isinstance_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def scan(self, repository_path: Path) -> list[Document]:
-                ...
+            def scan(self, repository_path: Path) -> list[Document]: ...
 
-            def supports(self, path: Path) -> bool:
-                ...
+            def supports(self, path: Path) -> bool: ...
 
         class ValidAdapter:
             def scan(self, repository_path: Path) -> list[Document]:
@@ -30,11 +28,9 @@ class TestSpecificationAdapterProtocol:
     def test_adapter_missing_scan_fails_protocol_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def scan(self, repository_path: Path) -> list[Document]:
-                ...
+            def scan(self, repository_path: Path) -> list[Document]: ...
 
-            def supports(self, path: Path) -> bool:
-                ...
+            def supports(self, path: Path) -> bool: ...
 
         class MissingScan:
             def supports(self, path: Path) -> bool:
@@ -46,11 +42,9 @@ class TestSpecificationAdapterProtocol:
     def test_adapter_missing_supports_fails_protocol_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def scan(self, repository_path: Path) -> list[Document]:
-                ...
+            def scan(self, repository_path: Path) -> list[Document]: ...
 
-            def supports(self, path: Path) -> bool:
-                ...
+            def supports(self, path: Path) -> bool: ...
 
         class MissingSupports:
             def scan(self, repository_path: Path) -> list[Document]:
@@ -97,7 +91,9 @@ class TestSpecificationAdapterProtocol:
 
 class TestDocumentDataclass:
     def test_document_accepts_valid_field_values(self):
-        doc = Document(id="doc-1", path="specs/req.md", document_type="section", content="# Hello")
+        doc = Document(
+            id="doc-1", path="specs/req.md", document_type="section", content="# Hello"
+        )
         assert doc.id == "doc-1"
         assert doc.path == "specs/req.md"
         assert doc.document_type == "section"
@@ -116,7 +112,9 @@ class TestDocumentDataclass:
         assert doc.metadata["framework"] == "openspec"
 
     def test_document_section_stores_hierarchy_correctly(self):
-        subsection = DocumentSection(id="sub-1", title="Subsection", level=2, content="Sub content")
+        subsection = DocumentSection(
+            id="sub-1", title="Subsection", level=2, content="Sub content"
+        )
         section = DocumentSection(
             id="sec-1",
             title="Main Section",
@@ -131,7 +129,9 @@ class TestDocumentDataclass:
         assert section.subsections[0].level == 2
 
     def test_document_with_empty_content_is_valid(self):
-        doc = Document(id="doc-empty", path="empty.md", document_type="section", content="")
+        doc = Document(
+            id="doc-empty", path="empty.md", document_type="section", content=""
+        )
         assert doc.content == ""
 
 
@@ -140,8 +140,18 @@ class TestMockAdapterScan:
         class MockAdapter:
             def scan(self, repository_path: Path) -> list[Document]:
                 return [
-                    Document(id="uc-1", path="specs/use-cases/login.md", document_type="use_case", content="# Login"),
-                    Document(id="br-1", path="specs/business-rules/password.md", document_type="business_rule", content="# Password"),
+                    Document(
+                        id="uc-1",
+                        path="specs/use-cases/login.md",
+                        document_type="use_case",
+                        content="# Login",
+                    ),
+                    Document(
+                        id="br-1",
+                        path="specs/business-rules/password.md",
+                        document_type="business_rule",
+                        content="# Password",
+                    ),
                 ]
 
             def supports(self, path: Path) -> bool:

@@ -43,8 +43,13 @@ class TestPluginLifecycle:
         )
         mock_ep = _mock_ep("lifecycle-test", meta)
 
-        with patch("specmetrics.kernel.plugin_discovery.entry_points", return_value=[mock_ep]), \
-             patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"):
+        with (
+            patch(
+                "specmetrics.kernel.plugin_discovery.entry_points",
+                return_value=[mock_ep],
+            ),
+            patch("specmetrics.kernel.plugin_validation.version", return_value="1.0.0"),
+        ):
             registry = load_plugins(PluginRegistry(), PluginValidator())
 
         plugins = registry.list_plugins()

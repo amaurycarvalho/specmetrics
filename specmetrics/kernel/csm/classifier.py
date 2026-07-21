@@ -7,13 +7,14 @@ from specmetrics.kernel.evidence_graph import GraphNode
 
 
 FRAMEWORK_PATTERNS = [
-    re.compile(r"^(?:OpenSpec|SpecKit|SpecMetrics)\s+(?:Section|Document|Measurement|Feature|Element|Concept):\s*", re.IGNORECASE),
+    re.compile(
+        r"^(?:OpenSpec|SpecKit|SpecMetrics)\s+(?:Section|Document|Measurement|Feature|Element|Concept):\s*",
+        re.IGNORECASE,
+    ),
     re.compile(r"^(?:open_spec|speckit|specmetrics)[_.].*", re.IGNORECASE),
 ]
 
-DECISION_PATTERNS = re.compile(
-    r"(?i)(decided|chosen|selected|agreed|resolved)\b.*"
-)
+DECISION_PATTERNS = re.compile(r"(?i)(decided|chosen|selected|agreed|resolved)\b.*")
 
 ASSUMPTION_PATTERNS = re.compile(
     r"(?i)(assume|assumed|presume|taken\s+as\s+true|we\s+believe)\b"
@@ -35,13 +36,9 @@ ACCEPTANCE_PATTERNS = re.compile(
     r"(?i)\b(given|when|then|verify|validated|acceptance)\b"
 )
 
-GLOSSARY_PATTERNS = re.compile(
-    r"(?i)^[A-Z][a-zA-Z]*(?:\s+[a-z][a-zA-Z]*)?\s*[:\-–—]"
-)
+GLOSSARY_PATTERNS = re.compile(r"(?i)^[A-Z][a-zA-Z]*(?:\s+[a-z][a-zA-Z]*)?\s*[:\-–—]")
 
-SPEC_ACTIVITY_PATTERNS = re.compile(
-    r"(?i)(explore|clarify|refine|review|validate)\b"
-)
+SPEC_ACTIVITY_PATTERNS = re.compile(r"(?i)(explore|clarify|refine|review|validate)\b")
 
 CLASSIFIER_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("decision", DECISION_PATTERNS),

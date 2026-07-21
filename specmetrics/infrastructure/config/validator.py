@@ -8,7 +8,9 @@ from .schema import ConfigWarning
 
 
 class ConfigValidationError(Exception):
-    def __init__(self, message: str, field: str, value: Any, expected_type: str) -> None:
+    def __init__(
+        self, message: str, field: str, value: Any, expected_type: str
+    ) -> None:
         self.field = field
         self.value = value
         self.expected_type = expected_type
@@ -16,7 +18,9 @@ class ConfigValidationError(Exception):
 
 
 class ConfigParseError(Exception):
-    def __init__(self, message: str, file_path: str, line_number: int | None = None) -> None:
+    def __init__(
+        self, message: str, file_path: str, line_number: int | None = None
+    ) -> None:
         self.file_path = file_path
         self.line_number = line_number
         super().__init__(message)

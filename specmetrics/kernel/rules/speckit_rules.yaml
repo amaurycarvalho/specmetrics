@@ -56,7 +56,7 @@ rules:
     name: "Numbered Given/When/Then"
     pattern:
       regex: '^(\d+)\. \*\*Given\*\* (.+), \*\*When\*\* (.+), \*\*Then\*\* (.+)$'
-    type: "fact"
+    type: "operation"
     confidence: 0.90
     priority: 75
 
@@ -65,7 +65,7 @@ rules:
     name: "Multi-line GIVEN"
     pattern:
       regex: '^-\s+\*\*Given\*\* (.+)$'
-    type: "fact"
+    type: "operation"
     confidence: 0.90
     priority: 75
     target_sections:
@@ -75,7 +75,7 @@ rules:
     name: "Multi-line WHEN"
     pattern:
       regex: '^-\s+\*\*When\*\* (.+)$'
-    type: "fact"
+    type: "operation"
     confidence: 0.90
     priority: 75
     target_sections:
@@ -85,7 +85,7 @@ rules:
     name: "Multi-line THEN"
     pattern:
       regex: '^-\s+\*\*Then\*\* (.+)$'
-    type: "fact"
+    type: "operation"
     confidence: 0.90
     priority: 75
     target_sections:

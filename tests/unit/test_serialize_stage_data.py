@@ -60,7 +60,9 @@ def _serialize_stage_data(
         raw_entities = result.stage_entities.get(sd.name, [])
         if raw_entities:
             per_category = sd.name in csm_cfm_stages
-            entry["entities"] = _truncate_entities(raw_entities, max_entities_per_stage, per_category=per_category)
+            entry["entities"] = _truncate_entities(
+                raw_entities, max_entities_per_stage, per_category=per_category
+            )
         else:
             entry["entities"] = []
         stages[sd.name] = [entry]
@@ -69,7 +71,9 @@ def _serialize_stage_data(
 
 def test_empty_entities_backward_compat():
     result = MockPipelineResult(
-        stage_details=[MockStageOutputItem(name="discover", count=5, count_type="documents")],
+        stage_details=[
+            MockStageOutputItem(name="discover", count=5, count_type="documents")
+        ],
     )
     serialized = _serialize_stage_data(result)
     entry = serialized["discover"][0]
@@ -80,7 +84,9 @@ def test_empty_entities_backward_compat():
 
 def test_populated_entities():
     result = MockPipelineResult(
-        stage_details=[MockStageOutputItem(name="discover", count=2, count_type="documents")],
+        stage_details=[
+            MockStageOutputItem(name="discover", count=2, count_type="documents")
+        ],
         stage_entities={
             "discover": [
                 {"id": "1", "document_type": "sdd", "path": "doc1.sdd"},
@@ -97,7 +103,9 @@ def test_populated_entities():
 def test_truncation_applied():
     entities = [{"id": str(i)} for i in range(100)]
     result = MockPipelineResult(
-        stage_details=[MockStageOutputItem(name="extract", count=100, count_type="items")],
+        stage_details=[
+            MockStageOutputItem(name="extract", count=100, count_type="items")
+        ],
         stage_entities={"extract": entities},
     )
     serialized = _serialize_stage_data(result, max_entities_per_stage=10)
@@ -117,12 +125,20 @@ def test_missing_stage_in_entities():
 
 def test_top_level_keys_preserved():
     result = MockPipelineResult(
-        stage_details=[MockStageOutputItem(name="measure", count=3, count_type="metrics")],
+        stage_details=[
+            MockStageOutputItem(name="measure", count=3, count_type="metrics")
+        ],
         stage_entities={"measure": [{"metric": "fpa", "total": 10}]},
     )
     serialized = _serialize_stage_data(result)
     entry = serialized["measure"][0]
-    assert list(entry.keys()) == ["name", "count", "count_type", "duration_ms", "entities"]
+    assert list(entry.keys()) == [
+        "name",
+        "count",
+        "count_type",
+        "duration_ms",
+        "entities",
+    ]
 
 
 def test_multiple_stages():

@@ -53,7 +53,9 @@ class ExplanationConfig:
         cfg = data.get("explanation", {})
         return cls(
             max_evidence_depth=cfg.get("max_evidence_depth", cls.max_evidence_depth),
-            include_low_confidence=cfg.get("include_low_confidence", cls.include_low_confidence),
+            include_low_confidence=cfg.get(
+                "include_low_confidence", cls.include_low_confidence
+            ),
             min_confidence=cfg.get("min_confidence", cls.min_confidence),
             default_format=cfg.get("default_format", cls.default_format),
             storage_dir=cfg.get("storage_dir", cls.storage_dir),
@@ -129,7 +131,11 @@ def _build_metrics_from_measurement_result(
                 metric_name=f"{ft}_count",
                 metric_value=bd.get("count", 0),
                 computation_summary=f"Total {ft} elements: {bd.get('count', 0)} (UFP: {bd.get('total_ufp', 0)})",
-                elements=[ElementContribution(**el) for el in elements if el["element_type"] == ft],
+                elements=[
+                    ElementContribution(**el)
+                    for el in elements
+                    if el["element_type"] == ft
+                ],
                 applied_rules=applied_rules,
             )
         )
@@ -161,19 +167,27 @@ def _collect_cfm_elements(
     if cfm is None:
         return elements, applied_rules
 
-    for category_name in ("actors", "functional_processes", "business_rules", "data_groups", "operations"):
+    for category_name in (
+        "actors",
+        "functional_processes",
+        "business_rules",
+        "data_groups",
+        "operations",
+    ):
         category = cfm.get_elements_by_category(category_name)
         for eid, elem in category.items():
             evidence_refs = tracer.trace_element(eid, cfm=cfm)
-            elements.append({
-                "element_id": eid,
-                "element_type": category_name,
-                "element_label": getattr(elem, "name", eid),
-                "complexity": None,
-                "weight": None,
-                "evidence": evidence_refs,
-                "applied_rules": [],
-            })
+            elements.append(
+                {
+                    "element_id": eid,
+                    "element_type": category_name,
+                    "element_label": getattr(elem, "name", eid),
+                    "complexity": None,
+                    "weight": None,
+                    "evidence": evidence_refs,
+                    "applied_rules": [],
+                }
+            )
 
     for rid, rule in cfm.business_rules.items():
         applied_rules.append(
@@ -217,7 +231,9 @@ class ExplainService:
         elements, applied_rules = _collect_cfm_elements(cfm, self._tracer)
 
         if measurement_result:
-            metrics = _build_metrics_from_measurement_result(measurement_result, elements, applied_rules)
+            metrics = _build_metrics_from_measurement_result(
+                measurement_result, elements, applied_rules
+            )
         else:
             metrics = _build_metrics_from_elements(elements, applied_rules, cfm)
 
@@ -233,18 +249,23 @@ class ExplainService:
             gaps = []
 
         if graph is None:
-            gaps.append("Evidence graph not available — evidence references may be incomplete")
+            gaps.append(
+                "Evidence graph not available — evidence references may be incomplete"
+            )
 
         explanation = MeasurementExplanation(
             run_id=run_id,
-            spec_path=spec_path or (cfm.metadata.run_id if cfm and cfm.metadata else run_id),
+            spec_path=spec_path
+            or (cfm.metadata.run_id if cfm and cfm.metadata else run_id),
             measured_at=datetime.now(timezone.utc),
             metrics=metrics,
             applied_rules=applied_rules,
             summary=ExplanationSummary(
                 total_metrics=len(metrics),
                 total_elements=len(elements),
-                total_evidence_refs=sum(len(el.evidence) for el in metrics[0].elements) if metrics else 0,
+                total_evidence_refs=sum(len(el.evidence) for el in metrics[0].elements)
+                if metrics
+                else 0,
                 total_rules_applied=len(applied_rules),
             ),
         )
@@ -264,7 +285,9 @@ class ExplainService:
         except OSError as exc:
             logger.warning("explanation_save_failed", run_id=run_id, error=str(exc))
 
-    def load_explanation(self, run_id: str, spec_path_hint: str | None = None) -> MeasurementExplanation | None:
+    def load_explanation(
+        self, run_id: str, spec_path_hint: str | None = None
+    ) -> MeasurementExplanation | None:
         cached = _explanation_store.get(run_id)
         if cached is not None:
             return cached
@@ -278,7 +301,12 @@ class ExplainService:
                 _explanation_store[run_id] = explanation
                 return explanation
             except (json.JSONDecodeError, KeyError, ValueError) as exc:
-                logger.warning("explanation_load_failed", run_id=run_id, path=str(path), error=str(exc))
+                logger.warning(
+                    "explanation_load_failed",
+                    run_id=run_id,
+                    path=str(path),
+                    error=str(exc),
+                )
                 return None
 
         return None

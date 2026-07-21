@@ -45,11 +45,15 @@ class PluginRegistry:
                 for et in existing.metadata.handled_event_types:
                     by_event = self._by_event_type.get(et)
                     if by_event:
-                        self._by_event_type[et] = [d for d in by_event if d.metadata.id != old_id]
+                        self._by_event_type[et] = [
+                            d for d in by_event if d.metadata.id != old_id
+                        ]
                 pt_key = existing.metadata.plugin_type.value
                 by_type = self._by_plugin_type.get(pt_key)
                 if by_type:
-                    self._by_plugin_type[pt_key] = [d for d in by_type if d.metadata.id != old_id]
+                    self._by_plugin_type[pt_key] = [
+                        d for d in by_type if d.metadata.id != old_id
+                    ]
 
         self._by_entry_point[descriptor.entry_point_name] = descriptor
         self._plugins[descriptor.metadata.id] = descriptor
@@ -69,7 +73,10 @@ class PluginRegistry:
         if not descriptors:
             return None
         for d in descriptors:
-            if d.status == PluginStatus.REGISTERED and d.metadata.handler_factory is not None:
+            if (
+                d.status == PluginStatus.REGISTERED
+                and d.metadata.handler_factory is not None
+            ):
                 return d.metadata.handler_factory()
         return None
 
@@ -77,7 +84,10 @@ class PluginRegistry:
         descriptors = self._by_event_type.get(event_type, [])
         result: list[EventHandler] = []
         for d in descriptors:
-            if d.status == PluginStatus.REGISTERED and d.metadata.handler_factory is not None:
+            if (
+                d.status == PluginStatus.REGISTERED
+                and d.metadata.handler_factory is not None
+            ):
                 result.append(d.metadata.handler_factory())
         return result
 
@@ -95,7 +105,10 @@ class PluginRegistry:
         for descriptor in self._plugins.values():
             if descriptor.status != PluginStatus.REGISTERED:
                 continue
-            if metrics_filter is not None and descriptor.metadata.plugin_type == PluginType.MEASUREMENT:
+            if (
+                metrics_filter is not None
+                and descriptor.metadata.plugin_type == PluginType.MEASUREMENT
+            ):
                 plugin_ids = {CLI_ID_TO_PLUGIN_ID.get(m, m) for m in metrics_filter}
                 if descriptor.metadata.id not in plugin_ids:
                     continue

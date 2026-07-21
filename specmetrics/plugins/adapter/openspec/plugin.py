@@ -112,7 +112,12 @@ class OpenSpecAdapter:
                     stats.specification_count += 1
             except UnicodeDecodeError as e:
                 error_code = "ENCODING_ERROR"
-                logger.error("openspec_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "openspec_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -123,7 +128,12 @@ class OpenSpecAdapter:
                 stats.total_errors += 1
             except Exception as e:
                 error_code = "UNREADABLE"
-                logger.error("openspec_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "openspec_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -155,7 +165,12 @@ class OpenSpecAdapter:
                     stats.active_changes += 1
             except UnicodeDecodeError as e:
                 error_code = "ENCODING_ERROR"
-                logger.error("openspec_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "openspec_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),
@@ -166,7 +181,12 @@ class OpenSpecAdapter:
                 stats.total_errors += 1
             except Exception as e:
                 error_code = "UNREADABLE"
-                logger.error("openspec_file_error", path=str(file_path), error_code=error_code, message=str(e))
+                logger.error(
+                    "openspec_file_error",
+                    path=str(file_path),
+                    error_code=error_code,
+                    message=str(e),
+                )
                 errors.append(
                     ScanError(
                         file_path=str(file_path.relative_to(repository_path)),

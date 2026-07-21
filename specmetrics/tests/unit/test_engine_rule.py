@@ -152,9 +152,7 @@ class TestRuleMatching:
                 priority=80,
             ),
         ]
-        matched = RulePackLoader.match_rules(
-            rules, "", "As a user, I want to login"
-        )
+        matched = RulePackLoader.match_rules(rules, "", "As a user, I want to login")
         assert matched is not None
         assert matched.id == "user-story"
 

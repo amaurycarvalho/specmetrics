@@ -91,7 +91,9 @@ class ProviderRouter:
                 if p.supports_type(document_type):
                     return p
             except Exception:
-                logger.warning("provider_supports_type_failed", document_type=document_type)
+                logger.warning(
+                    "provider_supports_type_failed", document_type=document_type
+                )
         return None
 
     def discover_from_registry(self, registry: PluginRegistry) -> None:
@@ -104,7 +106,9 @@ class ProviderRouter:
                 continue
             try:
                 provider = factory()
-                if not hasattr(provider, "extract") or not hasattr(provider, "supports_type"):
+                if not hasattr(provider, "extract") or not hasattr(
+                    provider, "supports_type"
+                ):
                     logger.warning(
                         "discovered_provider_missing_required_methods",
                         plugin_id=descriptor.metadata.id,

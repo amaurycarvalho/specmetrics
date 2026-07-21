@@ -3,13 +3,10 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
 import time
 from pathlib import Path
 from typing import Any
 
-import litellm
-from litellm import RateLimitError
 from pydantic import BaseModel, Field
 
 from specmetrics.kernel.adapter_interface import Document
@@ -20,17 +17,17 @@ from specmetrics.kernel.extraction_provider import (
     ExtractionResult,
     ProcessingStats,
 )
+from specmetrics.kernel.llm_gateway import (
+    BatchRequest,
+    DocumentPayload,
+    LLMGateway,
+    LLMGatewayConfig,
+)
 from specmetrics.kernel.semantic_extraction_engine import (
     ExtractionResult as NewExtractionResult,
 )
 
 logger = logging.getLogger(__name__)
-
-# Suppress LiteLLM's verbose error banners — we handle errors ourselves
-litellm.suppress_debug_info = True
-litellm.set_verbose = False
-logging.getLogger("LiteLLM").setLevel(logging.WARNING)
-logging.getLogger("litellm").setLevel(logging.WARNING)
 
 _DEFAULT_CHUNK_SIZE = 8_000
 
@@ -50,27 +47,6 @@ CANONICAL_TYPE_MAP: dict[str, str] = {
 
 def _infer_type(document_type: str) -> str:
     return CANONICAL_TYPE_MAP.get(document_type, "unknown")
-
-
-def _strip_code_fence(text: str) -> str:
-    text = text.strip()
-    if text.startswith("```"):
-        first_nl = text.find("\n")
-        if first_nl != -1:
-            text = text[first_nl + 1:]
-        if text.endswith("```"):
-            text = text[:-3]
-    return text.strip()
-
-
-_RETRY_DELAY_RE = re.compile(r"'retryDelay':\s*'(\d+(?:\.\d+)?)s'")
-
-
-def _parse_retry_delay(error_text: str) -> float | None:
-    match = _RETRY_DELAY_RE.search(error_text)
-    if match:
-        return float(match.group(1))
-    return None
 
 
 class LLMProviderConfig(BaseModel):
@@ -106,9 +82,15 @@ def _load_llm_config() -> dict[str, Any]:
             if path.exists():
                 try:
                     import ruamel.yaml
+
                     yaml = ruamel.yaml.YAML(typ="safe")
                     data = yaml.load(path.read_text(encoding="utf-8"))
-                    return (data or {}).get("plugins", {}).get("extraction_stage", {}).get("llm", {})
+                    return (
+                        (data or {})
+                        .get("plugins", {})
+                        .get("extraction_stage", {})
+                        .get("llm", {})
+                    )
                 except Exception:
                     return {}
     return {}
@@ -123,6 +105,7 @@ class LLMExtractionProvider:
         api_url: str | None = None,
         model: str | None = None,
         api_key: str | None = None,
+        gateway: LLMGateway | None = None,
     ) -> None:
         self._provider_id = provider_id
         self._chunk_size = chunk_size
@@ -133,9 +116,7 @@ class LLMExtractionProvider:
         self._provider = provider if provider is not None else cfg.get("provider")
 
         self._api_url = (
-            api_url
-            or cfg.get("api_url")
-            or os.environ.get("SPECMETRICS_LLM_API_URL")
+            api_url or cfg.get("api_url") or os.environ.get("SPECMETRICS_LLM_API_URL")
         )
         self._model = (
             model
@@ -149,6 +130,17 @@ class LLMExtractionProvider:
             or os.environ.get("SPECMETRICS_LLM_API_KEY")
             or os.environ.get("OPENAI_API_KEY")
         )
+
+        if gateway is not None:
+            self._gateway = gateway
+        else:
+            gw_config = LLMGatewayConfig(
+                provider=self._provider or "openai",
+                model=self._model,
+                api_key=self._api_key,
+                api_url=self._api_url,
+            )
+            self._gateway = LLMGateway(gw_config)
 
     @classmethod
     def config_schema(cls) -> type[BaseModel]:
@@ -235,7 +227,6 @@ class LLMExtractionProvider:
     def extract(self, document: Document) -> ExtractionResult:
         started_at = time.monotonic()
         all_elements: list[ExtractedElement] = []
-        chunks = self._chunk_content(document.content)
         errors = 0
 
         config_msg = self._check_config()
@@ -243,84 +234,71 @@ class LLMExtractionProvider:
             logger.warning(config_msg)
 
         if self.__class__._no_key:
-            fallback_elements, fallback_errors = self._run_deterministic_fallback(document)
-            all_elements.extend(fallback_elements)
-            errors += fallback_errors
-            duration = int((time.monotonic() - started_at) * 1000)
-            return ExtractionResult(
-                provider_id=self._provider_id,
-                elements=all_elements,
-                processing_stats=ProcessingStats(
-                    documents_processed=1,
-                    elements_extracted=len(all_elements),
-                    errors=errors,
-                    duration_ms=duration,
-                ),
+            return self._fallback_extract(document, started_at)
+
+        chunks = self._chunk_content(document.content)
+        doc_payloads = [
+            DocumentPayload(
+                document_id=f"{document.id}/chunk-{idx}",
+                content=chunk_text,
+                document_type=document.document_type,
             )
+            for chunk_text, idx in chunks
+        ]
 
-        completion_kwargs = self._build_completion_kwargs()
+        batch = BatchRequest(
+            system_prompt=(
+                "Extract semantic elements from the following specification document. "
+                "Return a JSON object with an 'elements' array where each element has "
+                "fields: type (fact/entity/relationship/operation), "
+                "confidence (0.0-1.0), and content."
+            ),
+            documents=doc_payloads,
+        )
 
-        for chunk_text, chunk_idx in chunks:
-            retries = 0
-            while retries < 3:
-                try:
-                    response = litellm.completion(
-                        **completion_kwargs,
-                        messages=[
-                            {
-                                "role": "system",
-                                "content": (
-                                    "Extract semantic elements from the following specification document. "
-                                    "Return a JSON array of objects with fields: type (fact/entity/relationship/operation), "
-                                    "confidence (0.0-1.0), and content."
-                                ),
-                            },
-                            {"role": "user", "content": chunk_text},
-                        ],
-                    )
-                    chunk_elements = self._parse_response(response, document, chunk_idx)
-                    all_elements.extend(chunk_elements)
-                    break
-                except RateLimitError as exc:
-                    retries += 1
-                    delay = _parse_retry_delay(str(exc))
-                    if delay:
-                        logger.warning(
-                            "Rate limit hit for chunk %d (attempt %d/3). "
-                            "Waiting %.1fs before retry...",
-                            chunk_idx,
-                            retries,
-                            delay,
+        try:
+            batch_results = self._gateway.complete_batch(batch, json_mode=True)
+            total_elements_found = 0
+            for chunk_doc_id, elements_list in batch_results.items():
+                chunk_idx = 0
+                if "/chunk-" in chunk_doc_id:
+                    try:
+                        chunk_idx = int(chunk_doc_id.split("/chunk-")[1])
+                    except (ValueError, IndexError):
+                        pass
+                for i, item in enumerate(elements_list):
+                    total_elements_found += 1
+                    elem_type = item.get("type", "fact")
+                    confidence = float(item.get("confidence", 0.5))
+                    text = item.get("content", "")
+                    section_id = f"chunk-{chunk_idx}" if chunk_idx > 0 else None
+                    all_elements.append(
+                        ExtractedElement(
+                            id=f"{document.id}/llm-{chunk_idx}-{i}",
+                            type=elem_type,
+                            confidence=max(0.0, min(1.0, confidence)),
+                            evidence=EvidenceReference(
+                                document_id=document.id,
+                                section_id=section_id,
+                                text=text[:200],
+                            ),
+                            content=text,
                         )
-                        time.sleep(delay)
-                    else:
-                        logger.warning(
-                            "Rate limit hit for chunk %d (attempt %d/3). "
-                            "No retry delay specified, retrying immediately...",
-                            chunk_idx,
-                            retries,
-                        )
-                except Exception as exc:
-                    logger.warning(
-                        "LLM API call failed for chunk %d: %s — "
-                        "falling back to structural extraction",
-                        chunk_idx,
-                        exc,
                     )
-                    fb_elements, fb_errors = self._run_deterministic_fallback(document)
-                    all_elements.extend(fb_elements)
-                    errors += fb_errors
-                    break
-            else:
+            if total_elements_found == 0 and chunks:
                 logger.warning(
-                    "LLM API call failed for chunk %d after %d retries — "
-                    "falling back to structural extraction",
-                    chunk_idx,
-                    retries,
+                    "LLM batch returned no elements, falling back to deterministic engine"
                 )
                 fb_elements, fb_errors = self._run_deterministic_fallback(document)
                 all_elements.extend(fb_elements)
                 errors += fb_errors
+        except Exception:
+            logger.warning(
+                "LLM batch extraction failed, falling back to deterministic engine"
+            )
+            fb_elements, fb_errors = self._run_deterministic_fallback(document)
+            all_elements.extend(fb_elements)
+            errors += fb_errors
 
         duration = int((time.monotonic() - started_at) * 1000)
         return ExtractionResult(
@@ -334,14 +312,30 @@ class LLMExtractionProvider:
             ),
         )
 
+    def _fallback_extract(
+        self, document: Document, started_at: float
+    ) -> ExtractionResult:
+        all_elements, errors = self._run_deterministic_fallback(document)
+        duration = int((time.monotonic() - started_at) * 1000)
+        return ExtractionResult(
+            provider_id=self._provider_id,
+            elements=all_elements,
+            processing_stats=ProcessingStats(
+                documents_processed=1,
+                elements_extracted=len(all_elements),
+                errors=errors,
+                duration_ms=duration,
+            ),
+        )
+
     def _parse_response(
-        self, response: Any, document: Document, chunk_idx: int = 0
+        self, content: str, document: Document, chunk_idx: int = 0
     ) -> list[ExtractedElement]:
         elements: list[ExtractedElement] = []
         try:
-            content = _strip_code_fence(response.choices[0].message.content)
             data = json.loads(content)
-            for i, item in enumerate(data):
+            items = data if isinstance(data, list) else data.get("elements", data)
+            for i, item in enumerate(items if isinstance(items, list) else []):
                 elem_type = item.get("type", "fact")
                 confidence = float(item.get("confidence", 0.5))
                 text = item.get("content", "")
@@ -360,9 +354,9 @@ class LLMExtractionProvider:
                     )
                 )
         except Exception:
-            logger.warning("Failed to parse LLM response, falling back to deterministic engine")
+            logger.warning(
+                "Failed to parse LLM response, falling back to deterministic engine"
+            )
             fb_elements, _ = self._run_deterministic_fallback(document)
             elements.extend(fb_elements)
         return elements
-
-

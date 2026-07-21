@@ -9,7 +9,9 @@ from specmetrics.plugins.adapter.openspec.scanner import (
 )
 
 
-def _make_openspec_repo(root: Path, *path_parts: str, content: str = "# Test\n") -> Path:
+def _make_openspec_repo(
+    root: Path, *path_parts: str, content: str = "# Test\n"
+) -> Path:
     target = root.joinpath("openspec", *path_parts)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content)
@@ -64,7 +66,9 @@ class TestScanChanges:
         assert len(results) == 2
 
     def test_archived_change_discovery(self, tmp_path: Path) -> None:
-        archived = tmp_path / "openspec" / "changes" / "archive" / "old-change" / "proposal.md"
+        archived = (
+            tmp_path / "openspec" / "changes" / "archive" / "old-change" / "proposal.md"
+        )
         archived.parent.mkdir(parents=True)
         archived.write_text("# Old proposal")
         results = scan_changes(tmp_path)
@@ -77,7 +81,14 @@ class TestScanChanges:
         valid = tmp_path / "openspec" / "changes" / "add-auth" / "proposal.md"
         valid.parent.mkdir(parents=True)
         valid.write_text("# Proposal")
-        for excluded in (".git", "__pycache__", ".venv", "node_modules", ".specify", "_temp"):
+        for excluded in (
+            ".git",
+            "__pycache__",
+            ".venv",
+            "node_modules",
+            ".specify",
+            "_temp",
+        ):
             d = tmp_path / "openspec" / "changes" / excluded
             d.mkdir(parents=True)
             (d / "proposal.md").write_text("# Should be ignored")
@@ -97,7 +108,9 @@ class TestScanChanges:
         assert "tasks.md" not in artifact_names
 
     def test_delta_spec_discovery(self, tmp_path: Path) -> None:
-        delta = tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        delta = (
+            tmp_path / "openspec" / "changes" / "add-auth" / "specs" / "api" / "spec.md"
+        )
         delta.parent.mkdir(parents=True)
         delta.write_text("# Delta spec")
         results = scan_changes(tmp_path)
@@ -122,7 +135,14 @@ class TestScanChanges:
 
     def test_mixed_active_and_archived(self, tmp_path: Path) -> None:
         active = tmp_path / "openspec" / "changes" / "active-change" / "proposal.md"
-        archived = tmp_path / "openspec" / "changes" / "archive" / "archived-change" / "proposal.md"
+        archived = (
+            tmp_path
+            / "openspec"
+            / "changes"
+            / "archive"
+            / "archived-change"
+            / "proposal.md"
+        )
         active.parent.mkdir(parents=True)
         archived.parent.mkdir(parents=True)
         active.write_text("# Active")
@@ -153,6 +173,7 @@ class TestPerFileErrorIsolation:
         spec2.parent.mkdir(parents=True)
         spec2.write_text("# API")
         from specmetrics.plugins.adapter.openspec.plugin import OpenSpecAdapter
+
         adapter = OpenSpecAdapter()
         docs = adapter.scan(tmp_path)
         assert len(docs) == 2
@@ -161,15 +182,19 @@ class TestPerFileErrorIsolation:
 class TestBenchmark:
     def test_benchmark_500_artifacts(self, tmp_path: Path) -> None:
         import time
+
         base = tmp_path / "openspec" / "specs"
         for i in range(500):
             domain_dir = base / f"domain{i}"
             domain_dir.mkdir(parents=True)
             (domain_dir / "spec.md").write_text(f"# Domain {i}\n\nContent {i}\n")
         from specmetrics.plugins.adapter.openspec.plugin import OpenSpecAdapter
+
         adapter = OpenSpecAdapter()
         start = time.perf_counter()
         docs = adapter.scan(tmp_path)
         elapsed = time.perf_counter() - start
         assert len(docs) == 500
-        assert elapsed < 5.0, f"SC-001: 500 artifacts scanned in {elapsed:.2f}s (limit: 5s)"
+        assert elapsed < 5.0, (
+            f"SC-001: 500 artifacts scanned in {elapsed:.2f}s (limit: 5s)"
+        )

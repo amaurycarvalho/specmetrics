@@ -59,10 +59,22 @@ class TokenPointsHandler:
 
         breakdown = get_breakdown_by_type(result)
 
+        all_token_contributions = (
+            result.specification_cost.contributions
+            + result.code_generation_cost.contributions
+        )
+        token_entities = [c.model_dump(mode="json") for c in all_token_contributions]
+
+        token_content_tokens: dict[str, int] = {}
+        for t, v in breakdown.items():
+            token_content_tokens[t] = v["content_tokens"]
+
         payload: dict[str, Any] = {
             "token_total_score": result.total_score,
             "token_specification_cost": result.specification_cost.total,
             "token_code_generation_cost": result.code_generation_cost.total,
+            "token_content_multiplier": calibration.content_multiplier,
+            "token_content_tokens": token_content_tokens,
             "token_element_counts": {
                 "csm": result.measurement_metadata.csm_element_count,
                 "cfm": result.measurement_metadata.cfm_element_count,
@@ -72,11 +84,19 @@ class TokenPointsHandler:
             },
             "token_calibration_version": result.calibration_version,
             "token_top_contributors": [
-                {"type": t, "count": v["count"], "total": v["total"]}
+                {
+                    "type": t,
+                    "count": v["count"],
+                    "total": v["total"],
+                    "content_tokens": v["content_tokens"],
+                }
                 for t, v in breakdown.items()
             ],
             "token_duration_ms": result.measurement_metadata.duration_ms,
-            "token_warnings": [w.model_dump() for w in result.measurement_metadata.warnings],
+            "token_warnings": [
+                w.model_dump() for w in result.measurement_metadata.warnings
+            ],
+            "token_entities": token_entities,
         }
 
         token_event = PipelineEvent(

@@ -195,6 +195,65 @@ This dimension captures the intellectual work required **after implementation**.
 
 ---
 
+# Content-Based Estimation (v2)
+
+Cognitive Points v2 introduces content-based estimation, enhancing the Bloom taxonomy classification with a formula that accounts for the actual text volume and sub-type differentiation of each specification element.
+
+## Scoring Formula
+
+```
+score = bloom_weight + (content_tokens × content_multiplier)
+```
+
+Where:
+- **bloom_weight**: The element's Bloom taxonomy weight (1.0–8.0) from the calibration profile, determined by element type and optional sub-type.
+- **content_tokens**: Number of tokens in the element's text content (name + description), counted using the same deterministic tokenizer used by Token Points.
+- **content_multiplier**: A global multiplier (default 0.1) that scales the content contribution relative to Bloom weights.
+
+With the default multiplier of 0.1, a 100-token description contributes 10.0 to the score — comparable to a "create"-level Bloom weight of 8.0. Organizations can tune this value via calibration YAML.
+
+## Token Counting Method
+
+Content tokenization reuses the same infrastructure as Token Points (spec 038): tiktoken (`cl100k_base`) if installed, falling back to `max(1, len(text) // 4)` character-count heuristic. A warning is logged when the fallback is active.
+
+## Content Sources per Element Type
+
+Content is extracted as `name + " " + description` concatenation:
+
+- **CSM Elements** (SpecificationActivity, Decision, Assumption, Constraint, Risk, OpenQuestion, AcceptanceCriterion, GlossaryTerm): Content = element's description text.
+- **CSM References**: Content = `title + " " + url`.
+- **CFM Elements** (FunctionalProcess, BusinessRule, Operation, DataGroup, Actor): Content = `name + " " + description`.
+- **CFM Relationships**: Content = `name` only (no description field).
+
+## Sub-Type Bloom Classification
+
+The Bloom classifier supports sub-type differentiation via a three-tier lookup:
+
+1. `base_type.sub_type_value` (e.g., `business_rule.derivation` → evaluate/5.0) — if the element has sub-type metadata
+2. `base_type` (e.g., `business_rule` → apply/3.0) — the existing flat mapping
+3. `default_bloom_level` — now "understand" (2.0) instead of the previous "analyze" (4.0)
+
+Default sub-type mappings include BusinessRules (constraint → apply, condition → analyze, policy → evaluate, derivation → evaluate) and Operations (standard → apply, conditional → analyze, iterative → analyze, transactional → create). Elements without sub-type metadata continue to use their base type mapping.
+
+## Updated Calibration Defaults
+
+- `content_multiplier`: 0.1 (new field enabling content-based estimation).
+- `default_bloom_level`: Changed from "analyze" to "understand" for more conservative scoring of unknown element types.
+- `bloom_mappings`: Extended with sub-type keys for BusinessRules and Operations.
+- **Backward Compatibility**: Old calibration YAML files without `content_multiplier`, sub-type mappings, or the updated default level load correctly via Pydantic field defaults. Setting `content_multiplier: 0.0` reverts to pure Bloom taxonomy scoring.
+
+## Usage Recommendations
+
+Cognitive Points v2 values are comparable across specifications because the score is grounded in content volume. A specification with 2× the content volume produces proportionally higher raw scores. This enables:
+
+- **Cross-specification cognitive comparability**: Compare the cognitive effort of different specifications on the same scale, regardless of SDD framework.
+- **Kanban work item sizing**: Group specifications into cognitive-effort buckets based on raw scores as a conceptual heuristic (e.g., Small: < 50 CP, Medium: 50–200 CP, Large: > 200 CP). These thresholds are organizational conventions, not a software feature — teams calibrate them to their own context.
+- **Portfolio planning**: Aggregate Cognitive Points across a backlog to identify which work items demand the most human cognitive effort for review and validation.
+
+The `cognitive_content_tokens` and `cognitive_content_multiplier` fields in the measurement payload provide auditability: consumers can verify the multiplier used and the content tokens counted per element type.
+
+---
+
 # Bloom-Based Cognitive Model
 
 Cognitive complexity is modeled using a configurable interpretation of **Bloom's Taxonomy**.

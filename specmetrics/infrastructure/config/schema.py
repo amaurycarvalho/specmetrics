@@ -9,7 +9,9 @@ from .sources import SourceLevel
 
 
 class PipelineSettings(BaseModel):
-    stage_timeout: int = Field(60, ge=1, le=3600, description="Seconds per pipeline stage")
+    stage_timeout: int = Field(
+        60, ge=1, le=3600, description="Seconds per pipeline stage"
+    )
     fail_fast: bool = Field(True, description="Stop on first stage failure")
 
 
@@ -19,12 +21,20 @@ class LoggingSettings(BaseModel):
 
 
 class SecuritySettings(BaseModel):
-    api_key: SecretStr | None = Field(None, description="API key for external services", json_schema_extra={"sensitive": True})
-    tls_ca_cert_path: str | None = Field(None, description="Path to CA certificate bundle")
+    api_key: SecretStr | None = Field(
+        None,
+        description="API key for external services",
+        json_schema_extra={"sensitive": True},
+    )
+    tls_ca_cert_path: str | None = Field(
+        None, description="Path to CA certificate bundle"
+    )
 
 
 class RunArtifactsSettings(BaseModel):
-    max_entities_per_stage: int = Field(5000, ge=1, description="Max entities per stage JSON artifact before truncation")
+    max_entities_per_stage: int = Field(
+        5000, ge=1, description="Max entities per stage JSON artifact before truncation"
+    )
 
 
 class CoreConfig(BaseModel):

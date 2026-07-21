@@ -62,7 +62,9 @@ class TestProtocolCompliance:
         adapter = _NoSupportsAdapter()
         assert not isinstance(adapter, SpecificationAdapter)
 
-    def test_adapter_missing_supported_document_types_fails_isinstance_check(self) -> None:
+    def test_adapter_missing_supported_document_types_fails_isinstance_check(
+        self,
+    ) -> None:
         class _NoDocTypes:
             def scan(self, repository_path: Path) -> list[Document]:
                 return []
@@ -75,9 +77,7 @@ class TestProtocolCompliance:
     def test_protocol_is_not_instantiable_directly(self) -> None:
         with_missing = {k for k in ("scan", "supports", "supported_document_types")}
         protocol_members = {
-            name
-            for name in dir(SpecificationAdapter)
-            if not name.startswith("_")
+            name for name in dir(SpecificationAdapter) if not name.startswith("_")
         }
         assert protocol_members.issuperset(with_missing)
 
@@ -126,6 +126,7 @@ class TestDocument:
             content="content",
         )
         import dataclasses
+
         assert dataclasses.fields(doc)
         assert dataclasses.is_dataclass(doc)
 

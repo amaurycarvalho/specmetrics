@@ -10,8 +10,20 @@ from specmetrics.kernel.validation.models import (
 )
 
 CONSTITUTION_PRINCIPLES = [
-    "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-    "XI", "XII", "XIII", "XIV",
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "X",
+    "XI",
+    "XII",
+    "XIII",
+    "XIV",
 ]
 
 PRINCIPLE_TITLES = {
@@ -50,9 +62,12 @@ def constitution_engaged(document: SpecificationDocument) -> ValidationResult:
 
     principles_text = match.group(1)
     found_principles = re.findall(r"\b(?:X{0,3}I{0,3}|IV|VI{0,3})\b", principles_text)
-    tokens = [p.strip("() ") for p in re.split(r"[,;\s]+", principles_text) if p.strip("() ")]
+    tokens = [
+        p.strip("() ") for p in re.split(r"[,;\s]+", principles_text) if p.strip("() ")
+    ]
     found_principles = [
-        p for p in tokens
+        p
+        for p in tokens
         if re.match(r"^(I{1,3}|IV|V|VI{0,3}|X{0,3}I{0,3}|XI{1,2}|XII|XIII|XIV)$", p)
     ]
 
@@ -70,14 +85,18 @@ def constitution_engaged(document: SpecificationDocument) -> ValidationResult:
             rule_name="constitution-engaged",
             passed=False,
             message=f"Unknown constitution principles referenced: {', '.join(unknown)}",
-            evidence=[EvidenceRef(detail=f"Unrecognized principle: {p}") for p in unknown],
+            evidence=[
+                EvidenceRef(detail=f"Unrecognized principle: {p}") for p in unknown
+            ],
         )
 
     return ValidationResult(
         rule_name="constitution-engaged",
         passed=True,
         message=f"Constitution principles engaged: {', '.join(found_principles)}",
-        evidence=[EvidenceRef(detail=f"Found {len(found_principles)} engaged principles")],
+        evidence=[
+            EvidenceRef(detail=f"Found {len(found_principles)} engaged principles")
+        ],
     )
 
 
@@ -101,18 +120,26 @@ def constitution_compliance_notes(document: SpecificationDocument) -> Validation
             evidence=[EvidenceRef(detail="Missing Constitution Check section")],
         )
 
-    if "Engaged Principles" in engagement_section and "Compliance Note" not in engagement_section:
+    if (
+        "Engaged Principles" in engagement_section
+        and "Compliance Note" not in engagement_section
+    ):
         has_principles_notes = any(
             principle in engagement_section for principle in CONSTITUTION_PRINCIPLES
         )
         if has_principles_notes and (
-            "compliance" in engagement_section.lower() or "satisfied" in engagement_section.lower()
+            "compliance" in engagement_section.lower()
+            or "satisfied" in engagement_section.lower()
         ):
             return ValidationResult(
                 rule_name="constitution-compliance-notes",
                 passed=True,
                 message="Constitution compliance notes are present",
-                evidence=[EvidenceRef(detail="Compliance descriptions found for engaged principles")],
+                evidence=[
+                    EvidenceRef(
+                        detail="Compliance descriptions found for engaged principles"
+                    )
+                ],
             )
 
     return ValidationResult(

@@ -17,6 +17,7 @@ class TestValidator:
     def test_invalid_data_raises_error(self):
         validator = Validator(CoreConfig)
         import pytest
+
         with pytest.raises(ConfigValidationError):
             validator.validate({"pipeline": {"stage_timeout": "not-a-number"}})
 

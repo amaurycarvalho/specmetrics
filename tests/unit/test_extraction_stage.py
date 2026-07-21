@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 
-
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.extraction_provider import (
@@ -16,7 +15,9 @@ from specmetrics.kernel.pipeline_context import PipelineContext
 
 
 class _MockProvider:
-    def __init__(self, provider_id: str = "mock", supported_types: list[str] | None = None) -> None:
+    def __init__(
+        self, provider_id: str = "mock", supported_types: list[str] | None = None
+    ) -> None:
         self._provider_id = provider_id
         self._supported_types = supported_types or ["section"]
 
@@ -49,6 +50,7 @@ class _MockProvider:
 
 def _make_event(documents: list[Document]) -> PipelineEvent:
     from uuid import uuid4
+
     context = PipelineContext(execution_id=uuid4()).with_stage_output(
         field_name="adapter_result",
         value={"documents": documents},
@@ -68,7 +70,12 @@ class TestExtractionStage:
         router.register(provider, "mock-1", types=["section"])
         stage = ExtractionStage(router)
 
-        doc = Document(id="doc-1", path="specs/test.md", document_type="section", content="# Test document")
+        doc = Document(
+            id="doc-1",
+            path="specs/test.md",
+            document_type="section",
+            content="# Test document",
+        )
         event = _make_event([doc])
         context = stage.handle(event)
 
@@ -85,8 +92,18 @@ class TestExtractionStage:
         stage = ExtractionStage(router)
 
         docs = [
-            Document(id="uc-1", path="use-cases/login.md", document_type="use_case", content="# Login"),
-            Document(id="br-1", path="business-rules/pw.md", document_type="business_rule", content="# Password"),
+            Document(
+                id="uc-1",
+                path="use-cases/login.md",
+                document_type="use_case",
+                content="# Login",
+            ),
+            Document(
+                id="br-1",
+                path="business-rules/pw.md",
+                document_type="business_rule",
+                content="# Password",
+            ),
         ]
         event = _make_event(docs)
         context = stage.handle(event)
@@ -102,9 +119,24 @@ class TestExtractionStage:
         stage = ExtractionStage(router)
 
         docs = [
-            Document(id="doc-1", path="specs/a.md", document_type="section", content="# Doc A"),
-            Document(id="doc-2", path="specs/b.md", document_type="section", content="# Doc B"),
-            Document(id="doc-3", path="specs/c.md", document_type="section", content="# Doc C"),
+            Document(
+                id="doc-1",
+                path="specs/a.md",
+                document_type="section",
+                content="# Doc A",
+            ),
+            Document(
+                id="doc-2",
+                path="specs/b.md",
+                document_type="section",
+                content="# Doc B",
+            ),
+            Document(
+                id="doc-3",
+                path="specs/c.md",
+                document_type="section",
+                content="# Doc C",
+            ),
         ]
         event = _make_event(docs)
         context = stage.handle(event)

@@ -160,6 +160,11 @@ def measure(
         "-l",
         help="Persist logs to .specmetrics/logs/<filename>",
     ),
+    llm_rpm_limit: int = typer.Option(
+        15,
+        "--llm-rpm-limit",
+        help="LLM requests per minute limit (0 = unlimited)",
+    ),
     config: Optional[Path] = typer.Option(
         None,
         "--config",
@@ -183,6 +188,7 @@ def measure(
         quiet=quiet,
         log_file=log_file,
         config_path=config,
+        llm_rpm_limit=llm_rpm_limit,
     )
     raise typer.Exit(code=exit_code)
 

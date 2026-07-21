@@ -23,9 +23,7 @@ class AppConfig:
 
     @property
     def default_output_format(self) -> str:
-        return (
-            self._config.get("pipeline", {}).get("default_output_format", "text")
-        )
+        return self._config.get("pipeline", {}).get("default_output_format", "text")
 
     @property
     def verbose(self) -> bool:
@@ -33,6 +31,4 @@ class AppConfig:
 
     @property
     def verify_compatibility(self) -> bool:
-        return bool(
-            self._config.get("plugins", {}).get("verify_compatibility", True)
-        )
+        return bool(self._config.get("plugins", {}).get("verify_compatibility", True))

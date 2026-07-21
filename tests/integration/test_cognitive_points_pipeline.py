@@ -28,15 +28,11 @@ def _uid() -> str:
 
 
 def _make_cfm() -> CanonicalFunctionalModel:
-    ev = CfmEvidenceRef(
-        graph_node_id="gn-001", document_id="doc-001", text="ev"
-    )
+    ev = CfmEvidenceRef(graph_node_id="gn-001", document_id="doc-001", text="ev")
     return CanonicalFunctionalModel(
         run_id="pipeline-test-cfm",
         functional_processes={
-            _uid(): FunctionalProcess(
-                id=_uid(), name="Login", evidence=ev
-            ),
+            _uid(): FunctionalProcess(id=_uid(), name="Login", evidence=ev),
         },
         operations={
             _uid(): Operation(
@@ -53,9 +49,7 @@ def _make_cfm() -> CanonicalFunctionalModel:
 
 
 def _make_csm() -> CanonicalSpecificationModel:
-    ev = CsmEvidenceRef(
-        graph_node_id="gn-002", document_id="doc-001", text="ev"
-    )
+    ev = CsmEvidenceRef(graph_node_id="gn-002", document_id="doc-001", text="ev")
     return CanonicalSpecificationModel(
         run_id="pipeline-test-csm",
         specification_activities={

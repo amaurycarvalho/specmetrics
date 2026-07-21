@@ -145,7 +145,9 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
                             expected_major=_EXPECTED_RULE_PACK_MAJOR_VERSION,
                         )
         except (FileNotFoundError, RuntimeError) as exc:
-            logger.warning("rule_pack_version_check_failed", path=str(path), error=str(exc))
+            logger.warning(
+                "rule_pack_version_check_failed", path=str(path), error=str(exc)
+            )
 
     def _match_rule_against_observation(
         self, rule: ExtractionRule, section_type: str, heading_text: str, content: str
@@ -168,7 +170,9 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
             candidates = [section_type, heading_text]
             if section_type != heading_text:
                 candidates.append(heading_text)
-            match_values = [heading_match] if isinstance(heading_match, str) else heading_match
+            match_values = (
+                [heading_match] if isinstance(heading_match, str) else heading_match
+            )
             for h_candidate in candidates:
                 for m in match_values:
                     if isinstance(m, str) and m.lower() == h_candidate.lower():
@@ -216,7 +220,9 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
             try:
                 visitor.visit(tokens, state)
             except Exception as exc:
-                logger.warning("visitor_failed", visitor=type(visitor).__name__, error=str(exc))
+                logger.warning(
+                    "visitor_failed", visitor=type(visitor).__name__, error=str(exc)
+                )
 
         for obs in state.observations:
             obs.location = (doc.id, obs.location[1])
@@ -244,7 +250,9 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
 
                 rules_attempted += 1
                 try:
-                    if self._match_rule_against_observation(rule, section_type, section_type, content):
+                    if self._match_rule_against_observation(
+                        rule, section_type, section_type, content
+                    ):
                         elem_id = _content_hash(doc_id, section_id, content)
                         evidence = EvidenceReference(
                             document_id=doc_id,
@@ -319,7 +327,9 @@ class DeterministicSemanticEngine(SemanticExtractionEngine):
 
         for doc in documents:
             doc_start = time.monotonic()
-            elements, attempted, succeeded, failed, failed_ids = self._execute_rules(doc, rules)
+            elements, attempted, succeeded, failed, failed_ids = self._execute_rules(
+                doc, rules
+            )
             all_elements.extend(elements)
 
             duration = int((time.monotonic() - doc_start) * 1000)

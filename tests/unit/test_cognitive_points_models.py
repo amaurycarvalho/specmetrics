@@ -54,9 +54,7 @@ def _sample_measurement() -> CognitivePointsMeasurement:
         fibonacci_normalization=FibonacciNormalizationResult(
             raw_score=25.0, threshold_applied=22, output_value=8
         ),
-        measurement_metadata=MeasurementMetadata(
-            total_elements_processed=6
-        ),
+        measurement_metadata=MeasurementMetadata(total_elements_processed=6),
     )
 
 
@@ -84,12 +82,8 @@ class TestCognitivePointsMeasurement:
                 run_id="test",
                 total_cognitive_points=8,
                 raw_score=100.0,
-                specification_review_effort=SpecificationReviewEffort(
-                    total_raw=10.0
-                ),
-                functional_validation_effort=FunctionalValidationEffort(
-                    total_raw=15.0
-                ),
+                specification_review_effort=SpecificationReviewEffort(total_raw=10.0),
+                functional_validation_effort=FunctionalValidationEffort(total_raw=15.0),
                 fibonacci_normalization=FibonacciNormalizationResult(
                     raw_score=25.0, threshold_applied=22, output_value=8
                 ),
@@ -237,25 +231,19 @@ class TestMeasurementMetadata:
         assert meta.warnings[0].code == "TEST"
 
     def test_bloom_distribution(self):
-        meta = MeasurementMetadata(
-            bloom_distribution={"analyze": 5, "evaluate": 3}
-        )
+        meta = MeasurementMetadata(bloom_distribution={"analyze": 5, "evaluate": 3})
         assert meta.bloom_distribution["analyze"] == 5
         assert meta.bloom_distribution["evaluate"] == 3
 
 
 class TestMeasurementWarning:
     def test_minimal(self):
-        warn = MeasurementWarning(
-            code="MISSING_CSM", message="CSM not available"
-        )
+        warn = MeasurementWarning(code="MISSING_CSM", message="CSM not available")
         assert warn.code == "MISSING_CSM"
         assert warn.details is None
 
     def test_with_details(self):
-        warn = MeasurementWarning(
-            code="TEST", message="test", details={"key": "value"}
-        )
+        warn = MeasurementWarning(code="TEST", message="test", details={"key": "value"})
         assert warn.details == {"key": "value"}
 
 

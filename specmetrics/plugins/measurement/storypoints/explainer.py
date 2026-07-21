@@ -21,9 +21,13 @@ def factor_breakdown_summary(
     result: StoryPointMeasurementResult,
 ) -> dict[str, float]:
     summary: dict[str, float] = {}
+    total_content = 0.0
     for item in result.items:
         for factor, score in item.factor_breakdown.items():
             summary[factor] = summary.get(factor, 0.0) + score
+        total_content += item.content_score
+    if total_content > 0.0:
+        summary["content_score"] = total_content
     return summary
 
 

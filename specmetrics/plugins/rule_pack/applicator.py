@@ -59,6 +59,7 @@ class RuleApplicator:
 
         for pack in packs:
             glossary.update(pack.glossary_overrides)
+            _methodology = pack.methodology
             for rule in pack.rules:
                 if rule.type == "exclusion":
                     ftypes = rule.config.function_types or []
@@ -78,6 +79,7 @@ class RuleApplicator:
                         rule_id=rule.id,
                         rule_type="exclusion",
                         description=f"Excluded function types: {', '.join(ftypes)}",
+                        methodology=_methodology,
                         after_state={"excluded_types": list(ftypes)},
                     )
 
@@ -89,6 +91,7 @@ class RuleApplicator:
                         rule_id=rule.id,
                         rule_type="element_exclusion",
                         description=f"Excluded element IDs: {', '.join(eids)}",
+                        methodology=_methodology,
                         after_state={"excluded_element_ids": list(eids)},
                     )
 
@@ -115,6 +118,7 @@ class RuleApplicator:
                         rule_id=rule.id,
                         rule_type="complexity_override",
                         description=f"Complexity thresholds override for {rule.config.function_type}: {rule.config.thresholds}",
+                        methodology=_methodology,
                         after_state={
                             "function_type": rule.config.function_type,
                             "thresholds": rule.config.thresholds or {},
@@ -146,6 +150,7 @@ class RuleApplicator:
                         rule_id=rule.id,
                         rule_type="weight_override",
                         description=f"Weight override for {rule.config.function_type}/{rule.config.complexity}: {rule.config.weight}",
+                        methodology=_methodology,
                         after_state={
                             "function_type": rule.config.function_type,
                             "complexity": rule.config.complexity,
@@ -163,6 +168,7 @@ class RuleApplicator:
                             rule_id=rule.id,
                             rule_type="vaf",
                             description=f"Computed VAF={vaf_value} from GSC (total={total})",
+                            methodology=_methodology,
                             after_state={"vaf": vaf_value, "gsc_total": total},
                         )
 
@@ -174,7 +180,7 @@ class RuleApplicator:
         for pack in packs:
             for rule in pack.rules:
                 if rule.type == "exclusion":
-                    for ft in (rule.config.function_types or []):
+                    for ft in rule.config.function_types or []:
                         if ft.upper() not in cfm_types:
                             logger.info(
                                 "rule_pack_unused_type",
@@ -184,7 +190,7 @@ class RuleApplicator:
                                 message=f"Rule references function type '{ft}' not present in CFM",
                             )
                 elif rule.type == "element_exclusion":
-                    for eid in (rule.config.element_ids or []):
+                    for eid in rule.config.element_ids or []:
                         if eid not in cfm.functional_processes:
                             logger.info(
                                 "rule_pack_unused_element",
@@ -206,7 +212,9 @@ class RuleApplicator:
         if vaf_value is not None:
             result = self._set_vaf(result, vaf_value)
 
-        result = self._annotator.annotate_cfm(result, glossary_overrides=glossary or None)
+        result = self._annotator.annotate_cfm(
+            result, glossary_overrides=glossary or None
+        )
 
         logger.info(
             "rule_applicator_applied",
@@ -272,7 +280,9 @@ class RuleApplicator:
                 metadata["complexity_source"] = "rule_pack_override"
                 det_count = metadata.get("det_count", 0)
                 ftr_count = metadata.get("ftr_count", 0)
-                if isinstance(det_count, (int, float)) and isinstance(ftr_count, (int, float)):
+                if isinstance(det_count, (int, float)) and isinstance(
+                    ftr_count, (int, float)
+                ):
                     det_bounds = thresholds.get("det", [0, 999])
                     ftr_bounds = thresholds.get("ftr", [0, 999])
                     if det_count <= det_bounds[0] and ftr_count <= ftr_bounds[0]:

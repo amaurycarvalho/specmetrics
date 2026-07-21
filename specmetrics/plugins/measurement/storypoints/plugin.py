@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
 
 import structlog
@@ -28,17 +29,21 @@ except Exception:
     _distribution_histogram = None
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
+from specmetrics.kernel.csm.model import CanonicalSpecificationModel
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
 from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 from .calculator import calculate
+from .calibrator import StoryPointsCalibrationProfile, load_calibration
 from .models import StoryPointMeasurementResult
 
 logger = structlog.get_logger(__name__)
 
 
 class StoryPointsHandler:
+    def __init__(self, calibration_dir: str | Path | None = None) -> None:
+        self._calibration_dir = calibration_dir
     @property
     def handled_event_type(self) -> EventType:
         return EventType.MEASUREMENT_COMPLETED
@@ -54,24 +59,27 @@ class StoryPointsHandler:
     def handle(self, event: PipelineEvent) -> PipelineContext:
         ctx = event.context
         cfm: Optional[CanonicalFunctionalModel] = ctx.canonical_model
+        csm: Optional[CanonicalSpecificationModel] = ctx.canonical_spec_model
 
         if not isinstance(cfm, CanonicalFunctionalModel):
             cfm = None
+        if not isinstance(csm, CanonicalSpecificationModel):
+            csm = None
 
         logger.info(
             "storypoints_measurement_started",
             execution_id=str(ctx.execution_id),
             has_cfm=cfm is not None,
+            has_csm=csm is not None,
         )
 
-        coefficients, thresholds, output_values = self._resolve_rule_pack_overrides(cfm)
+        calibration = load_calibration(self._calibration_dir)
 
         result = calculate(
             cfm,
             run_id=str(ctx.execution_id),
-            coefficients=coefficients,
-            thresholds=thresholds,
-            output_values=output_values,
+            csm=csm,
+            calibration=calibration,
         )
 
         if _measurement_duration is not None:
@@ -84,17 +92,22 @@ class StoryPointsHandler:
 
         dist_str = {str(k): v for k, v in result.distribution.items()}
 
+        storypoints_entities = [item.model_dump(mode="json") for item in result.items]
+
         payload: dict[str, Any] = {
             "storypoints_method": result.method,
             "storypoints_scale": result.scale,
             "storypoints_total_story_points": result.total_story_points,
             "storypoints_estimated_items": len(result.items),
             "storypoints_distribution": dist_str,
-            "storypoints_applied_rule_pack": result.applied_rule_pack,
+            "storypoints_total_raw_score": result.total_raw_score,
+            "storypoints_specification_effort_total": result.specification_effort_total,
+            "storypoints_implementation_effort_total": result.implementation_effort_total,
+            "storypoints_content_multiplier": result.content_multiplier,
+            "storypoints_calibration_version": result.calibration_version,
             "storypoints_duration_ms": result.execution_metadata.duration_ms,
-            "storypoints_warnings": [
-                w.model_dump() for w in result.warnings
-            ],
+            "storypoints_warnings": [w.model_dump() for w in result.warnings],
+            "storypoints_entities": storypoints_entities,
         }
 
         storypoints_event = PipelineEvent(
@@ -115,33 +128,12 @@ class StoryPointsHandler:
             "measurement_result", payload, event=storypoints_event
         )
 
-    def _resolve_rule_pack_overrides(
-        self, cfm: CanonicalFunctionalModel | None
-    ) -> tuple[dict[str, float] | None, list[float] | None, list[int] | None]:
-        if cfm is None:
-            return None, None, None
-
-        coefficients: dict[str, float] | None = None
-        thresholds: list[float] | None = None
-        output_values: list[int] | None = None
-
-        cfm_metadata = cfm.metadata if hasattr(cfm, "metadata") else None
-        if cfm_metadata is not None:
-            extra = getattr(cfm_metadata, "extra", None) or {}
-            coeffs_raw = extra.get("storypoints_coefficients")
-            if isinstance(coeffs_raw, dict):
-                coefficients = {k: float(v) for k, v in coeffs_raw.items()}
-            thresholds_raw = extra.get("storypoints_thresholds")
-            if isinstance(thresholds_raw, list):
-                thresholds = [float(v) for v in thresholds_raw]
-            values_raw = extra.get("storypoints_output_values")
-            if isinstance(values_raw, list):
-                output_values = [int(v) for v in values_raw]
-
-        return coefficients, thresholds, output_values
 
 
 class StoryPointsPlugin:
+    def __init__(self, calibration_dir: str | Path | None = None) -> None:
+        self._calibration_dir = calibration_dir
+
     def plugin_id(self) -> str:
         return "storypoints"
 
@@ -151,19 +143,34 @@ class StoryPointsPlugin:
     def measure(
         self,
         cfm: CanonicalFunctionalModel | None,
+        csm: CanonicalSpecificationModel | None = None,
         previous_fingerprints: dict[str, str] | None = None,
+        calibration: StoryPointsCalibrationProfile | None = None,
     ) -> StoryPointMeasurementResult:
-        return calculate(cfm, run_id="", previous_fingerprints=previous_fingerprints)
+        if calibration is None:
+            calibration = load_calibration(self._calibration_dir)
+        return calculate(
+            cfm,
+            run_id="",
+            previous_fingerprints=previous_fingerprints,
+            csm=csm,
+            calibration=calibration,
+        )
 
 
-def create_storypoints_measurement_metadata() -> PluginMetadata:
+def create_storypoints_measurement_metadata(
+    calibration_dir: str | Path | None = None,
+) -> PluginMetadata:
     return PluginMetadata(
         id="storypoints",
         api_version="0.1.0",
         plugin_type=PluginType.MEASUREMENT,
         handled_event_types=(EventType.MEASUREMENT_COMPLETED,),
-        handler_factory=lambda: StoryPointsHandler(),
+        handler_factory=lambda: StoryPointsHandler(
+            calibration_dir=calibration_dir,
+        ),
         name="Story Points",
-        description="Story Points measurement — estimates relative implementation effort from CFM using multi-factor weighted sum and Modified Fibonacci normalization",
+        description="Story Points measurement — estimates relative implementation effort from CFM using multi-factor weighted sum and Modified Fibonacci normalization. "
+        "Supports configurable calibration profiles, CSM element estimation, and relative ranking normalization.",
         version="0.1.0",
     )

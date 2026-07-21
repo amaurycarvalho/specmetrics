@@ -90,7 +90,9 @@ class CfmSerializer:
                 try:
                     record = json.loads(line)
                 except json.JSONDecodeError as exc:
-                    raise InvalidCfmDataError(f"Line {line_no}: invalid JSON — {exc}") from exc
+                    raise InvalidCfmDataError(
+                        f"Line {line_no}: invalid JSON — {exc}"
+                    ) from exc
                 record_type = record.pop("type", None)
                 if record_type == "metadata":
                     meta_record = record
@@ -114,46 +116,62 @@ class CfmSerializer:
                     try:
                         actor = Actor(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid actor — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid actor — {exc}"
+                        ) from exc
                     actors[actor.id] = actor
                 elif record_type == "functional_process":
                     try:
                         fp = FunctionalProcess(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid functional process — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid functional process — {exc}"
+                        ) from exc
                     functional_processes[fp.id] = fp
                 elif record_type == "business_rule":
                     try:
                         br = BusinessRule(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid business rule — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid business rule — {exc}"
+                        ) from exc
                     business_rules[br.id] = br
                 elif record_type == "data_group":
                     try:
                         dg = DataGroup(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid data group — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid data group — {exc}"
+                        ) from exc
                     data_groups[dg.id] = dg
                 elif record_type == "relationship":
                     try:
                         rel = Relationship(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid relationship — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid relationship — {exc}"
+                        ) from exc
                     relationships.append(rel)
                 elif record_type == "operation":
                     try:
                         op = Operation(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid operation — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid operation — {exc}"
+                        ) from exc
                     operations[op.id] = op
                 elif record_type == "unclassified":
                     try:
                         ue = UnclassifiedElement(**record)
                     except ValidationError as exc:
-                        raise InvalidCfmDataError(f"Line {line_no}: invalid unclassified element — {exc}") from exc
+                        raise InvalidCfmDataError(
+                            f"Line {line_no}: invalid unclassified element — {exc}"
+                        ) from exc
                     unclassified[ue.id] = ue
                 else:
-                    raise InvalidCfmDataError(f"Line {line_no}: unknown record type '{record_type}'")
+                    raise InvalidCfmDataError(
+                        f"Line {line_no}: unknown record type '{record_type}'"
+                    )
 
         if meta_record is None:
             raise InvalidCfmDataError("Missing metadata record (first line)")

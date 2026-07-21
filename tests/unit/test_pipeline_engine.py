@@ -13,11 +13,15 @@ from specmetrics.kernel import (
 class TestPipelineEngine:
     def test_publishes_repository_loaded_first(self) -> None:
         registry = HandlerRegistry()
-        handler = CapturingHandler(EventType.REPOSITORY_LOADED, "repo_handler", "Repository")
+        handler = CapturingHandler(
+            EventType.REPOSITORY_LOADED, "repo_handler", "Repository"
+        )
         registry.register(handler)
         engine = PipelineEngine(registry)
         ctx = engine.run(PipelineContext())
-        assert any(e.event_type == EventType.REPOSITORY_LOADED for e in ctx.published_events)
+        assert any(
+            e.event_type == EventType.REPOSITORY_LOADED for e in ctx.published_events
+        )
 
     def test_invokes_handlers_in_canonical_order(self) -> None:
         registry = HandlerRegistry()
@@ -28,19 +32,28 @@ class TestPipelineEngine:
                 self._et = et
                 self._hid = hid
                 self._sn = sn
+
             @property
-            def handled_event_type(self) -> EventType: return self._et
+            def handled_event_type(self) -> EventType:
+                return self._et
+
             @property
-            def handler_id(self) -> str: return self._hid
+            def handler_id(self) -> str:
+                return self._hid
+
             @property
-            def stage_name(self) -> str: return self._sn
+            def stage_name(self) -> str:
+                return self._sn
+
             def handle(self, event):
                 order.append(self._sn)
                 return event.context
 
         registry.register(OrderHandler(EventType.REPOSITORY_LOADED, "a", "A"))
         registry.register(OrderHandler(EventType.DOCUMENTS_DISCOVERED, "b", "B"))
-        registry.register(OrderHandler(EventType.SEMANTIC_EXTRACTION_COMPLETED, "c", "C"))
+        registry.register(
+            OrderHandler(EventType.SEMANTIC_EXTRACTION_COMPLETED, "c", "C")
+        )
         engine = PipelineEngine(registry)
         engine.run(PipelineContext())
         assert order == ["A", "B", "C"]
@@ -50,25 +63,38 @@ class TestPipelineEngine:
         registry.register(SimpleHandler(EventType.REPOSITORY_LOADED, "h1", "S1"))
         engine = PipelineEngine(registry)
         ctx = engine.run(PipelineContext())
-        assert any(e.event_type == EventType.PIPELINE_COMPLETED for e in ctx.published_events)
+        assert any(
+            e.event_type == EventType.PIPELINE_COMPLETED for e in ctx.published_events
+        )
 
     def test_stage_error_halts_pipeline(self) -> None:
         registry = HandlerRegistry()
 
         class FailingHandler:
             @property
-            def handled_event_type(self) -> EventType: return EventType.REPOSITORY_LOADED
+            def handled_event_type(self) -> EventType:
+                return EventType.REPOSITORY_LOADED
+
             @property
-            def handler_id(self) -> str: return "fail"
+            def handler_id(self) -> str:
+                return "fail"
+
             @property
-            def stage_name(self) -> str: return "FailStage"
-            def handle(self, event): raise StageError("FailStage", "intentional")
+            def stage_name(self) -> str:
+                return "FailStage"
+
+            def handle(self, event):
+                raise StageError("FailStage", "intentional")
 
         registry.register(FailingHandler())
         engine = PipelineEngine(registry)
         ctx = engine.run(PipelineContext())
-        assert any(e.event_type == EventType.PIPELINE_FAILED for e in ctx.published_events)
-        failed_events = [e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED]
+        assert any(
+            e.event_type == EventType.PIPELINE_FAILED for e in ctx.published_events
+        )
+        failed_events = [
+            e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED
+        ]
         assert len(failed_events) == 1
         assert failed_events[0].payload["failed_stage"] == "FailStage"
 
@@ -77,17 +103,26 @@ class TestPipelineEngine:
 
         class FailingHandler:
             @property
-            def handled_event_type(self) -> EventType: return EventType.REPOSITORY_LOADED
+            def handled_event_type(self) -> EventType:
+                return EventType.REPOSITORY_LOADED
+
             @property
-            def handler_id(self) -> str: return "fail"
+            def handler_id(self) -> str:
+                return "fail"
+
             @property
-            def stage_name(self) -> str: return "FailStage"
-            def handle(self, event): raise StageError("FailStage", "something broke")
+            def stage_name(self) -> str:
+                return "FailStage"
+
+            def handle(self, event):
+                raise StageError("FailStage", "something broke")
 
         registry.register(FailingHandler())
         engine = PipelineEngine(registry)
         ctx = engine.run(PipelineContext())
-        failed = [e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED][0]
+        failed = [
+            e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED
+        ][0]
         assert failed.publisher == "pipeline_engine"
         assert "FailStage" in failed.payload["failed_stage"]
 
@@ -125,11 +160,16 @@ class CapturingHandler:
         self.captured_events: list = []
 
     @property
-    def handled_event_type(self) -> EventType: return self._event_type
+    def handled_event_type(self) -> EventType:
+        return self._event_type
+
     @property
-    def handler_id(self) -> str: return self._handler_id
+    def handler_id(self) -> str:
+        return self._handler_id
+
     @property
-    def stage_name(self) -> str: return self._stage_name
+    def stage_name(self) -> str:
+        return self._stage_name
 
     def handle(self, event):
         self.captured_events.append(event)
@@ -143,11 +183,16 @@ class SimpleHandler:
         self._stage_name = stage_name
 
     @property
-    def handled_event_type(self) -> EventType: return self._event_type
+    def handled_event_type(self) -> EventType:
+        return self._event_type
+
     @property
-    def handler_id(self) -> str: return self._handler_id
+    def handler_id(self) -> str:
+        return self._handler_id
+
     @property
-    def stage_name(self) -> str: return self._stage_name
+    def stage_name(self) -> str:
+        return self._stage_name
 
     def handle(self, event):
         return event.context

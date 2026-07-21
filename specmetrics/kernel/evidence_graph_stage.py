@@ -191,9 +191,7 @@ class EvidenceGraphStage:
                     pass
 
                 try:
-                    self._backend.add_edge(
-                        nid, eid, {"edge_type": "derived_from"}
-                    )
+                    self._backend.add_edge(nid, eid, {"edge_type": "derived_from"})
                     edge_count += 1
                 except Exception:
                     pass
@@ -207,11 +205,35 @@ class EvidenceGraphStage:
             documents_covered=sorted(docs_covered),
         )
 
+        _NODE_TEXT_TRUNCATE = 200
+
+        def _trunc(s: str | None) -> str | None:
+            if s is None:
+                return None
+            return s[:_NODE_TEXT_TRUNCATE] if len(s) > _NODE_TEXT_TRUNCATE else s
+
+        payload_nodes: list[dict] = []
+        for node_data in self._backend.query_nodes({}):
+            nid = node_data.get("id", "")
+            if not nid:
+                continue
+            payload_nodes.append(
+                {
+                    "id": nid,
+                    "node_type": node_data.get("node_type", ""),
+                    "semantic_type": node_data.get("semantic_type"),
+                    "document_id": node_data.get("document_id"),
+                    "section_id": node_data.get("section_id"),
+                    "text": _trunc(node_data.get("text")),
+                }
+            )
+
         payload_out = {
             "run_id": run_id,
             "node_count": node_count,
             "edge_count": edge_count,
             "documents_covered": sorted(docs_covered),
+            "nodes": payload_nodes,
         }
 
         dropped_nodes = 0
@@ -228,7 +250,11 @@ class EvidenceGraphStage:
             logger.warning("evidence_graph_dropped_invalid_nodes", count=dropped_nodes)
         serialized = self._backend.to_serializable()
         graph_edges = [
-            GraphEdge(source=e["source"], target=e["target"], edge_type=e.get("edge_type", "derived_from"))
+            GraphEdge(
+                source=e["source"],
+                target=e["target"],
+                edge_type=e.get("edge_type", "derived_from"),
+            )
             for e in serialized.get("edges", [])
             if e["source"] in graph_nodes and e["target"] in graph_nodes
         ]
@@ -241,6 +267,7 @@ class EvidenceGraphStage:
 
         try:
             import os
+
             graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             os.makedirs(graphs_dir, exist_ok=True)
             save_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
@@ -269,9 +296,12 @@ class EvidenceGraphStage:
             event=built_event,
         )
 
-    def update_for_document(self, document_id: str, extraction_result_data: dict) -> None:
+    def update_for_document(
+        self, document_id: str, extraction_result_data: dict
+    ) -> None:
         nodes_to_remove = [
-            n["id"] for n in self._backend.query_nodes({"document_id": document_id})
+            n["id"]
+            for n in self._backend.query_nodes({"document_id": document_id})
             if n.get("id")
         ]
         for nid in nodes_to_remove:

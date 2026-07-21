@@ -15,7 +15,15 @@ def _make_run_dir(base: Path, measure_id: str, stage_data: dict | None = None) -
     run_dir = base / ".specmetrics" / "runs" / measure_id
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "metadata.json").write_text(
-        json.dumps({"id": measure_id, "created_at": "2026-01-01T00:00:00Z", "sdd_framework": "test", "llm": {"provider": "none"}}, indent=2)
+        json.dumps(
+            {
+                "id": measure_id,
+                "created_at": "2026-01-01T00:00:00Z",
+                "sdd_framework": "test",
+                "llm": {"provider": "none"},
+            },
+            indent=2,
+        )
     )
     if stage_data:
         for name, content in stage_data.items():
@@ -26,10 +34,14 @@ def _make_run_dir(base: Path, measure_id: str, stage_data: dict | None = None) -
 class TestExportRunIntegration:
     def test_export_run_with_id_creates_json_files(self, tmp_path: Path):
         mid = generate_measure_id()
-        _make_run_dir(tmp_path, mid, {
-            "discovery": [{"name": "req1", "count": 5}],
-            "extraction": [{"name": "req1", "count": 3}],
-        })
+        _make_run_dir(
+            tmp_path,
+            mid,
+            {
+                "discovery": [{"name": "req1", "count": 5}],
+                "extraction": [{"name": "req1", "count": 3}],
+            },
+        )
         result = runner.invoke(app, ["export", "run", mid, str(tmp_path)])
         assert result.exit_code == 0, result.output
         exports = tmp_path / ".specmetrics" / "exports"
@@ -49,6 +61,7 @@ class TestExportRunIntegration:
         _make_run_dir(tmp_path, mid2, {"discovery": [{"name": "b", "count": 2}]})
         cwd = Path.cwd().resolve()
         import os
+
         os.chdir(str(tmp_path))
         try:
             result = runner.invoke(app, ["export", "run"])
@@ -60,10 +73,16 @@ class TestExportRunIntegration:
 
     def test_export_run_csv_format(self, tmp_path: Path):
         mid = generate_measure_id()
-        _make_run_dir(tmp_path, mid, {
-            "discovery": [{"name": "req1", "count": 5}],
-        })
-        result = runner.invoke(app, ["export", "run", mid, str(tmp_path), "--format", "csv"])
+        _make_run_dir(
+            tmp_path,
+            mid,
+            {
+                "discovery": [{"name": "req1", "count": 5}],
+            },
+        )
+        result = runner.invoke(
+            app, ["export", "run", mid, str(tmp_path), "--format", "csv"]
+        )
         assert result.exit_code == 0, result.output
         exports = tmp_path / ".specmetrics" / "exports"
         csv_files = list(exports.glob("*.csv"))
@@ -76,10 +95,16 @@ class TestExportRunIntegration:
 
     def test_export_run_multiple_formats(self, tmp_path: Path):
         mid = generate_measure_id()
-        _make_run_dir(tmp_path, mid, {
-            "discovery": [{"name": "req1", "count": 5}],
-        })
-        result = runner.invoke(app, ["export", "run", mid, str(tmp_path), "--format", "json,csv,xml"])
+        _make_run_dir(
+            tmp_path,
+            mid,
+            {
+                "discovery": [{"name": "req1", "count": 5}],
+            },
+        )
+        result = runner.invoke(
+            app, ["export", "run", mid, str(tmp_path), "--format", "json,csv,xml"]
+        )
         assert result.exit_code == 0, result.output
         exports = tmp_path / ".specmetrics" / "exports"
         assert len(list(exports.glob("*.json"))) >= 1

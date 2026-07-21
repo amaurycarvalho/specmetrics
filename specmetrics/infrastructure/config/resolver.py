@@ -23,7 +23,9 @@ class Resolver:
             if existing is None or source.precedence > existing[1].precedence:
                 self._raw[key] = (value, source)
 
-    def resolve(self) -> tuple[dict[str, Any], dict[str, SourceProvenance], list[ConfigWarning]]:
+    def resolve(
+        self,
+    ) -> tuple[dict[str, Any], dict[str, SourceProvenance], list[ConfigWarning]]:
         resolved: dict[str, Any] = {}
         provenance: dict[str, SourceProvenance] = {}
         warnings: list[ConfigWarning] = []
@@ -52,7 +54,7 @@ class Resolver:
 
         def dfs(key: str, path: list[str]) -> None:
             if key in in_stack:
-                cycle = path[path.index(key):] + [key]
+                cycle = path[path.index(key) :] + [key]
                 raise ConfigCircularRefError(cycle)
             if key in visited:
                 return

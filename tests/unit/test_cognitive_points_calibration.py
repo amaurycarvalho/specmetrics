@@ -21,7 +21,7 @@ class TestDefaultCalibration:
         assert profile.bloom_levels["analyze"] == 4.0
         assert profile.bloom_levels["evaluate"] == 5.0
         assert profile.bloom_levels["create"] == 8.0
-        assert profile.default_bloom_level == "analyze"
+        assert profile.default_bloom_level == "understand"
 
     def test_default_bloom_mappings(self):
         profile = get_default_calibration()
@@ -32,10 +32,23 @@ class TestDefaultCalibration:
     def test_default_fibonacci_profile(self):
         profile = get_default_calibration()
         assert profile.fibonacci_normalization.thresholds == [
-            5, 12, 22, 35, 55, 85, 130
+            5,
+            12,
+            22,
+            35,
+            55,
+            85,
+            130,
         ]
         assert profile.fibonacci_normalization.output_values == [
-            1, 3, 5, 8, 13, 20, 40, 100
+            1,
+            3,
+            5,
+            8,
+            13,
+            20,
+            40,
+            100,
         ]
 
 
@@ -71,10 +84,7 @@ class TestCalibrationLoading:
         with tempfile.TemporaryDirectory() as tmp:
             yaml_path = Path(tmp, "cognitive-points.yml")
             yaml_path.write_text(
-                "version: '1.0'\n"
-                "bloom_levels:\n"
-                "  create: 10.0\n"
-                "  analyze: 5.0\n"
+                "version: '1.0'\nbloom_levels:\n  create: 10.0\n  analyze: 5.0\n"
             )
             profile = load_calibration(tmp)
             assert profile.bloom_levels["create"] == 10.0
@@ -85,9 +95,7 @@ class TestCalibrationLoading:
         with tempfile.TemporaryDirectory() as tmp:
             yaml_path = Path(tmp, "cognitive-points.yml")
             yaml_path.write_text(
-                "version: '1.0'\n"
-                "bloom_mappings:\n"
-                "  decision: remember\n"
+                "version: '1.0'\nbloom_mappings:\n  decision: remember\n"
             )
             profile = load_calibration(tmp)
             assert profile.bloom_mappings["decision"] == "remember"
@@ -109,10 +117,7 @@ class TestCalibrationLoading:
     def test_yaml_override_default_bloom_level(self):
         with tempfile.TemporaryDirectory() as tmp:
             yaml_path = Path(tmp, "cognitive-points.yml")
-            yaml_path.write_text(
-                "version: '1.0'\n"
-                "default_bloom_level: remember\n"
-            )
+            yaml_path.write_text("version: '1.0'\ndefault_bloom_level: remember\n")
             profile = load_calibration(tmp)
             assert profile.default_bloom_level == "remember"
 
@@ -133,14 +138,9 @@ class TestCalibrationLoading:
     def test_multiple_yaml_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "base.yml").write_text(
-                "version: '1.0'\n"
-                "bloom_levels:\n"
-                "  analyze: 5.0\n"
+                "version: '1.0'\nbloom_levels:\n  analyze: 5.0\n"
             )
-            Path(tmp, "override.yml").write_text(
-                "bloom_levels:\n"
-                "  create: 12.0\n"
-            )
+            Path(tmp, "override.yml").write_text("bloom_levels:\n  create: 12.0\n")
             profile = load_calibration(tmp)
             assert profile.bloom_levels["analyze"] == 5.0
             assert profile.bloom_levels["create"] == 12.0
@@ -156,6 +156,4 @@ class TestFibonacciNormalizationProfile:
         import pytest
 
         with pytest.raises(ValueError, match="len.*must equal"):
-            FibonacciNormalizationProfile(
-                thresholds=[1, 2], output_values=[1, 2, 3, 4]
-            )
+            FibonacciNormalizationProfile(thresholds=[1, 2], output_values=[1, 2, 3, 4])

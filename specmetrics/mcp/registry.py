@@ -34,7 +34,13 @@ class ResourceRegistry:
     def register(self, template: ResourceTemplate, handler: Callable) -> None:
         self._templates[template.uriTemplate] = template
         self._handlers[template.uriTemplate] = handler
-        pattern_str = "^" + re.escape(template.uriTemplate).replace(r"\{", "(?P<").replace(r"\}", ">[^/]+)") + "$"
+        pattern_str = (
+            "^"
+            + re.escape(template.uriTemplate)
+            .replace(r"\{", "(?P<")
+            .replace(r"\}", ">[^/]+)")
+            + "$"
+        )
         self._patterns[template.uriTemplate] = re.compile(pattern_str)
 
     def match_uri(self, uri: str) -> Callable | None:

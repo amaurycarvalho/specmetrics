@@ -67,6 +67,7 @@ class RulePackApplicator:
                 return "excluded_by_id"
             by_pattern = rule_pack.element_exclusions.get("by_pattern", [])
             import fnmatch
+
             for pattern in by_pattern:
                 if fnmatch.fnmatch(cfm_element_id, pattern):
                     return f"excluded_by_pattern:{pattern}"

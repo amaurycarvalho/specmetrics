@@ -44,6 +44,7 @@ class TestResolver:
     def test_circular_ref_detected(self):
         resolver = Resolver()
         import pytest
+
         resolver.add_source(CliSource({"a": "${b}"}), {"a": "${b}"})
         resolver.add_source(CliSource({"b": "${a}"}), {"b": "${a}"})
         with pytest.raises(ConfigCircularRefError) as exc:

@@ -37,19 +37,29 @@ def _remove_pid() -> None:
 def start(
     host: str = typer.Option(None, "--host", help="Network interface to bind"),
     port: int = typer.Option(None, "--port", help="TCP port to listen on"),
-    transport: str = typer.Option(None, "--transport", help="Transport protocol: stdio or sse"),
-    max_connections: int = typer.Option(None, "--max-connections", help="Maximum concurrent connections"),
+    transport: str = typer.Option(
+        None, "--transport", help="Transport protocol: stdio or sse"
+    ),
+    max_connections: int = typer.Option(
+        None, "--max-connections", help="Maximum concurrent connections"
+    ),
     log_level: str = typer.Option(None, "--log-level", help="Logging verbosity"),
-    config_file: str = typer.Option("specmetrics.yml", "--config", "-c", help="Path to configuration file"),
+    config_file: str = typer.Option(
+        "specmetrics.yml", "--config", "-c", help="Path to configuration file"
+    ),
 ):
     """Start the MCP server."""
-    overrides = {k: v for k, v in {
-        "host": host,
-        "port": port,
-        "transport": TransportType(transport) if transport else None,
-        "max_connections": max_connections,
-        "log_level": log_level,
-    }.items() if v is not None}
+    overrides = {
+        k: v
+        for k, v in {
+            "host": host,
+            "port": port,
+            "transport": TransportType(transport) if transport else None,
+            "max_connections": max_connections,
+            "log_level": log_level,
+        }.items()
+        if v is not None
+    }
     config = ServerConfiguration.from_yaml(config_file, overrides)
 
     server = MCPServer(config)
@@ -66,7 +76,9 @@ def start(
 
 @mcp_cli.command()
 def stop(
-    timeout: int = typer.Option(10, "--timeout", help="Seconds to wait for graceful shutdown"),
+    timeout: int = typer.Option(
+        10, "--timeout", help="Seconds to wait for graceful shutdown"
+    ),
 ):
     """Stop the MCP server."""
     pid = _read_pid()

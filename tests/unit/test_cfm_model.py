@@ -16,7 +16,9 @@ from specmetrics.kernel.cfm.model import (
 
 @pytest.fixture
 def sample_cfm() -> CanonicalFunctionalModel:
-    ev = EvidenceRef(graph_node_id="n0", document_id="doc1", section_id="s1", text="source")
+    ev = EvidenceRef(
+        graph_node_id="n0", document_id="doc1", section_id="s1", text="source"
+    )
     return CanonicalFunctionalModel(
         run_id="test",
         actors={"a1": Actor(id="a1", name="Admin", evidence=ev)},
@@ -24,7 +26,9 @@ def sample_cfm() -> CanonicalFunctionalModel:
         business_rules={"b1": BusinessRule(id="b1", name="Rule1", evidence=ev)},
         data_groups={"d1": DataGroup(id="d1", name="Data1", evidence=ev)},
         relationships=[],
-        operations={"o1": Operation(id="o1", name="Op1", parent_process_id="", evidence=ev)},
+        operations={
+            "o1": Operation(id="o1", name="Op1", parent_process_id="", evidence=ev)
+        },
         metadata=BuildMetadata(run_id="test"),
     )
 
@@ -34,22 +38,32 @@ class TestCanonicalFunctionalModel:
         assert sample_cfm.get_element("a1") is not None
         assert isinstance(sample_cfm.get_element("a1"), Actor)
 
-    def test_get_element_returns_none_for_missing(self, sample_cfm: CanonicalFunctionalModel) -> None:
+    def test_get_element_returns_none_for_missing(
+        self, sample_cfm: CanonicalFunctionalModel
+    ) -> None:
         assert sample_cfm.get_element("nonexistent") is None
 
-    def test_get_elements_by_category(self, sample_cfm: CanonicalFunctionalModel) -> None:
+    def test_get_elements_by_category(
+        self, sample_cfm: CanonicalFunctionalModel
+    ) -> None:
         actors = sample_cfm.get_elements_by_category("actors")
         assert len(actors) == 1
         assert "a1" in actors
 
-    def test_get_elements_by_category_unknown(self, sample_cfm: CanonicalFunctionalModel) -> None:
+    def test_get_elements_by_category_unknown(
+        self, sample_cfm: CanonicalFunctionalModel
+    ) -> None:
         assert sample_cfm.get_elements_by_category("invalid") == {}
 
-    def test_get_elements_by_evidence(self, sample_cfm: CanonicalFunctionalModel) -> None:
+    def test_get_elements_by_evidence(
+        self, sample_cfm: CanonicalFunctionalModel
+    ) -> None:
         result = sample_cfm.get_elements_by_evidence("doc1")
         assert len(result) == 4
 
-    def test_get_elements_by_evidence_no_match(self, sample_cfm: CanonicalFunctionalModel) -> None:
+    def test_get_elements_by_evidence_no_match(
+        self, sample_cfm: CanonicalFunctionalModel
+    ) -> None:
         assert sample_cfm.get_elements_by_evidence("nonexistent") == []
 
     def test_trace_evidence(self, sample_cfm: CanonicalFunctionalModel) -> None:

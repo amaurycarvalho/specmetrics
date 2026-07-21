@@ -72,23 +72,32 @@ class SNAPAssessor:
         for elem_id, elem in elements:
             semantic_marker = elem.metadata.get("semantic_marker", "")
             if not semantic_marker:
-                warnings.append(AssessmentWarning(
-                    code="MISSING_SEMANTIC_MARKER",
-                    message=f"Element '{elem_id}' has no semantic metadata marker",
-                    cfm_element_id=elem_id,
-                ))
+                warnings.append(
+                    AssessmentWarning(
+                        code="MISSING_SEMANTIC_MARKER",
+                        message=f"Element '{elem_id}' has no semantic metadata marker",
+                        cfm_element_id=elem_id,
+                    )
+                )
                 continue
 
-            if semantic_marker not in SEMANTIC_MARKER_TO_CATEGORY and semantic_marker not in inclusion_overrides:
-                warnings.append(AssessmentWarning(
-                    code="UNSUPPORTED_MARKER",
-                    message=f"Unsupported semantic marker '{semantic_marker}' on element '{elem_id}'",
-                    cfm_element_id=elem_id,
-                    details={"marker": semantic_marker},
-                ))
+            if (
+                semantic_marker not in SEMANTIC_MARKER_TO_CATEGORY
+                and semantic_marker not in inclusion_overrides
+            ):
+                warnings.append(
+                    AssessmentWarning(
+                        code="UNSUPPORTED_MARKER",
+                        message=f"Unsupported semantic marker '{semantic_marker}' on element '{elem_id}'",
+                        cfm_element_id=elem_id,
+                        details={"marker": semantic_marker},
+                    )
+                )
                 continue
 
-            category_id_str = inclusion_overrides.get(semantic_marker, SEMANTIC_MARKER_TO_CATEGORY.get(semantic_marker))
+            category_id_str = inclusion_overrides.get(
+                semantic_marker, SEMANTIC_MARKER_TO_CATEGORY.get(semantic_marker)
+            )
             if category_id_str is None:
                 continue
 
@@ -100,16 +109,20 @@ class SNAPAssessor:
             if cat_def is None:
                 continue
 
-            contribution = contribution_overrides.get(category_id, cat_def.default_contribution)
+            contribution = contribution_overrides.get(
+                category_id, cat_def.default_contribution
+            )
 
             refs: list[EvidenceRef] = []
             if hasattr(elem, "evidence") and elem.evidence:
-                refs.append(EvidenceRef(
-                    graph_node_id=elem.evidence.graph_node_id,
-                    document_id=elem.evidence.document_id,
-                    section_id=elem.evidence.section_id,
-                    text=elem.evidence.text,
-                ))
+                refs.append(
+                    EvidenceRef(
+                        graph_node_id=elem.evidence.graph_node_id,
+                        document_id=elem.evidence.document_id,
+                        section_id=elem.evidence.section_id,
+                        text=elem.evidence.text,
+                    )
+                )
 
             item_counter += 1
             item = AssessedItem(
@@ -122,7 +135,9 @@ class SNAPAssessor:
                 evidence_refs=refs,
             )
 
-            item, dedup_warning = self._deduplicate(item, seen_fingerprints, elem_id, elem)
+            item, dedup_warning = self._deduplicate(
+                item, seen_fingerprints, elem_id, elem
+            )
             if dedup_warning:
                 warnings.append(dedup_warning)
             if item is None:
@@ -139,7 +154,11 @@ class SNAPAssessor:
 
         if previous_result is not None and modified_element_ids is not None:
             modified_set = set(modified_element_ids)
-            kept = [i for i in previous_result.assessed_items if i.cfm_element_id not in modified_set]
+            kept = [
+                i
+                for i in previous_result.assessed_items
+                if i.cfm_element_id not in modified_set
+            ]
             existing_ids = {i.cfm_element_id for i in items}
             for i in kept:
                 if i.cfm_element_id not in existing_ids:
@@ -159,7 +178,9 @@ class SNAPAssessor:
 
         return result
 
-    def _collect_elements(self, cfm: CanonicalFunctionalModel) -> list[tuple[str, object]]:
+    def _collect_elements(
+        self, cfm: CanonicalFunctionalModel
+    ) -> list[tuple[str, object]]:
         elements: list[tuple[str, object]] = []
         for elem_id, elem in cfm.operations.items():
             elements.append((elem_id, elem))
@@ -180,7 +201,11 @@ class SNAPAssessor:
         doc_id = evidence.document_id if evidence else ""
         section_id = evidence.section_id if evidence else ""
         text = evidence.text if evidence else ""
-        semantic_marker = elem.metadata.get("semantic_marker", "") if hasattr(elem, "metadata") else ""
+        semantic_marker = (
+            elem.metadata.get("semantic_marker", "")
+            if hasattr(elem, "metadata")
+            else ""
+        )
         raw = f"{elem_id}:{doc_id}:{section_id or ''}:{text}:{semantic_marker}"
         return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -250,13 +275,15 @@ class SNAPAssessor:
             if not cat_item_list:
                 continue
             total_contribution = sum(i.contribution for i in cat_item_list)
-            categories.append(CategoryAssessment(
-                category_id=cat_def.id,
-                category_name=cat_def.name,
-                category_version=cat_def.version,
-                items=cat_item_list,
-                total_contribution=total_contribution,
-            ))
+            categories.append(
+                CategoryAssessment(
+                    category_id=cat_def.id,
+                    category_name=cat_def.name,
+                    category_version=cat_def.version,
+                    items=cat_item_list,
+                    total_contribution=total_contribution,
+                )
+            )
         return categories
 
     def _build_summary(self, items: list[AssessedItem]) -> AssessmentSummary:
@@ -268,7 +295,9 @@ class SNAPAssessor:
         by_category: dict[CategoryId, CategoryBreakdown] = {}
         for item in items:
             if item.category_id not in by_category:
-                by_category[item.category_id] = CategoryBreakdown(item_count=0, total_snap=0.0)
+                by_category[item.category_id] = CategoryBreakdown(
+                    item_count=0, total_snap=0.0
+                )
             by_category[item.category_id].item_count += 1
             if not item.excluded:
                 by_category[item.category_id].total_snap += item.contribution

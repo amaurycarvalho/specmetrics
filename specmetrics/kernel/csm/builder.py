@@ -146,13 +146,16 @@ def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
     all_acceptance_criteria = acceptance_criteria
 
     for sa_id, sa in specification_activities.items():
-        activity_type = classify_activity_type_with_context(
-            graph.nodes[sa_id], graph
-        )
+        activity_type = classify_activity_type_with_context(graph.nodes[sa_id], graph)
         linked = _find_linked(
-            sa_id, graph,
-            all_decisions, all_assumptions, all_constraints,
-            all_risks, all_open_questions, all_acceptance_criteria,
+            sa_id,
+            graph,
+            all_decisions,
+            all_assumptions,
+            all_constraints,
+            all_risks,
+            all_open_questions,
+            all_acceptance_criteria,
         )
         specification_activities[sa_id] = SpecificationActivity(
             id=sa.id,
@@ -272,7 +275,9 @@ class CsmBuilderStage:
                 "csm_builder_no_evidence_graph",
                 execution_id=str(event.context.execution_id),
             )
-            return context.with_stage_output(field_name="canonical_spec_model", value=None)
+            return context.with_stage_output(
+                field_name="canonical_spec_model", value=None
+            )
 
         run_id = graph_data.get("run_id", str(int(event.timestamp.timestamp())))
 
@@ -289,7 +294,9 @@ class CsmBuilderStage:
                 run_id=run_id,
                 execution_id=str(event.context.execution_id),
             )
-            return context.with_stage_output(field_name="canonical_spec_model", value=None)
+            return context.with_stage_output(
+                field_name="canonical_spec_model", value=None
+            )
 
         csm = build(evidence_graph)
 

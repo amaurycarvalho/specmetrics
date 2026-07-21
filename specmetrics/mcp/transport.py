@@ -12,8 +12,7 @@ class Transport(abc.ABC):
         self._mcp_server = mcp_server
 
     @abc.abstractmethod
-    async def run(self) -> None:
-        ...
+    async def run(self) -> None: ...
 
 
 class StdioTransport(Transport):
@@ -27,7 +26,9 @@ class StdioTransport(Transport):
 
 
 class SSETransport(Transport):
-    def __init__(self, mcp_server: MCPServerInstance, host: str = "127.0.0.1", port: int = 8100):
+    def __init__(
+        self, mcp_server: MCPServerInstance, host: str = "127.0.0.1", port: int = 8100
+    ):
         super().__init__(mcp_server)
         self.host = host
         self.port = port

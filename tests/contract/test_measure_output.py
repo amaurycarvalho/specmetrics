@@ -45,7 +45,9 @@ class TestMeasureOutputSchema:
             ),
             results=[
                 MetricResult(name="function_points", total=42, status="completed"),
-                MetricResult(name="business_complexity_points", total=0, status="failed"),
+                MetricResult(
+                    name="business_complexity_points", total=0, status="failed"
+                ),
             ],
             stages=[],
             errors=[

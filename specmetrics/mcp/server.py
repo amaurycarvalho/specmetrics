@@ -43,17 +43,32 @@ class LogLevel(str, Enum):
 
 
 class ServerConfiguration(BaseModel):
-    host: str = Field(default="127.0.0.1", description="Network interface to bind (SSE mode)")
-    port: int = Field(default=8100, description="TCP port to listen on (SSE mode)", ge=1024, le=65535)
-    transport: TransportType = Field(default=TransportType.stdio, description="Transport protocol")
-    max_connections: int = Field(default=10, description="Maximum concurrent client connections", ge=1)
+    host: str = Field(
+        default="127.0.0.1", description="Network interface to bind (SSE mode)"
+    )
+    port: int = Field(
+        default=8100, description="TCP port to listen on (SSE mode)", ge=1024, le=65535
+    )
+    transport: TransportType = Field(
+        default=TransportType.stdio, description="Transport protocol"
+    )
+    max_connections: int = Field(
+        default=10, description="Maximum concurrent client connections", ge=1
+    )
     log_level: LogLevel = Field(default=LogLevel.info, description="Logging verbosity")
-    pipeline_timeout_seconds: int = Field(default=120, description="Max wait time for pipeline tool execution", ge=30)
-    shutdown_timeout_seconds: int = Field(default=10, description="Max wait for in-flight requests on shutdown", ge=1)
+    pipeline_timeout_seconds: int = Field(
+        default=120, description="Max wait time for pipeline tool execution", ge=30
+    )
+    shutdown_timeout_seconds: int = Field(
+        default=10, description="Max wait for in-flight requests on shutdown", ge=1
+    )
 
     @classmethod
-    def from_yaml(cls, path: str | Path, overrides: dict | None = None) -> ServerConfiguration:
+    def from_yaml(
+        cls, path: str | Path, overrides: dict | None = None
+    ) -> ServerConfiguration:
         import yaml
+
         path = Path(path)
         if not path.exists():
             return cls(**(overrides or {}))
@@ -113,7 +128,9 @@ class ServerStatus:
 
 
 class ToolRequest:
-    def __init__(self, request_id: str, tool_name: str, parameters: dict, connection_id: str):
+    def __init__(
+        self, request_id: str, tool_name: str, parameters: dict, connection_id: str
+    ):
         self.request_id: str = request_id
         self.tool_name: str = tool_name
         self.parameters: dict = parameters
@@ -188,12 +205,20 @@ class MCPServer:
                 raise ToolError(
                     -32602,
                     f"Invalid type for {field}: expected string, got {type(value).__name__}",
-                    {"field": field, "expected_type": "string", "received_type": type(value).__name__},
+                    {
+                        "field": field,
+                        "expected_type": "string",
+                        "received_type": type(value).__name__,
+                    },
                 )
 
-    def _register_connection(self, transport_type: TransportType, protocol_version: str) -> MCPConnection | None:
+    def _register_connection(
+        self, transport_type: TransportType, protocol_version: str
+    ) -> MCPConnection | None:
         if len(self.connections) >= self.config.max_connections:
-            logger.warning("max_connections_reached", max_connections=self.config.max_connections)
+            logger.warning(
+                "max_connections_reached", max_connections=self.config.max_connections
+            )
             return None
         conn = MCPConnection(transport_type, protocol_version)
         self.connections[conn.connection_id] = conn
@@ -222,7 +247,9 @@ class MCPServer:
             self.status.start()
             await transport.run()
         elif self.config.transport == TransportType.sse:
-            transport = SSETransport(self._mcp_server, self.config.host, self.config.port)
+            transport = SSETransport(
+                self._mcp_server, self.config.host, self.config.port
+            )
             self.status.start()
             await transport.run()
 
@@ -279,9 +306,17 @@ class MCPServer:
             handle_explain_compare,
             handle_explain_measurement,
         )
-        from specmetrics.mcp.tools.export import EXPORT_RESULTS_TOOL, handle_export_results
+        from specmetrics.mcp.tools.export import (
+            EXPORT_RESULTS_TOOL,
+            handle_export_results,
+        )
         from specmetrics.mcp.tools.measure import RUN_PIPELINE_TOOL, handle_run_pipeline
-        from specmetrics.mcp.tools.specs import LIST_SPECS_TOOL, READ_SPEC_TOOL, handle_list_specs, handle_read_spec
+        from specmetrics.mcp.tools.specs import (
+            LIST_SPECS_TOOL,
+            READ_SPEC_TOOL,
+            handle_list_specs,
+            handle_read_spec,
+        )
         from specmetrics.mcp.tools.status import GET_STATUS_TOOL
 
         self.tool_registry.register(EXPLAIN_TOOL, handle_explain_measurement)
@@ -290,21 +325,33 @@ class MCPServer:
         self.tool_registry.register(LIST_SPECS_TOOL, handle_list_specs)
         self.tool_registry.register(READ_SPEC_TOOL, handle_read_spec)
         self.tool_registry.register(EXPORT_RESULTS_TOOL, handle_export_results)
-        self.tool_registry.register(GET_STATUS_TOOL, lambda params: [
-            TextContent(type="text", text=json.dumps({
-                "state": self.status.state.value,
-                "uptime_seconds": self.status.uptime,
-                "active_connections": self.status.active_connections,
-                "max_connections": self.status.max_connections,
-                "total_requests_handled": self.status.total_requests_handled,
-                "total_errors": self.status.total_errors,
-                "transport": self.status.transport.value,
-                "version": self.status.version,
-            }, indent=2))
-        ])
+        self.tool_registry.register(
+            GET_STATUS_TOOL,
+            lambda params: [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "state": self.status.state.value,
+                            "uptime_seconds": self.status.uptime,
+                            "active_connections": self.status.active_connections,
+                            "max_connections": self.status.max_connections,
+                            "total_requests_handled": self.status.total_requests_handled,
+                            "total_errors": self.status.total_errors,
+                            "transport": self.status.transport.value,
+                            "version": self.status.version,
+                        },
+                        indent=2,
+                    ),
+                )
+            ],
+        )
 
     def _register_resources(self) -> None:
-        from specmetrics.mcp.resources.specs import SPEC_RESOURCE_TEMPLATE, handle_spec_resource
+        from specmetrics.mcp.resources.specs import (
+            SPEC_RESOURCE_TEMPLATE,
+            handle_spec_resource,
+        )
         from specmetrics.mcp.resources.measurements import (
             MEASUREMENT_RESOURCE_TEMPLATE,
             EVIDENCE_RESOURCE_TEMPLATE,
@@ -315,9 +362,15 @@ class MCPServer:
         )
 
         self.resource_registry.register(SPEC_RESOURCE_TEMPLATE, handle_spec_resource)
-        self.resource_registry.register(MEASUREMENT_RESOURCE_TEMPLATE, handle_measurement_resource)
-        self.resource_registry.register(EVIDENCE_RESOURCE_TEMPLATE, handle_evidence_resource)
-        self.resource_registry.register(EXPORT_RESOURCE_TEMPLATE, handle_export_resource)
+        self.resource_registry.register(
+            MEASUREMENT_RESOURCE_TEMPLATE, handle_measurement_resource
+        )
+        self.resource_registry.register(
+            EVIDENCE_RESOURCE_TEMPLATE, handle_evidence_resource
+        )
+        self.resource_registry.register(
+            EXPORT_RESOURCE_TEMPLATE, handle_export_resource
+        )
 
     def _register_prompts(self) -> None:
         from specmetrics.mcp.prompts.templates import (
@@ -367,7 +420,9 @@ class MCPServer:
                     raise
                 except Exception as exc:
                     self.status.record_error()
-                    logger.error("tool_execution_failed", tool_name=name, error=str(exc))
+                    logger.error(
+                        "tool_execution_failed", tool_name=name, error=str(exc)
+                    )
                     raise ToolError(-32000, f"Tool execution failed: {exc}") from exc
             finally:
                 self._finish_request()
@@ -430,19 +485,29 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="SpecMetrics MCP Server")
-    parser.add_argument("--config", default="specmetrics.yml", help="Path to configuration file")
-    parser.add_argument("--host", default=None, help="Network interface to bind (SSE mode)")
+    parser.add_argument(
+        "--config", default="specmetrics.yml", help="Path to configuration file"
+    )
+    parser.add_argument(
+        "--host", default=None, help="Network interface to bind (SSE mode)"
+    )
     parser.add_argument("--port", type=int, default=None, help="TCP port (SSE mode)")
-    parser.add_argument("--transport", default=None, choices=["stdio", "sse"], help="Transport protocol")
+    parser.add_argument(
+        "--transport", default=None, choices=["stdio", "sse"], help="Transport protocol"
+    )
     parser.add_argument("--log-level", default=None, help="Logging verbosity")
     args = parser.parse_args()
 
-    overrides = {k: v for k, v in {
-        "host": args.host,
-        "port": args.port,
-        "transport": TransportType(args.transport) if args.transport else None,
-        "log_level": args.log_level,
-    }.items() if v is not None}
+    overrides = {
+        k: v
+        for k, v in {
+            "host": args.host,
+            "port": args.port,
+            "transport": TransportType(args.transport) if args.transport else None,
+            "log_level": args.log_level,
+        }.items()
+        if v is not None
+    }
 
     config = ServerConfiguration.from_yaml(args.config, overrides)
     server = MCPServer(config)

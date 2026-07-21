@@ -16,7 +16,7 @@ class MeasureMetadata(BaseModel):
 
 class MetricResult(BaseModel):
     name: str
-    total: int = 0
+    total: float = 0
     status: str = "completed"
     duration_ms: int = 0
 

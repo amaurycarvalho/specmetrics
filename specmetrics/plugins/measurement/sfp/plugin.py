@@ -114,10 +114,18 @@ class SFPMeasurementPlugin:
         if _measurement_duration is not None:
             _measurement_duration.record(duration_ms)
         if _fp_gauge is not None:
-            fp_count = sum(1 for c in result.measured_components if c.component_type == "functional_process")
+            fp_count = sum(
+                1
+                for c in result.measured_components
+                if c.component_type == "functional_process"
+            )
             _fp_gauge.set(fp_count)
         if _lf_gauge is not None:
-            lf_count = sum(1 for c in result.measured_components if c.component_type == "logical_function")
+            lf_count = sum(
+                1
+                for c in result.measured_components
+                if c.component_type == "logical_function"
+            )
             _lf_gauge.set(lf_count)
 
         logger.info(
@@ -130,6 +138,7 @@ class SFPMeasurementPlugin:
 
         if async_execution:
             import asyncio
+
             loop = asyncio.get_event_loop()
             future = loop.create_future()
             future.set_result(result)
@@ -162,10 +171,16 @@ class SFPMeasurementHandler:
         plugin = SFPMeasurementPlugin()
         result = plugin.measure(cfm)
 
+        sfp_entities = [c.model_dump(mode="json") for c in result.measured_components]
+
         payload: dict[str, Any] = {
             "sfp_total_sfp": result.summary.total_sfp,
             "sfp_total_components": result.summary.total_component_count,
-            "sfp_breakdown": {ct: {"count": b.count, "total_sfp": b.total_sfp} for ct, b in result.summary.by_type.items()},
+            "sfp_breakdown": {
+                ct: {"count": b.count, "total_sfp": b.total_sfp}
+                for ct, b in result.summary.by_type.items()
+            },
+            "sfp_entities": sfp_entities,
         }
 
         return ctx.merge_stage_output("measurement_result", payload)

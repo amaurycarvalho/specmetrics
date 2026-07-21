@@ -24,7 +24,9 @@ class PluginDiscovery:
                     entry_point_name=ep.name,
                     status=PluginStatus.PENDING,
                 )
-                logger.debug("plugin_discovered", plugin_id=metadata.id, entry_point=ep.name)
+                logger.debug(
+                    "plugin_discovered", plugin_id=metadata.id, entry_point=ep.name
+                )
                 descriptors.append(descriptor)
             except Exception as exc:
                 logger.warning(

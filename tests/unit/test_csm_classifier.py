@@ -6,7 +6,12 @@ from specmetrics.kernel.csm.activity_classifier import (
     classify_activity_type,
     classify_activity_type_with_context,
 )
-from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode, GraphEdge, GraphMetadata
+from specmetrics.kernel.evidence_graph import (
+    EvidenceGraph,
+    GraphNode,
+    GraphEdge,
+    GraphMetadata,
+)
 
 
 def _make_node(
@@ -30,7 +35,9 @@ class TestClassifier:
         assert classify_node(node) == "decision"
 
     def test_assumption_pattern(self):
-        node = _make_node("n2", "We assume the system will handle 1000 concurrent users")
+        node = _make_node(
+            "n2", "We assume the system will handle 1000 concurrent users"
+        )
         assert classify_node(node) == "assumption"
 
     def test_constraint_pattern(self):
@@ -58,11 +65,16 @@ class TestClassifier:
         assert classify_node(node) == "open_question"
 
     def test_acceptance_criterion(self):
-        node = _make_node("n9", "Given the user is authenticated, when they request data, then the system returns 200")
+        node = _make_node(
+            "n9",
+            "Given the user is authenticated, when they request data, then the system returns 200",
+        )
         assert classify_node(node) == "acceptance_criterion"
 
     def test_glossary_term(self):
-        node = _make_node("n10", "Token Points: A metric measuring specification token density")
+        node = _make_node(
+            "n10", "Token Points: A metric measuring specification token density"
+        )
         assert classify_node(node) == "glossary_term"
 
     def test_specification_activity(self):
@@ -82,11 +94,15 @@ class TestClassifier:
         assert classify_node(node) is None
 
     def test_decision_past_tense(self):
-        node = _make_node("n15", "It was agreed that Python would be the primary language")
+        node = _make_node(
+            "n15", "It was agreed that Python would be the primary language"
+        )
         assert classify_node(node) == "decision"
 
     def test_assumption_we_believe(self):
-        node = _make_node("n16", "We believe the migration can be completed in one sprint")
+        node = _make_node(
+            "n16", "We believe the migration can be completed in one sprint"
+        )
         assert classify_node(node) == "assumption"
 
     def test_risk_potential_issue(self):
@@ -100,22 +116,40 @@ class TestClassifier:
 
 class TestActivityClassifier:
     def test_exploration(self):
-        assert classify_activity_type("Discover business requirements for the new module") == "exploration"
+        assert (
+            classify_activity_type("Discover business requirements for the new module")
+            == "exploration"
+        )
 
     def test_research(self):
-        assert classify_activity_type("Research available authentication solutions") == "exploration"
+        assert (
+            classify_activity_type("Research available authentication solutions")
+            == "exploration"
+        )
 
     def test_clarification(self):
-        assert classify_activity_type("Clarify the ambiguity around user permissions") == "clarification"
+        assert (
+            classify_activity_type("Clarify the ambiguity around user permissions")
+            == "clarification"
+        )
 
     def test_refinement(self):
-        assert classify_activity_type("Refine the API specification for clarity") == "refinement"
+        assert (
+            classify_activity_type("Refine the API specification for clarity")
+            == "refinement"
+        )
 
     def test_review(self):
-        assert classify_activity_type("Review the architecture document for consistency") == "review"
+        assert (
+            classify_activity_type("Review the architecture document for consistency")
+            == "review"
+        )
 
     def test_validation(self):
-        assert classify_activity_type("Validate the requirements with stakeholders") == "validation"
+        assert (
+            classify_activity_type("Validate the requirements with stakeholders")
+            == "validation"
+        )
 
     def test_with_context_multiple_derived(self):
         graph = EvidenceGraph(

@@ -7,14 +7,18 @@ from specmetrics.kernel.evidence_graph import GraphNode
 
 
 FRAMEWORK_PATTERNS = [
-    re.compile(r"^(?:OpenSpec|SpecKit|SpecMetrics)\s+(?:Section|Document|Measurement|Feature|Element|Concept):\s*", re.IGNORECASE),
+    re.compile(
+        r"^(?:OpenSpec|SpecKit|SpecMetrics)\s+(?:Section|Document|Measurement|Feature|Element|Concept):\s*",
+        re.IGNORECASE,
+    ),
     re.compile(r"^(?:open_spec|speckit|specmetrics)[_.].*", re.IGNORECASE),
 ]
 
 ACTOR_PATTERNS = re.compile(
     r"^(admin|administrator|user|manager|operator|developer|analyst|viewer|editor|"
     r"owner|contributor|reviewer|approver|customer|client|agent|bot|service|"
-    r"system|coordinator|supervisor|lead|member|participant)$",
+    r"system|coordinator|supervisor|lead|member|participant|stakeholder|moderator|"
+    r"subscriber|visitor|guest|consumer|provider|vendor|partner)$",
     re.IGNORECASE,
 )
 
@@ -34,9 +38,23 @@ def classify_node(node: GraphNode) -> Optional[str]:
     return None
 
 
+_ACTOR_SECTION_PATTERNS = re.compile(
+    r"(Actor|Role|User|Persona)",
+    re.IGNORECASE,
+)
+_ACTOR_KEY_PHRASES = re.compile(
+    r"(acts as|is a user|represents a person|external system)",
+    re.IGNORECASE,
+)
+
+
 def _classify_entity(node: GraphNode) -> str:
     name = node.text.strip()
     if ACTOR_PATTERNS.match(name):
+        return "actor"
+    if node.section_id and _ACTOR_SECTION_PATTERNS.search(node.section_id):
+        return "actor"
+    if _ACTOR_KEY_PHRASES.search(name):
         return "actor"
     if name[0].isupper() and _is_data_like(name):
         return "data_group"

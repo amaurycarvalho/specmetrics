@@ -46,6 +46,7 @@ class AppliedRuleRecord(BaseModel):
     rule_id: str
     rule_type: str
     description: str = ""
+    methodology: str = ""
     before_state: dict[str, object] = {}
     after_state: dict[str, object] = {}
 

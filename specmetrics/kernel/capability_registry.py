@@ -7,7 +7,13 @@ class CapabilityRegistry:
     def __init__(self):
         self._capabilities: dict[str, dict[str, Any]] = {}
 
-    def register(self, name: str, description: str, handler: Callable, metadata: dict | None = None) -> None:
+    def register(
+        self,
+        name: str,
+        description: str,
+        handler: Callable,
+        metadata: dict | None = None,
+    ) -> None:
         self._capabilities[name] = {
             "name": name,
             "description": description,

@@ -46,8 +46,8 @@ rules:
   - id: "openspec-req-heading"
     name: "Requirement Heading"
     pattern:
-      regex: '^### Requirement: (.+)$'
-    type: "fact"
+      regex: '^Requirement: (.+)$'
+    type: "operation"
     confidence: 0.95
     priority: 80
 
@@ -56,7 +56,7 @@ rules:
     name: "DEVE Statement"
     pattern:
       regex: '(O sistema|O [A-Z][a-zA-Z]+|[A-Z][a-zA-Z]+) (DEVE|NÃO DEVE|DEVEM|NÃO DEVEM) (.+)'
-    type: "fact"
+    type: "operation"
     confidence: 0.95
     priority: 78
 
@@ -65,7 +65,7 @@ rules:
     name: "SHALL Statement"
     pattern:
       regex: '(The system|[A-Z][a-zA-Z]+) (SHALL|SHALL NOT|SHOULD|MAY) (.+)'
-    type: "fact"
+    type: "operation"
     confidence: 0.90
     priority: 75
 
@@ -100,8 +100,8 @@ rules:
   - id: "openspec-then-assertion"
     name: "THEN Assertion"
     pattern:
-      regex: '^-\s+\*\*THEN\*\* (.+)$'
-    type: "fact"
+      regex: '^\*\*THEN\*\* (.+)$'
+    type: "operation"
     confidence: 0.90
     priority: 75
 
@@ -118,11 +118,10 @@ rules:
   - id: "openspec-decision-colon"
     name: "Decision Record (Colon)"
     pattern:
-      regex: '^### Decision (\d+): (.+)$'
-    type: "fact"
+      regex: '^Decision (\d+): (.+)$'
+    type: "operation"
     confidence: 0.95
     priority: 80
-    document_type: "design"
 
   # FR-022: Decision record (dot format, Portuguese)
   - id: "openspec-decision-dot"
@@ -166,11 +165,10 @@ rules:
   - id: "openspec-what-changes"
     name: "What Changes Section"
     pattern:
-      regex: '^## What Changes$'
-    type: "fact"
+      regex: '^What Changes$'
+    type: "operation"
     confidence: 0.90
     priority: 70
-    document_type: "proposal"
 
   - id: "openspec-context-section"
     name: "Context Section"
@@ -213,20 +211,18 @@ rules:
   - id: "openspec-task-category"
     name: "Task Category"
     pattern:
-      regex: '^## (\d+)\. (.+)$'
-    type: "fact"
+      regex: '^(\d+)\. (.+)$'
+    type: "operation"
     confidence: 0.85
     priority: 65
-    document_type: "tasks"
 
   - id: "openspec-task-item"
     name: "Task Item"
     pattern:
-      regex: '^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$'
-    type: "fact"
+      regex: '^\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$'
+    type: "operation"
     confidence: 0.85
     priority: 65
-    document_type: "tasks"
 
   # FR-027: Domain entity (TitleCase)
   - id: "openspec-domain-entity"
@@ -295,7 +291,7 @@ rules:
   - id: "openspec-and-clause"
     name: "AND Clause"
     pattern:
-      regex: '^-\s+\*\*AND\*\* (.+)$'
-    type: "fact"
+      regex: '^\*\*AND\*\* (.+)$'
+    type: "operation"
     confidence: 0.85
     priority: 70

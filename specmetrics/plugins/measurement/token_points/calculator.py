@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import time
 
+import structlog
+
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.csm.model import CanonicalSpecificationModel
+from specmetrics.kernel.token_utils import count_tokens
 from specmetrics.plugins.calibration.models import CalibrationProfile
+
 
 from .models import (
     CodeGenerationCost,
@@ -15,6 +19,62 @@ from .models import (
     TokenContribution,
     TokenPointsMeasurement,
 )
+
+logger = structlog.get_logger(__name__)
+
+
+def _extract_content_text_csm(elem) -> str:
+    name = getattr(elem, "name", None) or ""
+    description = getattr(elem, "description", None) or ""
+    return (name + " " + description).strip()
+
+
+def _extract_content_text_cfm(elem, collection_name: str) -> str:
+    if collection_name == "relationships":
+        name = getattr(elem, "name", None) or ""
+        return name.strip()
+    name = getattr(elem, "name", None) or ""
+    description = getattr(elem, "description", None) or ""
+    return (name + " " + description).strip()
+
+
+def _build_token_contribution(
+    *,
+    element_id: str,
+    element_type: str,
+    element_name: str,
+    model_source: str,
+    applied_weight: float,
+    content_text: str,
+    content_multiplier: float,
+    evidence_ref: EvidenceRef | None,
+) -> TokenContribution:
+    if not content_text:
+        content_tokens = 0
+        content_score = 0.0
+        logger.debug("empty_content", element_id=element_id, element_type=element_type)
+    else:
+        content_tokens = count_tokens(content_text)
+        content_score = content_tokens * content_multiplier
+    partial_score = applied_weight + content_score
+    logger.debug(
+        "token_contribution",
+        element_id=element_id,
+        element_type=element_type,
+        content_token_count=content_tokens,
+        content_score=content_score,
+    )
+    return TokenContribution(
+        element_id=element_id,
+        element_type=element_type,
+        element_name=element_name,
+        model_source=model_source,
+        applied_weight=applied_weight,
+        content_token_count=content_tokens,
+        content_score=content_score,
+        partial_score=partial_score,
+        evidence_ref=evidence_ref,
+    )
 
 
 def calculate(
@@ -31,6 +91,7 @@ def calculate(
 
     spec_weight = calibration.specification_cost
     code_weight = calibration.code_generation_cost
+    content_multiplier = calibration.content_multiplier
 
     csm_element_count = 0
     cfm_element_count = 0
@@ -40,7 +101,8 @@ def calculate(
     if csm is not None:
         for activity_id, activity in csm.specification_activities.items():
             weight = spec_weight.activities.get(activity.activity_type, 0.0)
-            contrib = TokenContribution(
+            content_text = _extract_content_text_csm(activity)
+            contrib = _build_token_contribution(
                 element_id=activity_id,
                 element_type=activity.activity_type,
                 element_name=activity.description[:80]
@@ -48,21 +110,32 @@ def calculate(
                 else activity_id,
                 model_source="csm",
                 applied_weight=weight,
-                partial_score=weight,
+                content_text=content_text,
+                content_multiplier=content_multiplier,
                 evidence_ref=_csm_evidence(activity.evidence_references),
             )
             spec_contributions.append(contrib)
             csm_element_count += 1
 
         for elem_id, elem in csm.references.items():
-            unknown_csm_count += 1
-        warnings.append(
-            MeasurementWarning(
-                code="UNKNOWN_CSM_ELEMENTS",
-                message=f"{unknown_csm_count} CSM reference element(s) found with no configurable weight — excluded from Specification Cost",
-                details={"count": str(unknown_csm_count), "category": "references"},
+            content_text = (
+                (getattr(elem, "title", None) or "")
+                + " "
+                + (getattr(elem, "url", None) or "")
+            ).strip()
+            weight = spec_weight.references
+            contrib = _build_token_contribution(
+                element_id=elem_id,
+                element_type="references",
+                element_name=elem_id,
+                model_source="csm",
+                applied_weight=weight,
+                content_text=content_text,
+                content_multiplier=content_multiplier,
+                evidence_ref=_csm_evidence(elem.evidence_references),
             )
-        )
+            spec_contributions.append(contrib)
+            csm_element_count += 1
 
         for collection_name, collection in [
             ("decisions", csm.decisions),
@@ -75,13 +148,15 @@ def calculate(
         ]:
             weight = getattr(spec_weight, collection_name, 0.0)
             for elem_id, elem in collection.items():
-                contrib = TokenContribution(
+                content_text = _extract_content_text_csm(elem)
+                contrib = _build_token_contribution(
                     element_id=elem_id,
                     element_type=collection_name,
                     element_name=elem.description[:80] if elem.description else elem_id,
                     model_source="csm",
                     applied_weight=weight,
-                    partial_score=weight,
+                    content_text=content_text,
+                    content_multiplier=content_multiplier,
                     evidence_ref=_csm_evidence(elem.evidence_references),
                 )
                 spec_contributions.append(contrib)
@@ -122,13 +197,15 @@ def calculate(
                     or elem_id
                 )
                 evidence = getattr(elem, "evidence", None)
-                contrib = TokenContribution(
+                content_text = _extract_content_text_cfm(elem, collection_name)
+                contrib = _build_token_contribution(
                     element_id=elem_id,
                     element_type=collection_name,
                     element_name=str(name)[:80] if name else elem_id,
                     model_source="cfm",
                     applied_weight=weight,
-                    partial_score=weight,
+                    content_text=content_text,
+                    content_multiplier=content_multiplier,
                     evidence_ref=_cfm_evidence(evidence),
                 )
                 code_contributions.append(contrib)

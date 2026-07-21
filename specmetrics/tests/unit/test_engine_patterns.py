@@ -27,7 +27,9 @@ def _rule(
     )
 
 
-def _obs(type_: str = "heading", content: str = "", section_type: str = "") -> Observation:
+def _obs(
+    type_: str = "heading", content: str = "", section_type: str = ""
+) -> Observation:
     return Observation(
         type=type_,
         content=content,
@@ -46,26 +48,32 @@ class TestPatternLibraryInitialization:
         assert len(lib.rules) == 1
 
     def test_multiple_packs_merged(self) -> None:
-        lib = PatternLibrary([
-            [_rule("r1", heading="Actors")],
-            [_rule("r2", heading="Constraints")],
-        ])
+        lib = PatternLibrary(
+            [
+                [_rule("r1", heading="Actors")],
+                [_rule("r2", heading="Constraints")],
+            ]
+        )
         assert len(lib.rules) == 2
 
 
 class TestPatternLibraryConflictResolution:
     def test_higher_priority_overrides_lower(self) -> None:
-        lib = PatternLibrary([
-            [_rule("dup", heading="Actors", priority=50)],
-            [_rule("dup", heading="Actors", priority=90)],
-        ])
+        lib = PatternLibrary(
+            [
+                [_rule("dup", heading="Actors", priority=50)],
+                [_rule("dup", heading="Actors", priority=90)],
+            ]
+        )
         assert lib.rules[0].priority == 90
 
     def test_same_priority_tie_broken_by_id(self) -> None:
-        lib = PatternLibrary([
-            [_rule("b-rule", heading="Test", priority=50)],
-            [_rule("a-rule", heading="Test", priority=50)],
-        ])
+        lib = PatternLibrary(
+            [
+                [_rule("b-rule", heading="Test", priority=50)],
+                [_rule("a-rule", heading="Test", priority=50)],
+            ]
+        )
         ids = [r.id for r in lib.rules]
         assert ids == sorted(ids)
 

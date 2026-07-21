@@ -14,7 +14,14 @@ class TestBuildMetadata:
         spec.parent.mkdir(parents=True)
         spec.write_text("# Feature A")
         meta = build_metadata(spec, tmp_path)
-        required = {"framework", "artifact_type", "kind", "feature", "workspace", "relative_path"}
+        required = {
+            "framework",
+            "artifact_type",
+            "kind",
+            "feature",
+            "workspace",
+            "relative_path",
+        }
         assert required.issubset(meta.keys())
 
     def test_feature_identifier_from_parent_directory(self, tmp_path: Path) -> None:
@@ -37,7 +44,9 @@ class TestBuildMetadata:
             f = tmp_path / filename
             f.write_text("# Test")
             meta = build_metadata(f, tmp_path)
-            assert meta["artifact_type"] == expected_type, f"{filename} should map to {expected_type}"
+            assert meta["artifact_type"] == expected_type, (
+                f"{filename} should map to {expected_type}"
+            )
 
     def test_unknown_file_handling(self, tmp_path: Path) -> None:
         unknown = tmp_path / "specs" / "feature-a" / "notes.md"
@@ -84,7 +93,9 @@ class TestBuildMetadata:
             f = tmp_path / filename
             f.write_text("# Test")
             meta = build_metadata(f, tmp_path)
-            assert meta["kind"] == expected_kind, f"{filename} should have kind {expected_kind}"
+            assert meta["kind"] == expected_kind, (
+                f"{filename} should have kind {expected_kind}"
+            )
 
     def test_framework_always_speckit(self, tmp_path: Path) -> None:
         f = tmp_path / "any.md"

@@ -16,11 +16,9 @@ class TestExtractionProviderProtocol:
     def test_valid_provider_passes_structural_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def extract(self, document: Document) -> ExtractionResult:
-                ...
+            def extract(self, document: Document) -> ExtractionResult: ...
 
-            def supports_type(self, document_type: str) -> bool:
-                ...
+            def supports_type(self, document_type: str) -> bool: ...
 
         class ValidProvider:
             def extract(self, document: Document) -> ExtractionResult:
@@ -39,11 +37,9 @@ class TestExtractionProviderProtocol:
     def test_provider_missing_extract_fails_structural_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def extract(self, document: Document) -> ExtractionResult:
-                ...
+            def extract(self, document: Document) -> ExtractionResult: ...
 
-            def supports_type(self, document_type: str) -> bool:
-                ...
+            def supports_type(self, document_type: str) -> bool: ...
 
         class MissingExtract:
             def supports_type(self, document_type: str) -> bool:
@@ -55,11 +51,9 @@ class TestExtractionProviderProtocol:
     def test_provider_missing_supports_type_fails_structural_check(self):
         @runtime_checkable
         class CheckableProtocol(Protocol):
-            def extract(self, document: Document) -> ExtractionResult:
-                ...
+            def extract(self, document: Document) -> ExtractionResult: ...
 
-            def supports_type(self, document_type: str) -> bool:
-                ...
+            def supports_type(self, document_type: str) -> bool: ...
 
         class MissingSupportsType:
             def extract(self, document: Document) -> ExtractionResult:

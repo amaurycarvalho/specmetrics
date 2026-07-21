@@ -98,16 +98,19 @@ class TestRulePackEnginePlugin:
         rules_dir = Path(plugin._rules_dir)
         rule_pack_path = rules_dir / "test.yml"
         with open(rule_pack_path, "w") as f:
-            yaml.dump({
-                "id": "test-pack",
-                "rules": [
-                    {
-                        "id": "exclude-eq",
-                        "type": "exclusion",
-                        "config": {"function_types": ["EQ"]},
-                    },
-                ],
-            }, f)
+            yaml.dump(
+                {
+                    "id": "test-pack",
+                    "rules": [
+                        {
+                            "id": "exclude-eq",
+                            "type": "exclusion",
+                            "config": {"function_types": ["EQ"]},
+                        },
+                    ],
+                },
+                f,
+            )
 
         ctx = PipelineContext()
         ctx = ctx.with_stage_output("canonical_model", cfm)

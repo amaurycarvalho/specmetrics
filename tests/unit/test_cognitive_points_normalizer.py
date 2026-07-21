@@ -61,16 +61,10 @@ class TestFibonacciNormalizerCustom:
         assert normalizer.normalize(150).output_value == 20
 
     def test_invalid_validation(self):
-        with pytest.raises(
-            ValueError, match="len.*must equal"
-        ):
-            FibonacciNormalizer(
-                thresholds=[1, 2], output_values=[1, 2, 3, 4]
-            )
+        with pytest.raises(ValueError, match="len.*must equal"):
+            FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3, 4])
 
     def test_thresholds_property(self):
-        normalizer = FibonacciNormalizer(
-            thresholds=[1, 2], output_values=[1, 2, 3]
-        )
+        normalizer = FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3])
         assert normalizer.thresholds == [1, 2]
         assert normalizer.output_values == [1, 2, 3]

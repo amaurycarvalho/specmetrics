@@ -24,12 +24,24 @@ class TestOrchestratorMetricFiltering:
             with patch.object(orch, "_build_stage_results", return_value=[]):
                 with patch.object(orch, "_extract_measurement", return_value=None):
                     with patch.object(orch, "_build_metric_results", return_value=[]):
-                        with patch.object(orch, "_build_stage_details", return_value=[]):
-                            with patch.object(orch, "_build_output_errors", return_value=[]):
-                                with patch.object(orch, "_get_llm_info", return_value=("", "")):
-                                    with patch.object(orch, "_handle_export", return_value=None):
-                                        with patch("specmetrics.application.orchestrator.PipelineEngine"):
-                                            with patch("specmetrics.application.orchestrator.AdapterRegistry"):
+                        with patch.object(
+                            orch, "_build_stage_details", return_value=[]
+                        ):
+                            with patch.object(
+                                orch, "_build_output_errors", return_value=[]
+                            ):
+                                with patch.object(
+                                    orch, "_get_llm_info", return_value=("", "")
+                                ):
+                                    with patch.object(
+                                        orch, "_handle_export", return_value=None
+                                    ):
+                                        with patch(
+                                            "specmetrics.application.orchestrator.PipelineEngine"
+                                        ):
+                                            with patch(
+                                                "specmetrics.application.orchestrator.AdapterRegistry"
+                                            ):
                                                 orch.execute(request)
 
         mock_discover.assert_called_once_with(metrics_filter=["fpa"])
@@ -46,12 +58,24 @@ class TestOrchestratorMetricFiltering:
             with patch.object(orch, "_build_stage_results", return_value=[]):
                 with patch.object(orch, "_extract_measurement", return_value=None):
                     with patch.object(orch, "_build_metric_results", return_value=[]):
-                        with patch.object(orch, "_build_stage_details", return_value=[]):
-                            with patch.object(orch, "_build_output_errors", return_value=[]):
-                                with patch.object(orch, "_get_llm_info", return_value=("", "")):
-                                    with patch.object(orch, "_handle_export", return_value=None):
-                                        with patch("specmetrics.application.orchestrator.PipelineEngine"):
-                                            with patch("specmetrics.application.orchestrator.AdapterRegistry"):
+                        with patch.object(
+                            orch, "_build_stage_details", return_value=[]
+                        ):
+                            with patch.object(
+                                orch, "_build_output_errors", return_value=[]
+                            ):
+                                with patch.object(
+                                    orch, "_get_llm_info", return_value=("", "")
+                                ):
+                                    with patch.object(
+                                        orch, "_handle_export", return_value=None
+                                    ):
+                                        with patch(
+                                            "specmetrics.application.orchestrator.PipelineEngine"
+                                        ):
+                                            with patch(
+                                                "specmetrics.application.orchestrator.AdapterRegistry"
+                                            ):
                                                 orch.execute(request)
 
         mock_discover.assert_called_once_with(metrics_filter=None)
@@ -99,12 +123,18 @@ class TestOrchestratorOutput:
         ctx = MagicMock()
 
         metric_results = [MetricOutputItem(name="function_points", total=42)]
-        stage_details = [StageOutputItem(name="discover", count=5, count_type="documents")]
+        stage_details = [
+            StageOutputItem(name="discover", count=5, count_type="documents")
+        ]
         output_errors = []
 
         export_file = orch._write_json_output(
-            request, ctx, tmp_path,
-            metric_results, stage_details, output_errors,
+            request,
+            ctx,
+            tmp_path,
+            metric_results,
+            stage_details,
+            output_errors,
         )
 
         assert export_file.exists()
@@ -118,14 +148,20 @@ class TestPluginRegistryFiltering:
     def test_install_handlers_with_filter(self):
         from specmetrics.kernel.events import EventType
         from specmetrics.kernel.handler_registry import HandlerRegistry
-        from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginStatus, PluginType
+        from specmetrics.kernel.plugin_metadata import (
+            PluginMetadata,
+            PluginStatus,
+            PluginType,
+        )
         from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry
 
         registry = PluginRegistry()
 
         def make_handler():
             handler = MagicMock()
-            type(handler).handled_event_type = property(lambda _: EventType.MEASUREMENT_COMPLETED)
+            type(handler).handled_event_type = property(
+                lambda _: EventType.MEASUREMENT_COMPLETED
+            )
             type(handler).handler_id = property(lambda _: "test_handler")
             type(handler).stage_name = property(lambda _: "Test")
             return handler

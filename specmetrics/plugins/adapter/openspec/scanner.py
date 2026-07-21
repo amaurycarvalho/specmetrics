@@ -6,13 +6,15 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-TEMP_EXCLUSIONS = frozenset({
-    ".git",
-    "__pycache__",
-    ".venv",
-    "node_modules",
-    ".specify",
-})
+TEMP_EXCLUSIONS = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        ".venv",
+        "node_modules",
+        ".specify",
+    }
+)
 
 
 def _is_temp_dir(name: str) -> bool:

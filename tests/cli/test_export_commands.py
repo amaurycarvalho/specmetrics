@@ -30,7 +30,9 @@ class TestExportRunUnit:
             (out_dir / f"{fname}.json").write_text(json.dumps(data))
 
         assert (out_dir / "discovery.json").exists()
-        assert json.loads((out_dir / "discovery.json").read_text()) == [{"name": "x", "count": 1}]
+        assert json.loads((out_dir / "discovery.json").read_text()) == [
+            {"name": "x", "count": 1}
+        ]
 
     def test_csv_export_normalization(self, tmp_path: Path):
         from specmetrics.plugins.exporter.orchestrator import stage_to_csv
@@ -80,7 +82,9 @@ class TestExportRunErrors:
         mid = "20260720-120000-aaaabbbb"
         runs_dir = tmp_path / ".specmetrics" / "runs" / mid
         runs_dir.mkdir(parents=True)
-        (runs_dir / "metadata.json").write_text(json.dumps({"id": mid, "created_at": "2026-01-01T00:00:00Z"}))
+        (runs_dir / "metadata.json").write_text(
+            json.dumps({"id": mid, "created_at": "2026-01-01T00:00:00Z"})
+        )
 
         result = runner.invoke(app, ["export", "run", "nonexistent-id", str(tmp_path)])
         assert result.exit_code != 0

@@ -32,10 +32,14 @@ class XmlExporter(ExporterPlugin):
             if metadata.run_id:
                 SubElement(meta_el, "run-id").text = metadata.run_id
             if metadata.specmetrics_version:
-                SubElement(meta_el, "specmetrics-version").text = metadata.specmetrics_version
+                SubElement(
+                    meta_el, "specmetrics-version"
+                ).text = metadata.specmetrics_version
             SubElement(meta_el, "function-count").text = str(metadata.function_count)
             if metadata.export_timestamp:
-                SubElement(meta_el, "export-timestamp").text = metadata.export_timestamp.isoformat()
+                SubElement(
+                    meta_el, "export-timestamp"
+                ).text = metadata.export_timestamp.isoformat()
 
             measurements_el = SubElement(root, "measurements")
             for m in measurements:

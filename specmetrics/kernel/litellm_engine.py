@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
@@ -7,6 +8,7 @@ import structlog
 
 from .adapter_interface import Document
 from .engine_patterns import _content_hash
+from .llm_gateway import LLMGateway, LLMGatewayConfig
 from .semantic_extraction_engine import (
     EvidenceReference,
     ExtractedElement,
@@ -17,29 +19,8 @@ from .semantic_extraction_engine import (
 
 logger = structlog.get_logger(__name__)
 
-try:
-    import litellm as _litellm
 
-    HAS_LITELLM = True
-except ImportError:
-    HAS_LITELLM = False
-    _litellm = None  # type: ignore[assignment]
-
-
-class ExtractionError(Exception):
-    ...
-
-
-_LITELLM_EXCEPTIONS: tuple[type[Exception], ...] = ()
-if HAS_LITELLM:
-    _LITELLM_EXCEPTIONS = (
-        getattr(_litellm, "AuthenticationError", Exception),
-        getattr(_litellm, "RateLimitError", Exception),
-        getattr(_litellm, "Timeout", Exception),
-        getattr(_litellm, "APIError", Exception),
-        getattr(_litellm, "ServiceUnavailableError", Exception),
-        Exception,
-    )
+class ExtractionError(Exception): ...
 
 
 _SYSTEM_PROMPT = """You are a semantic extraction engine. Extract semantic elements from the given specification document.
@@ -59,45 +40,43 @@ class LiteLLMSemanticEngine(SemanticExtractionEngine):
         api_key: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 4096,
+        gateway: LLMGateway | None = None,
     ) -> None:
         self._model = model
         self._api_key = api_key
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-    def _call_llm(self, document: Document) -> list[dict[str, Any]]:
-        if not HAS_LITELLM:
-            raise ExtractionError(
-                "LiteLLM is not installed. Install with: pip install litellm"
+        if gateway is not None:
+            self._gateway = gateway
+        else:
+            config = LLMGatewayConfig(
+                provider="openai",
+                model=model,
+                api_key=api_key,
+                max_tokens=max_tokens,
             )
+            self._gateway = LLMGateway(config)
 
-        user_content = f"Document: {document.id}\nType: {document.document_type}\n\n{document.content}"
+    def _call_llm(self, document: Document) -> list[dict[str, Any]]:
+        user_content = (
+            f"Document: {document.id}\n"
+            f"Type: {document.document_type}\n\n"
+            f"{document.content}"
+        )
 
         try:
-            response = _litellm.completion(  # type: ignore[union-attr]
-                model=self._model,
-                messages=[
-                    {"role": "system", "content": _SYSTEM_PROMPT},
-                    {"role": "user", "content": user_content},
-                ],
-                temperature=self._temperature,
-                max_tokens=self._max_tokens,
-                response_format={"type": "json_object"},
+            response_text = self._gateway.complete(
+                system_prompt=_SYSTEM_PROMPT,
+                user_message=user_content,
+                json_mode=True,
             )
-        except _LITELLM_EXCEPTIONS as exc:
+            data = json.loads(response_text)
+            return data.get("elements", [])
+        except (json.JSONDecodeError, RuntimeError) as exc:
             raise ExtractionError(
                 f"LLM provider failed: {type(exc).__name__}: {exc}"
             ) from exc
-
-        try:
-            import json
-
-            content = response.choices[0].message.content
-            data = json.loads(content)
-            return data.get("elements", [])
-        except (KeyError, IndexError, json.JSONDecodeError, AttributeError) as exc:
-            logger.warning("llm_response_parse_failed", error=str(exc))
-            return []
 
     def _parse_elements(
         self,

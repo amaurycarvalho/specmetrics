@@ -27,7 +27,8 @@ def get_breakdown_by_type(measurement: TokenPointsMeasurement) -> dict[str, dict
     ):
         etype = contrib.element_type
         if etype not in breakdown:
-            breakdown[etype] = {"count": 0, "total": 0.0}
+            breakdown[etype] = {"count": 0, "total": 0.0, "content_tokens": 0}
         breakdown[etype]["count"] += 1
         breakdown[etype]["total"] += contrib.partial_score
+        breakdown[etype]["content_tokens"] += contrib.content_token_count
     return breakdown

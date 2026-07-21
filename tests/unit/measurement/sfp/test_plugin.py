@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 
-
 from specmetrics.kernel.cfm.model import (
     BuildMetadata,
     CanonicalFunctionalModel,
@@ -110,6 +109,7 @@ class TestT044_EdgeCases:
     def test_cfm_with_unclassified_elements(self):
         ev = _make_evidence()
         from specmetrics.kernel.cfm.model import UnclassifiedElement
+
         cfm = CanonicalFunctionalModel(
             run_id="test-unclassified",
             operations={
@@ -129,11 +129,17 @@ class TestT044_EdgeCases:
                     evidence=ev,
                 ),
             },
-            metadata=BuildMetadata(run_id="test-unclassified", version="1.0", source="test"),
+            metadata=BuildMetadata(
+                run_id="test-unclassified", version="1.0", source="test"
+            ),
         )
         plugin = SFPMeasurementPlugin()
         result = plugin.measure(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 1
 
 
@@ -141,6 +147,7 @@ class TestT045_CyclicReferences:
     def test_cyclic_relationships_do_not_crash_plugin(self):
         ev = _make_evidence()
         from specmetrics.kernel.cfm.model import Relationship
+
         cfm = CanonicalFunctionalModel(
             run_id="test-cyclic",
             operations={
@@ -161,9 +168,27 @@ class TestT045_CyclicReferences:
                 ),
             },
             relationships=[
-                Relationship(id="rel-001", source_id="op-001", target_id="dg-001", relationship_type="uses", evidence=ev),
-                Relationship(id="rel-002", source_id="dg-001", target_id="op-001", relationship_type="governs", evidence=ev),
-                Relationship(id="rel-003", source_id="op-001", target_id="op-001", relationship_type="triggers", evidence=ev),
+                Relationship(
+                    id="rel-001",
+                    source_id="op-001",
+                    target_id="dg-001",
+                    relationship_type="uses",
+                    evidence=ev,
+                ),
+                Relationship(
+                    id="rel-002",
+                    source_id="dg-001",
+                    target_id="op-001",
+                    relationship_type="governs",
+                    evidence=ev,
+                ),
+                Relationship(
+                    id="rel-003",
+                    source_id="op-001",
+                    target_id="op-001",
+                    relationship_type="triggers",
+                    evidence=ev,
+                ),
             ],
             metadata=BuildMetadata(run_id="test-cyclic", version="1.0", source="test"),
         )
@@ -174,31 +199,44 @@ class TestT045_CyclicReferences:
 
     def test_deeply_nested_cyclic_references(self):
         from specmetrics.kernel.cfm.model import Relationship
+
         ops = {}
         for i in range(100):
             ev = _make_evidence(text=f"process evidence {i}")
             ops[f"op-{i:03d}"] = Operation(
-                id=f"op-{i:03d}", name=f"Process {i}",
-                parent_process_id="fp-001", evidence=ev,
+                id=f"op-{i:03d}",
+                name=f"Process {i}",
+                parent_process_id="fp-001",
+                evidence=ev,
                 metadata={"node_type": "elementary_process"},
             )
         rels = []
         for i in range(99):
-            rels.append(Relationship(
-                id=f"rel-{i:03d}", source_id=f"op-{i:03d}",
-                target_id=f"op-{i+1:03d}", relationship_type="triggers",
-                evidence=_make_evidence(text=f"relationship {i}"),
-            ))
-        rels.append(Relationship(
-            id="rel-loop", source_id="op-099",
-            target_id="op-000", relationship_type="triggers",
-            evidence=_make_evidence(text="relationship loop"),
-        ))
+            rels.append(
+                Relationship(
+                    id=f"rel-{i:03d}",
+                    source_id=f"op-{i:03d}",
+                    target_id=f"op-{i + 1:03d}",
+                    relationship_type="triggers",
+                    evidence=_make_evidence(text=f"relationship {i}"),
+                )
+            )
+        rels.append(
+            Relationship(
+                id="rel-loop",
+                source_id="op-099",
+                target_id="op-000",
+                relationship_type="triggers",
+                evidence=_make_evidence(text="relationship loop"),
+            )
+        )
         cfm = CanonicalFunctionalModel(
             run_id="test-deep-cyclic",
             operations=ops,
             relationships=rels,
-            metadata=BuildMetadata(run_id="test-deep-cyclic", version="1.0", source="test"),
+            metadata=BuildMetadata(
+                run_id="test-deep-cyclic", version="1.0", source="test"
+            ),
         )
         plugin = SFPMeasurementPlugin()
         result = plugin.measure(cfm)

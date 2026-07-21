@@ -37,7 +37,9 @@ class RulePackLoader:
             logger.info("rule_pack_dir_not_found", path=str(self._rules_dir))
             return []
         files = sorted(self._rules_dir.glob("*.yml"))
-        logger.info("rule_pack_files_discovered", count=len(files), path=str(self._rules_dir))
+        logger.info(
+            "rule_pack_files_discovered", count=len(files), path=str(self._rules_dir)
+        )
         return files
 
     def load_file(self, file_path: Path) -> tuple[RulePack | None, FileLoadResult]:

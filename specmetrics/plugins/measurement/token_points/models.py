@@ -36,8 +36,20 @@ class TokenContribution(BaseModel):
     element_name: str
     model_source: Literal["cfm", "csm"]
     applied_weight: float
+    content_token_count: int = 0
+    content_score: float = 0.0
     partial_score: float
     evidence_ref: EvidenceRef | None = None
+
+    @model_validator(mode="after")
+    def validate_partial_score(self) -> TokenContribution:
+        expected = self.applied_weight + self.content_score
+        if abs(self.partial_score - expected) > 1e-9:
+            raise ValueError(
+                f"partial_score ({self.partial_score}) must equal "
+                f"applied_weight ({self.applied_weight}) + content_score ({self.content_score}) = {expected}"
+            )
+        return self
 
 
 class SpecificationCost(BaseModel):

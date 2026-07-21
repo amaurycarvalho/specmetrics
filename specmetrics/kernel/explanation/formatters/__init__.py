@@ -16,6 +16,8 @@ class ExplanationFormatter(Protocol):
 def get_formatter(name: str = "text") -> ExplanationFormatter:
     if name == "json":
         from .json import JsonFormatter
+
         return JsonFormatter()
     from .text import TextFormatter
+
     return TextFormatter()

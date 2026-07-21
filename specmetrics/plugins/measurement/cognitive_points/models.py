@@ -36,8 +36,20 @@ class CognitiveContribution(BaseModel):
     model_source: Literal["cfm", "csm"]
     bloom_level: str
     cognitive_weight: float
+    content_token_count: int = 0
+    content_score: float = 0.0
     partial_score: float
     evidence_ref: EvidenceRef | None = None
+
+    @model_validator(mode="after")
+    def validate_partial_score(self) -> CognitiveContribution:
+        expected = self.cognitive_weight + self.content_score
+        if abs(self.partial_score - expected) > 0.001:
+            raise ValueError(
+                f"partial_score ({self.partial_score}) must equal "
+                f"cognitive_weight ({self.cognitive_weight}) + content_score ({self.content_score}) = {expected}"
+            )
+        return self
 
 
 class SpecificationReviewEffort(BaseModel):
@@ -98,12 +110,8 @@ def aggregate(
         raise ValueError("Cannot aggregate empty list of measurements")
 
     run_ids = [m.run_id for m in measurements]
-    total_spec = sum(
-        m.specification_review_effort.total_raw for m in measurements
-    )
-    total_func = sum(
-        m.functional_validation_effort.total_raw for m in measurements
-    )
+    total_spec = sum(m.specification_review_effort.total_raw for m in measurements)
+    total_func = sum(m.functional_validation_effort.total_raw for m in measurements)
     total_raw = total_spec + total_func
 
     all_spec_contribs: list[CognitiveContribution] = []
@@ -119,9 +127,7 @@ def aggregate(
         total_csm += m.measurement_metadata.csm_element_count
         total_cfm += m.measurement_metadata.cfm_element_count
         for level, count in m.measurement_metadata.bloom_distribution.items():
-            merged_bloom_dist[level] = (
-                merged_bloom_dist.get(level, 0) + count
-            )
+            merged_bloom_dist[level] = merged_bloom_dist.get(level, 0) + count
         all_warnings.extend(m.measurement_metadata.warnings)
 
     combined_spec_breakdown: dict[str, int] = {}

@@ -7,7 +7,13 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from .evidence_graph import EvidenceGraph, GraphEdge, GraphMetadata, GraphNode, InvalidGraphDataError
+from .evidence_graph import (
+    EvidenceGraph,
+    GraphEdge,
+    GraphMetadata,
+    GraphNode,
+    InvalidGraphDataError,
+)
 
 
 class GraphStore:
@@ -55,7 +61,9 @@ class GraphStore:
                 try:
                     record = json.loads(line)
                 except json.JSONDecodeError as exc:
-                    raise InvalidGraphDataError(f"Line {line_no}: invalid JSON — {exc}") from exc
+                    raise InvalidGraphDataError(
+                        f"Line {line_no}: invalid JSON — {exc}"
+                    ) from exc
                 record_type = record.pop("type", None)
                 if record_type == "metadata":
                     record.pop("node_count", None)
@@ -65,23 +73,33 @@ class GraphStore:
                     try:
                         node = GraphNode(**record)
                     except ValidationError as exc:
-                        raise InvalidGraphDataError(f"Line {line_no}: invalid node — {exc}") from exc
+                        raise InvalidGraphDataError(
+                            f"Line {line_no}: invalid node — {exc}"
+                        ) from exc
                     nodes[node.id] = node
                 elif record_type == "edge":
                     try:
                         edge = GraphEdge(**record)
                     except ValidationError as exc:
-                        raise InvalidGraphDataError(f"Line {line_no}: invalid edge — {exc}") from exc
+                        raise InvalidGraphDataError(
+                            f"Line {line_no}: invalid edge — {exc}"
+                        ) from exc
                     edges.append(edge)
                 else:
-                    raise InvalidGraphDataError(f"Line {line_no}: unknown record type '{record_type}'")
+                    raise InvalidGraphDataError(
+                        f"Line {line_no}: unknown record type '{record_type}'"
+                    )
         if metadata is None:
             raise InvalidGraphDataError("Missing metadata record (first line)")
         for edge in edges:
             if edge.source not in nodes:
-                raise InvalidGraphDataError(f"Edge references non-existent source node: {edge.source}")
+                raise InvalidGraphDataError(
+                    f"Edge references non-existent source node: {edge.source}"
+                )
             if edge.target not in nodes:
-                raise InvalidGraphDataError(f"Edge references non-existent target node: {edge.target}")
+                raise InvalidGraphDataError(
+                    f"Edge references non-existent target node: {edge.target}"
+                )
         node_count = len(nodes)
         edge_count = len(edges)
         documents = list({n.document_id for n in nodes.values()})
@@ -93,7 +111,9 @@ class GraphStore:
             created_at=metadata.get("created_at", "2026-01-01T00:00:00"),
             pipeline_version=metadata.get("pipeline_version"),
         )
-        return EvidenceGraph(run_id=gmeta.run_id, nodes=nodes, edges=edges, metadata=gmeta)
+        return EvidenceGraph(
+            run_id=gmeta.run_id, nodes=nodes, edges=edges, metadata=gmeta
+        )
 
     @staticmethod
     def list_graphs(directory: str) -> list[str]:

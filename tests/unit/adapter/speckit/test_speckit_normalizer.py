@@ -4,7 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from specmetrics.plugins.adapter.speckit.normalizer import normalize_document, _parse_sections
+from specmetrics.plugins.adapter.speckit.normalizer import (
+    normalize_document,
+    _parse_sections,
+)
 
 
 class TestNormalizeDocument:
@@ -19,7 +22,9 @@ class TestNormalizeDocument:
     def test_section_hierarchy_preserved(self, tmp_path: Path) -> None:
         spec = tmp_path / "specs" / "feature-a" / "spec.md"
         spec.parent.mkdir(parents=True)
-        spec.write_text("# Title\n\nIntro\n## Section 1\n\nBody 1\n## Section 2\n\nBody 2\n")
+        spec.write_text(
+            "# Title\n\nIntro\n## Section 1\n\nBody 1\n## Section 2\n\nBody 2\n"
+        )
         doc = normalize_document(spec, tmp_path)
         assert doc.sections is not None
         assert len(doc.sections) >= 1

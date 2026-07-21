@@ -5,10 +5,10 @@ from .models import TShirtSize
 DEFAULT_MAPPING: list[TShirtSize] = [
     TShirtSize(label="XS", story_point_range=(1, 1), ordinal=1),
     TShirtSize(label="S", story_point_range=(2, 3), ordinal=2),
-    TShirtSize(label="M", story_point_range=(5, 8), ordinal=3),
-    TShirtSize(label="L", story_point_range=(13, 13), ordinal=4),
-    TShirtSize(label="XL", story_point_range=(20, 20), ordinal=5),
-    TShirtSize(label="XXL", story_point_range=(40, 100), ordinal=6),
+    TShirtSize(label="M", story_point_range=(5, 5), ordinal=3),
+    TShirtSize(label="L", story_point_range=(8, 13), ordinal=4),
+    TShirtSize(label="XL", story_point_range=(20, 40), ordinal=5),
+    TShirtSize(label="XXL", story_point_range=(100, 100), ordinal=6),
 ]
 
 
@@ -35,9 +35,7 @@ def _validate_mapping(sizes: list[TShirtSize]) -> None:
 
 
 class TShirtClassifier:
-    def __init__(
-        self, mapping: list[TShirtSize] | None = None
-    ) -> None:
+    def __init__(self, mapping: list[TShirtSize] | None = None) -> None:
         self._mapping = list(mapping) if mapping is not None else list(DEFAULT_MAPPING)
         _validate_mapping(self._mapping)
 
@@ -68,7 +66,9 @@ def classify_all(
         MeasurementWarning,
     )
 
-    classifier = TShirtClassifier(mapping=mapping) if mapping is not None else TShirtClassifier()
+    classifier = (
+        TShirtClassifier(mapping=mapping) if mapping is not None else TShirtClassifier()
+    )
     result_items: list[TWItem] = []
     warnings: list[MeasurementWarning] = []
 
@@ -81,7 +81,8 @@ def classify_all(
                 MeasurementWarning(
                     code="MISSING_SP_VALUE",
                     message="Work item has no Story Point value, skipping",
-                    element_id=getattr(item, "element_id", None) or item.get("element_id"),
+                    element_id=getattr(item, "element_id", None)
+                    or item.get("element_id"),
                 )
             )
             continue
@@ -89,7 +90,9 @@ def classify_all(
         tshirt_size, rule = classifier.classify(int(sp_value))
 
         element_id = getattr(item, "element_id", None) or item.get("element_id", "")
-        element_name = getattr(item, "element_name", None) or item.get("element_name", "")
+        element_name = getattr(item, "element_name", None) or item.get(
+            "element_name", ""
+        )
 
         evidence = MeasurementEvidence(
             element_id=element_id,

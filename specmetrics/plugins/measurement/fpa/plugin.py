@@ -108,16 +108,31 @@ class FPAMeasurementHandler:
         plugin = FPAMeasurementPlugin()
         result = plugin.measure(cfm)
 
+        fpa_entities = [f.model_dump(mode="json") for f in result.measured_functions]
+
+        vaf = result.summary.vaf
+
         payload: dict[str, Any] = {
             "fpa_total_function_points": result.summary.total_ufp,
-            "fpa_breakdown": {ft: {"count": b.count, "total_ufp": b.total_ufp} for ft, b in result.summary.by_type.items()},
+            "fpa_breakdown": {
+                ft: {"count": b.count, "total_ufp": b.total_ufp}
+                for ft, b in result.summary.by_type.items()
+            },
             "fpa_complexity_distribution": [
-                {"function_type": c.function_type, "complexity": c.complexity, "count": c.count, "total_ufp": c.total_ufp}
+                {
+                    "function_type": c.function_type,
+                    "complexity": c.complexity,
+                    "count": c.count,
+                    "total_ufp": c.total_ufp,
+                }
                 for c in result.summary.complexity_distribution
             ],
             "fpa_function_counts": result.summary.by_type,
             "fpa_complexity_counts": result.summary.by_complexity,
+            "fpa_entities": fpa_entities,
         }
+        if vaf is not None:
+            payload["fpa_vaf"] = vaf
 
         return ctx.merge_stage_output("measurement_result", payload)
 

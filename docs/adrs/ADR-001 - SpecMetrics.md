@@ -1,8 +1,8 @@
 # ADR-001: Architectural Decisions of SpecMetrics
 
-**Date:** 2026-07-17
+**Date:** 2026-07-21
 
-**Status:** Accepted
+**Status:** Accepted (Updated)
 
 ## Context
 
@@ -117,6 +117,10 @@ Alongside the CFM, the CSM captures specification-specific knowledge: Specificat
 
 Each measurement engine is a separate plugin that consumes the CFM (and optionally the CSM) and produces a measurement result. All measurement engines follow the same pattern: a `Plugin` class with `measure()`, a `Handler` implementing `EventHandler`, and a `create_*_metadata()` factory.
 
+**Story Points** extends the traditional 6-factor structural sum with content-based estimation (`raw_score = structural_score + content_tokens * content_multiplier`) and relative ranking normalization (percentile bands mapped to Modified Fibonacci), replacing the previous fixed-threshold approach. It now consumes both CFM and CSM, estimating effort from all specification element types—not just functional processes.
+
+**T-Shirt Sizing** classifies Story Point normalized values into six ordinal categories (XS–XXL) using a configurable lookup table. It injects `tshirt` (entity count) and `tshirt_breakdown` (per-size counts with `{count: N}`) keys into the pipeline payload, which flow into `measure.json` and `metrics.json` outputs. The CLI displays `TShirt: N entities` with a per-size breakdown line.
+
 | Engine | Input | Output | Deterministic |
 |--------|-------|--------|---------------|
 | **FPA** (IFPUG CPM 4.3) | CFM | Function Points | ✅ |
@@ -124,8 +128,8 @@ Each measurement engine is a separate plugin that consumes the CFM (and optional
 | **SNAP** (Non-functional) | CFM | SNAP Points | ✅ |
 | **Token Points** | CFM + CSM | AI token cost estimate | ✅ |
 | **Cognitive Points** | CFM + CSM | Human cognitive effort (Bloom taxonomy + Fibonacci) | ✅ |
-| **Story Points** | CFM | Modified Fibonacci implementation effort (6-factor weighted sum) | ✅ |
-| **T-Shirt Sizing** | Story Points result | XS–XXL classification (derived/presentation layer) | ✅ |
+| **Story Points** | CFM + CSM | Modified Fibonacci implementation effort (6-factor weighted sum + content tokens + relative ranking normalization) | ✅ |
+| **T-Shirt Sizing** | Story Points result | XS–XXL classification with per-size breakdown (derived/presentation layer) | ✅ |
 | **BCP** | CFM | Business Complexity Points via external LLM-based SDK | ❌ (by design) |
 
 ### 10. Rule Pack Engine for Externalized Policies
@@ -139,7 +143,7 @@ Measurement engines consume Rule Pack overrides through:
 
 ### 11. Two Interaction Interfaces (CLI and MCP)
 
-- **CLI** (Typer): commands `measure`, `plugins list`, `init`, `validate`, `export`, `publish`, `explain`
+- **CLI** (Typer): commands `measure`, `clean`, `version`, `plugins`, `export`, `config`, `explain`, `mcp`, `validate`
 - **MCP Server**: exposes capabilities as MCP tools via JSON-RPC 2.0 over stdio or SSE
 
 Both interfaces use the same underlying pipeline orchestration (`PipelineOrchestrator`).
@@ -158,12 +162,19 @@ Most measurement plugins also emit direct OpenTelemetry metrics (duration histog
 
 The validation pipeline (F14) checks semantic consistency before measurement: missing mandatory sections, unrecognized formats, constitutional compliance. It is a separate stage that feeds into the measurement pipeline without being part of it.
 
-### 15. Calibration Profile System (Token Points, Cognitive Points)
+### 15. Calibration Profile System (Token Points, Cognitive Points, Story Points, T-Shirt Sizing)
 
-For engines requiring externalized calibration (weights, mappings, normalization tables), calibration profiles are loaded from `.specmetrics/calibration/<engine>.yml` YAML files via `ruamel.yaml`. Each engine provides:
+For engines requiring externalized calibration (weights, mappings, normalization tables, ranking strategies), calibration profiles are loaded from `.specmetrics/calibration/<engine>.yml` YAML files via `ruamel.yaml`. Each engine provides:
 - Built-in default calibration profile
 - YAML loader with deep merge over defaults
 - Validation on load (non-negative weights, semver versioning, profile structure)
+
+| Engine | Calibratable Parameters |
+|--------|------------------------|
+| Token Points | Content multiplier, specification cost weights, code generation cost weights |
+| Cognitive Points | Factor coefficients, Bloom taxonomy weights |
+| Story Points | Content multiplier, 6 factor coefficients, CSM/CFM base weights, fallback weight, Fibonacci scale, ranking strategy |
+| T-Shirt Sizing | Mapping table (Story Point ranges to size labels), configurable via `tshirt_mapping` pipeline metadata |
 
 ### 16. Explainability as a First-Class Concern
 

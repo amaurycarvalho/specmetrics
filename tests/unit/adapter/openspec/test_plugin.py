@@ -12,7 +12,9 @@ from specmetrics.plugins.adapter.openspec.plugin import (
 
 
 class TestSupports:
-    def test_supports_returns_true_when_openspec_specs_exists(self, tmp_path: Path) -> None:
+    def test_supports_returns_true_when_openspec_specs_exists(
+        self, tmp_path: Path
+    ) -> None:
         (tmp_path / "openspec" / "specs").mkdir(parents=True)
         adapter = OpenSpecAdapter()
         assert adapter.supports(tmp_path) is True
@@ -42,7 +44,9 @@ class TestSupports:
 
 class TestDataClasses:
     def test_scan_error_creation(self) -> None:
-        err = ScanError(file_path="test.md", error_code="UNREADABLE", message="Could not read")
+        err = ScanError(
+            file_path="test.md", error_code="UNREADABLE", message="Could not read"
+        )
         assert err.file_path == "test.md"
         assert err.error_code == "UNREADABLE"
         assert err.message == "Could not read"

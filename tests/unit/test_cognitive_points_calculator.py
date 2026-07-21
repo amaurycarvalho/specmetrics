@@ -69,9 +69,7 @@ def _make_cfm() -> CanonicalFunctionalModel:
     return CanonicalFunctionalModel(
         run_id="cfm-test-001",
         actors={
-            _uid(): Actor(
-                id=_uid(), name="User", actor_type="person", evidence=ev
-            ),
+            _uid(): Actor(id=_uid(), name="User", actor_type="person", evidence=ev),
         },
         functional_processes={
             _uid(): FunctionalProcess(
@@ -111,9 +109,7 @@ def _make_cfm() -> CanonicalFunctionalModel:
                 evidence=ev,
             ),
         },
-        metadata=CfmBuildMetadata(
-            run_id="cfm-test-001", version="1.0", source="test"
-        ),
+        metadata=CfmBuildMetadata(run_id="cfm-test-001", version="1.0", source="test"),
     )
 
 
@@ -186,9 +182,7 @@ def _make_csm() -> CanonicalSpecificationModel:
                 evidence_references=[ev],
             ),
         },
-        metadata=CsmBuildMetadata(
-            run_id="csm-test-001", version="1.0", source="test"
-        ),
+        metadata=CsmBuildMetadata(run_id="csm-test-001", version="1.0", source="test"),
     )
 
 
@@ -227,9 +221,7 @@ class TestCalculateFromKnownModels:
         result = calculate(cfm, None, calibration, run_id="no-csm")
         assert result.specification_review_effort.total_raw == 0.0
         assert result.functional_validation_effort.total_raw > 0
-        warning_codes = [
-            w.code for w in result.measurement_metadata.warnings
-        ]
+        warning_codes = [w.code for w in result.measurement_metadata.warnings]
         assert "MISSING_CSM" in warning_codes
 
     def test_missing_cfm(self):
@@ -238,9 +230,7 @@ class TestCalculateFromKnownModels:
         result = calculate(None, csm, calibration, run_id="no-cfm")
         assert result.functional_validation_effort.total_raw == 0.0
         assert result.specification_review_effort.total_raw > 0
-        warning_codes = [
-            w.code for w in result.measurement_metadata.warnings
-        ]
+        warning_codes = [w.code for w in result.measurement_metadata.warnings]
         assert "MISSING_CFM" in warning_codes
 
     def test_both_missing(self):
@@ -254,9 +244,7 @@ class TestCalculateFromKnownModels:
     def test_metadata_tracks_counts(self):
         cfm = _make_cfm()
         csm = _make_csm()
-        result = calculate(
-            cfm, csm, _make_default_calibration(), run_id="meta"
-        )
+        result = calculate(cfm, csm, _make_default_calibration(), run_id="meta")
         assert result.measurement_metadata.total_elements_processed > 0
         assert result.measurement_metadata.csm_element_count > 0
         assert result.measurement_metadata.cfm_element_count > 0
@@ -273,7 +261,9 @@ class TestCalculateFromKnownModels:
         spec_raw = result.specification_review_effort.total_raw
         func_raw = result.functional_validation_effort.total_raw
         assert result.raw_score == pytest.approx(spec_raw + func_raw)
-        assert result.total_cognitive_points == result.fibonacci_normalization.output_value
+        assert (
+            result.total_cognitive_points == result.fibonacci_normalization.output_value
+        )
 
 
 class TestAggregation:
@@ -288,9 +278,7 @@ class TestAggregation:
         m1 = calculate(cfm, csm, cal, run_id="m1")
         m2 = calculate(cfm, csm, cal, run_id="m2")
         aggregated = aggregate([m1, m2])
-        assert aggregated.raw_score == pytest.approx(
-            m1.raw_score + m2.raw_score
-        )
+        assert aggregated.raw_score == pytest.approx(m1.raw_score + m2.raw_score)
         assert aggregated.specification_review_effort.total_raw == pytest.approx(
             m1.specification_review_effort.total_raw
             + m2.specification_review_effort.total_raw
@@ -317,9 +305,7 @@ class TestPerformance:
         cfm = CanonicalFunctionalModel(
             run_id="perf-test",
             operations=ops,
-            metadata=CfmBuildMetadata(
-                run_id="perf-test", version="1.0", source="test"
-            ),
+            metadata=CfmBuildMetadata(run_id="perf-test", version="1.0", source="test"),
         )
         csm_ev = _make_csm_evidence()
         decisions = {}
@@ -338,8 +324,6 @@ class TestPerformance:
             ),
         )
         start = time.monotonic()
-        calculate(
-            cfm, csm, _make_default_calibration(), run_id="perf"
-        )
+        calculate(cfm, csm, _make_default_calibration(), run_id="perf")
         elapsed = time.monotonic() - start
         assert elapsed < 2.0

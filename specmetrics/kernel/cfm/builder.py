@@ -28,10 +28,10 @@ logger = structlog.get_logger(__name__)
 
 
 _OPERATION_DIRECTION_PATTERNS = [
-    (re.compile(r'\*\*WHEN\*\*'), "input"),
-    (re.compile(r'\*\*GIVEN\*\*'), "input"),
-    (re.compile(r'#### Scenario:'), "query"),
-    (re.compile(r'\*\*THEN\*\*'), "output"),
+    (re.compile(r"\*\*WHEN\*\*"), "input"),
+    (re.compile(r"\*\*GIVEN\*\*"), "input"),
+    (re.compile(r"#### Scenario:"), "query"),
+    (re.compile(r"\*\*THEN\*\*"), "output"),
 ]
 
 
@@ -42,7 +42,62 @@ def _infer_operation_direction(text: str) -> str:
     return "input"
 
 
-def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
+DEFAULT_SEMANTIC_MARKER_MAP: list[tuple[set[str], set[str], str]] = [
+    (
+        {"business_rule"},
+        {"User Scenarios", "User Story", "Scenario", "Acceptance", "UI"},
+        "presentation_interface",
+    ),
+    (
+        {"data_group"},
+        {"Data Model", "Key Entities", "Entities", "Schema"},
+        "data_operation",
+    ),
+    (
+        {"business_rule", "operation"},
+        {"Functional Requirements", "Features", "Requirements", "Specification"},
+        "operational_feature",
+    ),
+    (
+        {"business_rule"},
+        {"Integration", "API", "Contracts", "Technical", "Architecture"},
+        "technical_interface",
+    ),
+]
+
+DEFAULT_SEMANTIC_MARKER_FALLBACK: dict[str, str] = {
+    "data_group": "data_operation",
+    "operation": "operational_feature",
+    "business_rule": "operational_feature",
+    "actor": "operational_feature",
+}
+
+
+def _infer_semantic_marker(
+    category: str,
+    section_id: str | None,
+    marker_map: list[tuple[set[str], set[str], str]] | None = None,
+    fallback_map: dict[str, str] | None = None,
+) -> str:
+    map_ = marker_map if marker_map is not None else DEFAULT_SEMANTIC_MARKER_MAP
+    fallback = (
+        fallback_map if fallback_map is not None else DEFAULT_SEMANTIC_MARKER_FALLBACK
+    )
+    if section_id:
+        section_lower = section_id.lower()
+        for categories, section_patterns, marker in map_:
+            if category in categories:
+                for sp in section_patterns:
+                    if sp.lower() in section_lower:
+                        return marker
+    return fallback.get(category, "operational_feature")
+
+
+def build(
+    graph: EvidenceGraph,
+    semantic_marker_map: list[tuple[set[str], set[str], str]] | None = None,
+    semantic_marker_fallback: dict[str, str] | None = None,
+) -> CanonicalFunctionalModel:
     actors: dict[str, Actor] = {}
     functional_processes: dict[str, FunctionalProcess] = {}
     business_rules: dict[str, BusinessRule] = {}
@@ -71,31 +126,81 @@ def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
         clean_name = strip_framework_labels(node.text)
         evidence = _to_evidence_ref(node_id, node)
 
+        section_id = node.section_id
+
         if category == "actor":
-            actors[node_id] = Actor(id=node_id, name=clean_name, evidence=evidence)
+            actors[node_id] = Actor(
+                id=node_id,
+                name=clean_name,
+                evidence=evidence,
+                metadata={
+                    "semantic_marker": _infer_semantic_marker(
+                        category,
+                        section_id,
+                        semantic_marker_map,
+                        semantic_marker_fallback,
+                    )
+                },
+            )
         elif category == "business_rule":
             business_rules[node_id] = BusinessRule(
-                id=node_id, name=clean_name, description=node.text, evidence=evidence,
+                id=node_id,
+                name=clean_name,
+                description=node.text,
+                evidence=evidence,
+                metadata={
+                    "semantic_marker": _infer_semantic_marker(
+                        category,
+                        section_id,
+                        semantic_marker_map,
+                        semantic_marker_fallback,
+                    )
+                },
             )
         elif category == "data_group":
-            data_groups[node_id] = DataGroup(id=node_id, name=clean_name, evidence=evidence)
+            data_groups[node_id] = DataGroup(
+                id=node_id,
+                name=clean_name,
+                evidence=evidence,
+                metadata={
+                    "semantic_marker": _infer_semantic_marker(
+                        category,
+                        section_id,
+                        semantic_marker_map,
+                        semantic_marker_fallback,
+                    )
+                },
+            )
         elif category == "relationship":
             source_id, target_id = _extract_relationship_endpoints(node_id, graph)
-            relationships.append(Relationship(
-                id=node_id, source_id=source_id, target_id=target_id,
-                evidence=evidence,
-            ))
+            relationships.append(
+                Relationship(
+                    id=node_id,
+                    source_id=source_id,
+                    target_id=target_id,
+                    evidence=evidence,
+                )
+            )
         elif category == "operation":
             direction = _infer_operation_direction(node.text)
             operations[node_id] = Operation(
-                id=node_id, name=clean_name, parent_process_id="",
-                description=node.text, evidence=evidence,
-                metadata={"direction": direction},
+                id=node_id,
+                name=clean_name,
+                parent_process_id="",
+                description=node.text,
+                evidence=evidence,
+                metadata={
+                    "direction": direction,
+                    "semantic_marker": _infer_semantic_marker(
+                        category,
+                        section_id,
+                        semantic_marker_map,
+                        semantic_marker_fallback,
+                    ),
+                },
             )
 
-    functional_processes = _build_functional_processes(
-        operations, data_groups, actors
-    )
+    functional_processes = _build_functional_processes(operations, data_groups, actors)
 
     build_duration_ms = int((time.monotonic() - started_at) * 1000)
     element_counts = {
@@ -112,7 +217,9 @@ def build(graph: EvidenceGraph) -> CanonicalFunctionalModel:
         run_id=graph.run_id,
         build_duration_ms=build_duration_ms,
         element_counts=element_counts,
-        total_input_nodes=len([n for n in graph.nodes.values() if n.node_type == "extracted_element"]),
+        total_input_nodes=len(
+            [n for n in graph.nodes.values() if n.node_type == "extracted_element"]
+        ),
         unclassified_count=len(unclassified),
         conflicts=conflicts,
     )
@@ -164,8 +271,14 @@ def _build_functional_processes(
     for doc_id, ops in ops_by_doc.items():
         fp_id = f"fp_{doc_id}"
         fp_ops = [op_id for op_id, _ in ops]
-        fp_evidence = ops[0][1].evidence if ops[0][1].evidence else EvidenceRef(
-            graph_node_id=fp_id, document_id=doc_id, text="",
+        fp_evidence = (
+            ops[0][1].evidence
+            if ops[0][1].evidence
+            else EvidenceRef(
+                graph_node_id=fp_id,
+                document_id=doc_id,
+                text="",
+            )
         )
 
         fp_dgs = [dg_id for dg_id, _ in data_groups_by_doc.get(doc_id, [])]
@@ -183,7 +296,9 @@ def _build_functional_processes(
     return functional_processes
 
 
-def _extract_relationship_endpoints(node_id: str, graph: EvidenceGraph) -> tuple[str, str]:
+def _extract_relationship_endpoints(
+    node_id: str, graph: EvidenceGraph
+) -> tuple[str, str]:
     for edge in graph.edges:
         if edge.source == node_id and edge.target != node_id:
             return node_id, edge.target
@@ -202,10 +317,16 @@ def _to_evidence_ref(node_id: str, node: GraphNode) -> EvidenceRef:
 
 
 class CfmBuilderStage:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        semantic_marker_map: list[tuple[set[str], set[str], str]] | None = None,
+        semantic_marker_fallback: dict[str, str] | None = None,
+    ) -> None:
         self._handled_event_type = EventType.EVIDENCE_GRAPH_BUILT
         self._handler_id = "cfm_builder_stage"
         self._stage_name = "canonical_model"
+        self._semantic_marker_map = semantic_marker_map
+        self._semantic_marker_fallback = semantic_marker_fallback
 
     @property
     def handled_event_type(self) -> EventType:
@@ -224,7 +345,10 @@ class CfmBuilderStage:
 
         graph_data = context.evidence_graph
         if graph_data is None:
-            logger.warning("cfm_builder_no_evidence_graph", execution_id=str(event.context.execution_id))
+            logger.warning(
+                "cfm_builder_no_evidence_graph",
+                execution_id=str(event.context.execution_id),
+            )
             return context.with_stage_output(field_name="canonical_model", value=None)
 
         run_id = graph_data.get("run_id", str(int(event.timestamp.timestamp())))
@@ -232,6 +356,7 @@ class CfmBuilderStage:
         try:
             from specmetrics.kernel.graph_persistence import GraphStore
             import os
+
             graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             graph_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
             evidence_graph = GraphStore.load(graph_path)
@@ -243,7 +368,9 @@ class CfmBuilderStage:
             )
             return context.with_stage_output(field_name="canonical_model", value=None)
 
-        cfm = build(evidence_graph)
+        cfm = build(
+            evidence_graph, self._semantic_marker_map, self._semantic_marker_fallback
+        )
 
         payload = {
             "run_id": cfm.run_id,
@@ -268,8 +395,7 @@ class CfmBuilderStage:
             context=context,
             timestamp=datetime.now(timezone.utc),
         )
-        context = context.with_stage_output(field_name="canonical_model", value=cfm, event=canonical_event)
+        context = context.with_stage_output(
+            field_name="canonical_model", value=cfm, event=canonical_event
+        )
         return context
-
-
-

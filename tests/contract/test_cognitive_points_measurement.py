@@ -41,18 +41,12 @@ class TestMeasurementAPIContract:
             run_id="contract-test",
             total_cognitive_points=8,
             raw_score=25.0,
-            specification_review_effort=SpecificationReviewEffort(
-                total_raw=10.0
-            ),
-            functional_validation_effort=FunctionalValidationEffort(
-                total_raw=15.0
-            ),
+            specification_review_effort=SpecificationReviewEffort(total_raw=10.0),
+            functional_validation_effort=FunctionalValidationEffort(total_raw=15.0),
             fibonacci_normalization=FibonacciNormalizationResult(
                 raw_score=25.0, threshold_applied=22, output_value=8
             ),
-            measurement_metadata=MeasurementMetadata(
-                total_elements_processed=6
-            ),
+            measurement_metadata=MeasurementMetadata(total_elements_processed=6),
         )
         assert m.run_id == "contract-test"
         assert m.total_cognitive_points == 8

@@ -20,11 +20,16 @@ def _sample_result() -> StoryPointMeasurementResult:
     return StoryPointMeasurementResult(
         run_id="test-run-001",
         total_story_points=8,
+        total_raw_score=9.0,
+        specification_effort_total=0.0,
+        implementation_effort_total=9.0,
         items=[
             FunctionalWorkItem(
                 element_id="fp-001",
                 element_name="Process Order",
                 raw_score=6.0,
+                structural_score=6.0,
+                content_score=0.0,
                 normalized_value=5,
                 factor_breakdown={
                     "business_interactions": 1.0,
@@ -39,6 +44,8 @@ def _sample_result() -> StoryPointMeasurementResult:
                 element_id="fp-002",
                 element_name="Validate Payment",
                 raw_score=3.0,
+                structural_score=3.0,
+                content_score=0.0,
                 normalized_value=3,
                 factor_breakdown={
                     "business_interactions": 1.0,
@@ -87,6 +94,8 @@ class TestStoryPointMeasurementResult:
                         element_id="fp-001",
                         element_name="Test",
                         raw_score=5.0,
+                        structural_score=5.0,
+                        content_score=0.0,
                         normalized_value=5,
                         factor_breakdown={
                             "business_interactions": 5.0,
@@ -114,6 +123,8 @@ class TestStoryPointMeasurementResult:
                         element_id="fp-001",
                         element_name="Test",
                         raw_score=5.0,
+                        structural_score=5.0,
+                        content_score=0.0,
                         normalized_value=5,
                         factor_breakdown={
                             "business_interactions": 5.0,
@@ -153,6 +164,8 @@ class TestFunctionalWorkItem:
             element_id="fp-001",
             element_name="Login",
             raw_score=5.0,
+            structural_score=5.0,
+            content_score=0.0,
             normalized_value=5,
             factor_breakdown={
                 "business_interactions": 5.0,
@@ -173,6 +186,8 @@ class TestFunctionalWorkItem:
                 element_id="fp-001",
                 element_name="Test",
                 raw_score=100.0,
+                structural_score=5.0,
+                content_score=0.0,
                 normalized_value=5,
                 factor_breakdown={
                     "business_interactions": 5.0,
@@ -192,6 +207,8 @@ class TestFunctionalWorkItem:
             element_id="fp-001",
             element_name="Login",
             raw_score=5.0,
+            structural_score=5.0,
+            content_score=0.0,
             normalized_value=5,
             factor_breakdown={
                 "business_interactions": 5.0,
@@ -211,6 +228,8 @@ class TestFunctionalWorkItem:
             element_id="fp-001",
             element_name="Login",
             raw_score=5.0,
+            structural_score=5.0,
+            content_score=0.0,
             normalized_value=5,
             factor_breakdown={
                 "business_interactions": 5.0,
@@ -287,7 +306,8 @@ class TestRawEffortScore:
 class TestStoryPointEstimate:
     def test_construct(self):
         est = StoryPointEstimate(
-            value=8, raw_score=14.5,
+            value=8,
+            raw_score=14.5,
             normalization_rule="default_threshold_v1",
         )
         assert est.value == 8

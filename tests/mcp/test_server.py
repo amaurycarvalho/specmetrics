@@ -60,6 +60,7 @@ class TestMCPServer:
         server._register_tools()
         from specmetrics.mcp.server import ToolError
         import pytest
+
         with pytest.raises(ToolError):
             server._validate_tool_params("list_specs", {})
 
@@ -68,5 +69,6 @@ class TestMCPServer:
         server._register_tools()
         from specmetrics.mcp.server import ToolError
         import pytest
+
         with pytest.raises(ToolError):
             server._validate_tool_params("nonexistent_tool", {})

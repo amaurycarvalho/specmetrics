@@ -18,9 +18,7 @@ REFINEMENT_PATTERNS = re.compile(
     r"(?i)(refin|restructur|rewrit|improv(e|ing)\s+clarify|rephrase)"
 )
 
-REVIEW_PATTERNS = re.compile(
-    r"(?i)(review|evaluat|inspect|checklist|audit)"
-)
+REVIEW_PATTERNS = re.compile(r"(?i)(review|evaluat|inspect|checklist|audit)")
 
 VALIDATION_PATTERNS = re.compile(
     r"(?i)(validat|confirm|sign.?off|stakeholder\s+accept|approv)"

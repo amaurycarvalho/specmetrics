@@ -4,7 +4,11 @@ from __future__ import annotations
 import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
-from specmetrics.kernel.cfm.models import RulePack, RuleValidationReport, ValidationError
+from specmetrics.kernel.cfm.models import (
+    RulePack,
+    RuleValidationReport,
+    ValidationError,
+)
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
 from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType

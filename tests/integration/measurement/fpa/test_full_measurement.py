@@ -26,20 +26,47 @@ def _make_cfm() -> CanonicalFunctionalModel:
     return CanonicalFunctionalModel(
         run_id="integ-test-run",
         data_groups={
-            "dg1": DataGroup(id="dg1", name="Orders", data_type="internal", evidence=_evidence("order data")),
-            "dg2": DataGroup(id="dg2", name="Products", data_type="internal", evidence=_evidence("product data")),
-            "dg3": DataGroup(id="dg3", name="TaxService", data_type="external", evidence=_evidence("tax api")),
+            "dg1": DataGroup(
+                id="dg1",
+                name="Orders",
+                data_type="internal",
+                evidence=_evidence("order data"),
+            ),
+            "dg2": DataGroup(
+                id="dg2",
+                name="Products",
+                data_type="internal",
+                evidence=_evidence("product data"),
+            ),
+            "dg3": DataGroup(
+                id="dg3",
+                name="TaxService",
+                data_type="external",
+                evidence=_evidence("tax api"),
+            ),
         },
         operations={
-            "op1": Operation(id="op1", name="CreateOrder", parent_process_id="p1",
-                            evidence=_evidence("create order flow"),
-                            metadata={"direction": "input"}),
-            "op2": Operation(id="op2", name="PrintInvoice", parent_process_id="p1",
-                            evidence=_evidence("invoice output"),
-                            metadata={"direction": "output"}),
-            "op3": Operation(id="op3", name="CheckPrice", parent_process_id="p1",
-                            evidence=_evidence("price lookup"),
-                            metadata={"direction": "query"}),
+            "op1": Operation(
+                id="op1",
+                name="CreateOrder",
+                parent_process_id="p1",
+                evidence=_evidence("create order flow"),
+                metadata={"direction": "input"},
+            ),
+            "op2": Operation(
+                id="op2",
+                name="PrintInvoice",
+                parent_process_id="p1",
+                evidence=_evidence("invoice output"),
+                metadata={"direction": "output"},
+            ),
+            "op3": Operation(
+                id="op3",
+                name="CheckPrice",
+                parent_process_id="p1",
+                evidence=_evidence("price lookup"),
+                metadata={"direction": "query"},
+            ),
         },
         metadata=BuildMetadata(
             run_id="integ-test-run",
@@ -65,9 +92,9 @@ class TestFullMeasurement:
         by_type = result.summary.by_type
         assert by_type["ILF"].count == 2  # Orders, Products
         assert by_type["EIF"].count == 1  # TaxService
-        assert by_type["EI"].count == 1   # CreateOrder
-        assert by_type["EO"].count == 1   # PrintInvoice
-        assert by_type["EQ"].count == 1   # CheckPrice
+        assert by_type["EI"].count == 1  # CreateOrder
+        assert by_type["EO"].count == 1  # PrintInvoice
+        assert by_type["EQ"].count == 1  # CheckPrice
 
         assert len(result.measured_functions) == 6
 
@@ -96,8 +123,12 @@ class TestFullMeasurement:
         empty_cfm = CanonicalFunctionalModel(
             run_id="empty-run",
             metadata=BuildMetadata(
-                run_id="empty-run", build_duration_ms=0, element_counts={},
-                total_input_nodes=0, unclassified_count=0, conflicts=[],
+                run_id="empty-run",
+                build_duration_ms=0,
+                element_counts={},
+                total_input_nodes=0,
+                unclassified_count=0,
+                conflicts=[],
                 created_at=now,
             ),
         )
@@ -114,8 +145,12 @@ class TestFullMeasurement:
         result_default = plugin.measure(cfm)
         result_custom = plugin.measure(cfm, rule_pack)
 
-        eq_default = [f for f in result_default.measured_functions if f.function_type == "EQ"]
-        eq_custom = [f for f in result_custom.measured_functions if f.function_type == "EQ"]
+        eq_default = [
+            f for f in result_default.measured_functions if f.function_type == "EQ"
+        ]
+        eq_custom = [
+            f for f in result_custom.measured_functions if f.function_type == "EQ"
+        ]
 
         assert len(eq_default) > 0
         assert len(eq_custom) == 0
@@ -131,8 +166,16 @@ class TestFullMeasurement:
         result_default = plugin.measure(cfm)
         result_custom = plugin.measure(cfm, rule_pack)
 
-        ilf_default = sum(f.ufp_weight for f in result_default.measured_functions if f.function_type == "ILF")
-        ilf_custom = sum(f.ufp_weight for f in result_custom.measured_functions if f.function_type == "ILF")
+        ilf_default = sum(
+            f.ufp_weight
+            for f in result_default.measured_functions
+            if f.function_type == "ILF"
+        )
+        ilf_custom = sum(
+            f.ufp_weight
+            for f in result_custom.measured_functions
+            if f.function_type == "ILF"
+        )
 
         # With 2 ILFs at weight 1 each, should be 2
         assert ilf_custom == 2
@@ -141,6 +184,7 @@ class TestFullMeasurement:
 
     def test_plugin_discovery(self):
         from importlib.metadata import entry_points
+
         eps = entry_points(group="specmetrics.plugins.measurement")
         names = [ep.name for ep in eps]
         assert "fpa" in names

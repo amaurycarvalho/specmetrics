@@ -43,7 +43,9 @@ def _evidence(text: str = "src") -> EvidenceRef:
 
 class TestDataGroupClassification:
     def test_internal_data_group_to_ilf(self):
-        dg = DataGroup(id="dg1", name="Orders", data_type="internal", evidence=_evidence())
+        dg = DataGroup(
+            id="dg1", name="Orders", data_type="internal", evidence=_evidence()
+        )
         cfm = _make_cfm(data_groups=[dg])
         counter = FPACounter()
         result = counter.count(cfm)
@@ -53,7 +55,9 @@ class TestDataGroupClassification:
         assert ilf_fns[0].name == "Orders"
 
     def test_external_data_group_to_eif(self):
-        dg = DataGroup(id="dg1", name="TaxAPI", data_type="external", evidence=_evidence())
+        dg = DataGroup(
+            id="dg1", name="TaxAPI", data_type="external", evidence=_evidence()
+        )
         cfm = _make_cfm(data_groups=[dg])
         counter = FPACounter()
         result = counter.count(cfm)
@@ -70,9 +74,15 @@ class TestDataGroupClassification:
 
     def test_multiple_data_groups_classified_correctly(self):
         dgs = [
-            DataGroup(id="dg1", name="Internal", data_type="internal", evidence=_evidence("a")),
-            DataGroup(id="dg2", name="External", data_type="external", evidence=_evidence("b")),
-            DataGroup(id="dg3", name="Shared", data_type="shared", evidence=_evidence("c")),
+            DataGroup(
+                id="dg1", name="Internal", data_type="internal", evidence=_evidence("a")
+            ),
+            DataGroup(
+                id="dg2", name="External", data_type="external", evidence=_evidence("b")
+            ),
+            DataGroup(
+                id="dg3", name="Shared", data_type="shared", evidence=_evidence("c")
+            ),
         ]
         cfm = _make_cfm(data_groups=dgs)
         counter = FPACounter()
@@ -86,7 +96,9 @@ class TestDataGroupClassification:
 class TestOperationClassification:
     def test_input_operation_to_ei(self):
         op = Operation(
-            id="op1", name="CreateOrder", parent_process_id="p1",
+            id="op1",
+            name="CreateOrder",
+            parent_process_id="p1",
             evidence=_evidence(),
             metadata={"direction": "input"},
         )
@@ -99,7 +111,9 @@ class TestOperationClassification:
 
     def test_output_operation_to_eo(self):
         op = Operation(
-            id="op1", name="PrintReport", parent_process_id="p1",
+            id="op1",
+            name="PrintReport",
+            parent_process_id="p1",
             evidence=_evidence(),
             metadata={"direction": "output"},
         )
@@ -111,7 +125,9 @@ class TestOperationClassification:
 
     def test_query_operation_to_eq(self):
         op = Operation(
-            id="op1", name="LookupProduct", parent_process_id="p1",
+            id="op1",
+            name="LookupProduct",
+            parent_process_id="p1",
             evidence=_evidence(),
             metadata={"direction": "query"},
         )
@@ -123,7 +139,9 @@ class TestOperationClassification:
 
     def test_operation_without_direction_is_skipped(self):
         op = Operation(
-            id="op1", name="UnknownOp", parent_process_id="p1",
+            id="op1",
+            name="UnknownOp",
+            parent_process_id="p1",
             evidence=_evidence(),
             metadata={},
         )
@@ -147,12 +165,17 @@ class TestEmptyCFM:
     def test_cfm_with_only_actors_returns_zero_count(self):
         now = datetime.now(timezone.utc)
         from specmetrics.kernel.cfm.model import Actor
+
         cfm = CanonicalFunctionalModel(
             run_id="test-run",
             actors={"a1": Actor(id="a1", name="User", evidence=_evidence())},
             metadata=BuildMetadata(
-                run_id="test-run", build_duration_ms=0, element_counts={},
-                total_input_nodes=1, unclassified_count=0, conflicts=[],
+                run_id="test-run",
+                build_duration_ms=0,
+                element_counts={},
+                total_input_nodes=1,
+                unclassified_count=0,
+                conflicts=[],
                 created_at=now,
             ),
         )
@@ -180,29 +203,42 @@ class TestPerformance:
     def test_sc001_10_data_groups_15_processes_under_5_seconds(self):
         now = datetime.now(timezone.utc)
         data_groups = [
-            DataGroup(id=f"dg{i}", name=f"Group{i}", data_type="internal",
-                       evidence=_evidence(f"data{i}"))
+            DataGroup(
+                id=f"dg{i}",
+                name=f"Group{i}",
+                data_type="internal",
+                evidence=_evidence(f"data{i}"),
+            )
             for i in range(10)
         ]
         ops = []
         for i in range(15):
-            ops.append(Operation(
-                id=f"op{i}", name=f"Process{i}", parent_process_id="p1",
-                evidence=_evidence(f"op{i}"),
-                metadata={"direction": "input"},
-            ))
+            ops.append(
+                Operation(
+                    id=f"op{i}",
+                    name=f"Process{i}",
+                    parent_process_id="p1",
+                    evidence=_evidence(f"op{i}"),
+                    metadata={"direction": "input"},
+                )
+            )
         cfm = CanonicalFunctionalModel(
             run_id="perf-test",
             data_groups={g.id: g for g in data_groups},
             operations={o.id: o for o in ops},
             metadata=BuildMetadata(
-                run_id="perf-test", build_duration_ms=0, element_counts={},
-                total_input_nodes=25, unclassified_count=0, conflicts=[],
+                run_id="perf-test",
+                build_duration_ms=0,
+                element_counts={},
+                total_input_nodes=25,
+                unclassified_count=0,
+                conflicts=[],
                 created_at=now,
             ),
         )
         counter = FPACounter()
         import time
+
         start = time.monotonic()
         result = counter.count(cfm)
         elapsed = time.monotonic() - start
@@ -212,25 +248,37 @@ class TestPerformance:
     def test_sc007_500_plus_functions_no_errors(self):
         now = datetime.now(timezone.utc)
         data_groups = [
-            DataGroup(id=f"dg{i}", name=f"Group{i}", data_type="internal",
-                       evidence=_evidence(f"d{i}"))
+            DataGroup(
+                id=f"dg{i}",
+                name=f"Group{i}",
+                data_type="internal",
+                evidence=_evidence(f"d{i}"),
+            )
             for i in range(100)
         ]
         ops = []
         for i in range(400):
             direction = ["input", "output", "query"][i % 3]
-            ops.append(Operation(
-                id=f"op{i}", name=f"Op{i}", parent_process_id="p1",
-                evidence=_evidence(f"e{i}"),
-                metadata={"direction": direction},
-            ))
+            ops.append(
+                Operation(
+                    id=f"op{i}",
+                    name=f"Op{i}",
+                    parent_process_id="p1",
+                    evidence=_evidence(f"e{i}"),
+                    metadata={"direction": direction},
+                )
+            )
         cfm = CanonicalFunctionalModel(
             run_id="perf-large",
             data_groups={g.id: g for g in data_groups},
             operations={o.id: o for o in ops},
             metadata=BuildMetadata(
-                run_id="perf-large", build_duration_ms=0, element_counts={},
-                total_input_nodes=500, unclassified_count=0, conflicts=[],
+                run_id="perf-large",
+                build_duration_ms=0,
+                element_counts={},
+                total_input_nodes=500,
+                unclassified_count=0,
+                conflicts=[],
                 created_at=now,
             ),
         )

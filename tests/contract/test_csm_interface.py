@@ -60,7 +60,9 @@ class TestCsmConsumerProtocol:
         csm = CanonicalSpecificationModel(
             run_id="run-1",
             decisions={
-                UUID1: Decision(id=UUID1, description="Decide X", evidence_references=refs),
+                UUID1: Decision(
+                    id=UUID1, description="Decide X", evidence_references=refs
+                ),
             },
             assumptions={},
             metadata=metadata,
@@ -102,14 +104,18 @@ class TestCsmConsumerProtocol:
         csm1 = CanonicalSpecificationModel(
             run_id="openspec-run",
             decisions={
-                UUID1: Decision(id=UUID1, description="Use Python", evidence_references=refs),
+                UUID1: Decision(
+                    id=UUID1, description="Use Python", evidence_references=refs
+                ),
             },
             metadata=metadata1,
         )
         csm2 = CanonicalSpecificationModel(
             run_id="speckit-run",
             decisions={
-                UUID1: Decision(id=UUID1, description="Use Python", evidence_references=refs),
+                UUID1: Decision(
+                    id=UUID1, description="Use Python", evidence_references=refs
+                ),
             },
             metadata=metadata2,
         )
@@ -129,7 +135,9 @@ class TestCsmQueryInterface:
         csm = CanonicalSpecificationModel(
             run_id="run-1",
             decisions={
-                UUID1: Decision(id=UUID1, description="Decision text", evidence_references=refs),
+                UUID1: Decision(
+                    id=UUID1, description="Decision text", evidence_references=refs
+                ),
             },
             metadata=metadata,
         )
@@ -162,7 +170,9 @@ class TestCsmQueryInterface:
         csm = CanonicalSpecificationModel(
             run_id="run-1",
             decisions={
-                UUID1: Decision(id=UUID1, description="D1", evidence_references=refs_doc1),
+                UUID1: Decision(
+                    id=UUID1, description="D1", evidence_references=refs_doc1
+                ),
             },
             metadata=metadata,
         )

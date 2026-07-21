@@ -23,7 +23,9 @@ def _write_rule_pack(rules_dir: Path, filename: str, data: dict) -> Path:
 
 
 class TestRulePackLoader:
-    def test_discover_files_empty_directory(self, loader: RulePackLoader, tmp_path: Path) -> None:
+    def test_discover_files_empty_directory(
+        self, loader: RulePackLoader, tmp_path: Path
+    ) -> None:
         files = loader.discover_files()
         assert files == []
 
@@ -32,7 +34,9 @@ class TestRulePackLoader:
         files = loader.discover_files()
         assert files == []
 
-    def test_discover_files_sorts_alphabetically(self, loader: RulePackLoader, tmp_path: Path) -> None:
+    def test_discover_files_sorts_alphabetically(
+        self, loader: RulePackLoader, tmp_path: Path
+    ) -> None:
         rules_dir = Path(loader._rules_dir)
         _write_rule_pack(rules_dir, "z.yml", {"id": "z-pack"})
         _write_rule_pack(rules_dir, "a.yml", {"id": "a-pack"})
@@ -45,13 +49,21 @@ class TestRulePackLoader:
 
     def test_load_file_valid(self, loader: RulePackLoader, tmp_path: Path) -> None:
         rules_dir = Path(loader._rules_dir)
-        _write_rule_pack(rules_dir, "test.yml", {
-            "id": "test-pack",
-            "description": "Test pack",
-            "rules": [
-                {"id": "r1", "type": "exclusion", "config": {"function_types": ["EQ"]}},
-            ],
-        })
+        _write_rule_pack(
+            rules_dir,
+            "test.yml",
+            {
+                "id": "test-pack",
+                "description": "Test pack",
+                "rules": [
+                    {
+                        "id": "r1",
+                        "type": "exclusion",
+                        "config": {"function_types": ["EQ"]},
+                    },
+                ],
+            },
+        )
         files = loader.discover_files()
         assert len(files) == 1
         pack, result = loader.load_file(files[0])
@@ -61,7 +73,9 @@ class TestRulePackLoader:
         assert pack.rules[0].id == "r1"
         assert result.status == "loaded"
 
-    def test_load_file_invalid_yaml(self, loader: RulePackLoader, tmp_path: Path) -> None:
+    def test_load_file_invalid_yaml(
+        self, loader: RulePackLoader, tmp_path: Path
+    ) -> None:
         rules_dir = Path(loader._rules_dir)
         fpath = rules_dir / "bad.yml"
         fpath.write_text("{invalid: yaml: unclosed")
@@ -79,7 +93,9 @@ class TestRulePackLoader:
         assert result.status == "error"
         assert "missing required 'id'" in result.error
 
-    def test_load_all_mixed_valid_and_invalid(self, loader: RulePackLoader, tmp_path: Path) -> None:
+    def test_load_all_mixed_valid_and_invalid(
+        self, loader: RulePackLoader, tmp_path: Path
+    ) -> None:
         rules_dir = Path(loader._rules_dir)
         _write_rule_pack(rules_dir, "good.yml", {"id": "good-pack", "rules": []})
         _write_rule_pack(rules_dir, "bad.yml", {"description": "no id"})

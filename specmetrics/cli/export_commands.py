@@ -10,7 +10,10 @@ import typer
 
 from specmetrics.application.enums import OutputFormat
 from specmetrics.application.models import PipelineRequest
-from specmetrics.application.orchestrator import PipelineOrchestrator, read_run_artifacts
+from specmetrics.application.orchestrator import (
+    PipelineOrchestrator,
+    read_run_artifacts,
+)
 from specmetrics.plugins.exporter.base import ExporterPlugin
 from specmetrics.plugins.exporter.orchestrator import (
     ExportOrchestrator,
@@ -116,7 +119,10 @@ def run(
     selected_formats = [f.strip().lower() for f in formats.split(",") if f.strip()]
     invalid_fmts = [f for f in selected_formats if f not in ("json", "csv", "xml")]
     if invalid_fmts:
-        typer.echo(f"Invalid format(s): {', '.join(invalid_fmts)}. Use json, csv, xml.", err=True)
+        typer.echo(
+            f"Invalid format(s): {', '.join(invalid_fmts)}. Use json, csv, xml.",
+            err=True,
+        )
         raise typer.Exit(code=1)
 
     target_measure_id = measure_id
@@ -125,8 +131,12 @@ def run(
     if target_measure_id is None:
         runs = list_measure_runs(project_path)
         if not runs:
-            typer.echo("No measure runs found. Running measurement pipeline directly...")
-            _run_pipeline_export(project_path, out_dir, selected_formats, publish, otel_endpoint, verbose)
+            typer.echo(
+                "No measure runs found. Running measurement pipeline directly..."
+            )
+            _run_pipeline_export(
+                project_path, out_dir, selected_formats, publish, otel_endpoint, verbose
+            )
             typer.echo(f"Export complete — {out_dir}")
             return
         target_measure_id = runs[0]["id"]
@@ -211,7 +221,9 @@ def _run_pipeline_export(
         )
         for r in export_results:
             status = "\u2713" if r["status"] == "completed" else "\u2717"
-            typer.echo(f"  {status} {r['format']}: {r.get('path', r.get('error', 'unknown'))}")
+            typer.echo(
+                f"  {status} {r['format']}: {r.get('path', r.get('error', 'unknown'))}"
+            )
 
     if publish:
         from specmetrics.plugins.exporter.models import ExportMetadata
@@ -252,7 +264,7 @@ def list(
         typer.echo("No measure runs found.")
         return
     typer.echo(f"{'Measure ID':<35} {'Created'}")
-    typer.echo(f"{'-'*35} {'-'*30}")
+    typer.echo(f"{'-' * 35} {'-' * 30}")
     for r in runs:
         created = r["created_at"][:19] if r["created_at"] else "unknown"
         typer.echo(f"{r['id']:<35} {created}")

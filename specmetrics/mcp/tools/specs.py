@@ -16,12 +16,14 @@ def _discover_specs(project_path: Path) -> list[dict]:
         spec_file = item / "spec.md"
         if spec_file.exists():
             stat = spec_file.stat()
-            results.append({
-                "name": item.name,
-                "path": str(spec_file),
-                "type": "specification",
-                "last_modified": stat.st_mtime,
-            })
+            results.append(
+                {
+                    "name": item.name,
+                    "path": str(spec_file),
+                    "type": "specification",
+                    "last_modified": stat.st_mtime,
+                }
+            )
     return results
 
 

@@ -40,6 +40,8 @@ class TestConstitutionComplianceNotes:
         assert result.passed
 
     def test_missing_compliance_notes_fails(self):
-        content = "## Constitution Check\n\n**Engaged Principles**: I (Specification First)\n"
+        content = (
+            "## Constitution Check\n\n**Engaged Principles**: I (Specification First)\n"
+        )
         result = constitution_compliance_notes(_doc(content))
         assert not result.passed

@@ -12,7 +12,9 @@ from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry
 
 
 class _MockAdapter:
-    def __init__(self, adapter_id: str, supported_paths: Optional[list[str]] = None) -> None:
+    def __init__(
+        self, adapter_id: str, supported_paths: Optional[list[str]] = None
+    ) -> None:
         self._adapter_id = adapter_id
         self._supported_paths = supported_paths or []
 

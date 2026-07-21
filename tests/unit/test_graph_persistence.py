@@ -19,10 +19,15 @@ from specmetrics.kernel.graph_persistence import GraphStore
 @pytest.fixture
 def sample_graph() -> EvidenceGraph:
     nodes = {
-        "n1": GraphNode(id="n1", node_type="evidence", document_id="doc1", text="source text"),
+        "n1": GraphNode(
+            id="n1", node_type="evidence", document_id="doc1", text="source text"
+        ),
         "n2": GraphNode(
-            id="n2", node_type="extracted_element", semantic_type="fact",
-            document_id="doc1", text="fact content",
+            id="n2",
+            node_type="extracted_element",
+            semantic_type="fact",
+            document_id="doc1",
+            text="fact content",
         ),
     }
     edges = [
@@ -63,7 +68,9 @@ class TestGraphStore:
             if os.path.exists(path):
                 os.unlink(path)
 
-    def test_load_reconstructs_identical_graph(self, sample_graph: EvidenceGraph) -> None:
+    def test_load_reconstructs_identical_graph(
+        self, sample_graph: EvidenceGraph
+    ) -> None:
         with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
             path = f.name
         try:
@@ -110,7 +117,9 @@ class TestGraphStore:
                 nodes={},
                 edges=[],
                 metadata=GraphMetadata(
-                    run_id="test", node_count=0, edge_count=0,
+                    run_id="test",
+                    node_count=0,
+                    edge_count=0,
                     documents_covered=[],
                 ),
             )
@@ -130,7 +139,9 @@ class TestGraphStore:
             assert loaded.metadata.run_id == sample_graph.metadata.run_id
             assert loaded.metadata.node_count == sample_graph.metadata.node_count
             assert loaded.metadata.edge_count == sample_graph.metadata.edge_count
-            assert set(loaded.metadata.documents_covered) == set(sample_graph.metadata.documents_covered)
+            assert set(loaded.metadata.documents_covered) == set(
+                sample_graph.metadata.documents_covered
+            )
         finally:
             if os.path.exists(path):
                 os.unlink(path)

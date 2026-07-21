@@ -19,5 +19,7 @@ def discover_exporters() -> list[ExporterPlugin]:
                 plugins.append(instance)
                 logger.debug("exporter_discovered", format_id=instance.format_id())
         except Exception as exc:
-            logger.warning("exporter_discovery_failed", entry_point=ep.name, error=str(exc))
+            logger.warning(
+                "exporter_discovery_failed", entry_point=ep.name, error=str(exc)
+            )
     return plugins

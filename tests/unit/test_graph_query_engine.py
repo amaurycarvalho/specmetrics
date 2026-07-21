@@ -9,24 +9,49 @@ from specmetrics.kernel.graph_query_engine import GraphQueryEngine
 @pytest.fixture
 def populated_backend() -> NetworkXBackend:
     b = NetworkXBackend()
-    b.add_node("e1", {
-        "node_type": "extracted_element", "semantic_type": "fact",
-        "document_id": "doc1", "text": "fact one",
-    })
-    b.add_node("e2", {
-        "node_type": "extracted_element", "semantic_type": "entity",
-        "document_id": "doc1", "text": "entity one",
-    })
-    b.add_node("e3", {
-        "node_type": "extracted_element", "semantic_type": "fact",
-        "document_id": "doc2", "text": "fact two",
-    })
-    b.add_node("ev1", {
-        "node_type": "evidence", "document_id": "doc1", "text": "source text 1",
-    })
-    b.add_node("ev2", {
-        "node_type": "evidence", "document_id": "doc2", "text": "source text 2",
-    })
+    b.add_node(
+        "e1",
+        {
+            "node_type": "extracted_element",
+            "semantic_type": "fact",
+            "document_id": "doc1",
+            "text": "fact one",
+        },
+    )
+    b.add_node(
+        "e2",
+        {
+            "node_type": "extracted_element",
+            "semantic_type": "entity",
+            "document_id": "doc1",
+            "text": "entity one",
+        },
+    )
+    b.add_node(
+        "e3",
+        {
+            "node_type": "extracted_element",
+            "semantic_type": "fact",
+            "document_id": "doc2",
+            "text": "fact two",
+        },
+    )
+    b.add_node(
+        "ev1",
+        {
+            "node_type": "evidence",
+            "document_id": "doc1",
+            "text": "source text 1",
+        },
+    )
+    b.add_node(
+        "ev2",
+        {
+            "node_type": "evidence",
+            "document_id": "doc2",
+            "text": "source text 2",
+        },
+    )
     b.add_edge("e1", "ev1", {"edge_type": "derived_from"})
     b.add_edge("e2", "ev1", {"edge_type": "derived_from"})
     b.add_edge("e3", "ev2", {"edge_type": "derived_from"})
@@ -88,6 +113,7 @@ class TestGraphQueryEngine:
 
     def test_traverse_provenance_nonexistent(self, engine: GraphQueryEngine) -> None:
         from specmetrics.kernel.evidence_graph import NodeNotFoundError
+
         with pytest.raises(NodeNotFoundError):
             engine.traverse_provenance("nonexistent")
 

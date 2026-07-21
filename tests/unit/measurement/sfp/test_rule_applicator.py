@@ -22,7 +22,9 @@ class TestT022_ExcludeFunctionalProcessesByID:
         )
         applicator = RulePackApplicator()
         result = applicator.apply_to_component(
-            "functional_process", "op-001", rule_pack,
+            "functional_process",
+            "op-001",
+            rule_pack,
         )
         assert result == "excluded_by_id"
 
@@ -32,7 +34,9 @@ class TestT022_ExcludeFunctionalProcessesByID:
         )
         applicator = RulePackApplicator()
         result = applicator.apply_to_component(
-            "functional_process", "op-999", rule_pack,
+            "functional_process",
+            "op-999",
+            rule_pack,
         )
         assert result is None
 
@@ -44,7 +48,9 @@ class TestT023_ExcludeLogicalFunctionsByPattern:
         )
         applicator = RulePackApplicator()
         result = applicator.apply_to_component(
-            "logical_function", "dg_internal_config", rule_pack,
+            "logical_function",
+            "dg_internal_config",
+            rule_pack,
         )
         assert result is not None
         assert "excluded_by_pattern" in result
@@ -55,7 +61,9 @@ class TestT023_ExcludeLogicalFunctionsByPattern:
         )
         applicator = RulePackApplicator()
         result = applicator.apply_to_component(
-            "logical_function", "dg_customer", rule_pack,
+            "logical_function",
+            "dg_customer",
+            rule_pack,
         )
         assert result is None
 

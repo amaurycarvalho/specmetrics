@@ -10,7 +10,11 @@ from specmetrics.kernel.cfm.model import (
     Operation,
     BuildMetadata,
 )
-from specmetrics.plugins.measurement.sfp.counter import SFPCounter, DEFAULT_FP_CONTRIBUTION, DEFAULT_LF_CONTRIBUTION
+from specmetrics.plugins.measurement.sfp.counter import (
+    SFPCounter,
+    DEFAULT_FP_CONTRIBUTION,
+    DEFAULT_LF_CONTRIBUTION,
+)
 
 
 def _make_cfm(
@@ -81,7 +85,11 @@ class TestT006_ElementaryProcessToFunctionalProcess:
         cfm = _make_cfm(operations={"op-001": op})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 1
         assert fps[0].name == "Create Order"
         assert fps[0].cfm_element_id == "op-001"
@@ -91,7 +99,11 @@ class TestT006_ElementaryProcessToFunctionalProcess:
         cfm = _make_cfm(operations={"op-001": op})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 0
 
     def test_handles_no_node_type_metadata(self):
@@ -99,7 +111,11 @@ class TestT006_ElementaryProcessToFunctionalProcess:
         cfm = _make_cfm(operations={"op-001": op})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 1
 
 
@@ -109,7 +125,11 @@ class TestT007_DataGroupToLogicalFunction:
         cfm = _make_cfm(data_groups={"dg-001": dg})
         counter = SFPCounter()
         result = counter.count(cfm)
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert len(lfs) == 1
         assert lfs[0].name == "Customer"
         assert lfs[0].cfm_element_id == "dg-001"
@@ -119,7 +139,11 @@ class TestT007_DataGroupToLogicalFunction:
         cfm = _make_cfm(data_groups={"dg-001": dg})
         counter = SFPCounter()
         result = counter.count(cfm)
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert len(lfs) == 0
 
     def test_handles_no_node_type_metadata_for_data_groups(self):
@@ -127,7 +151,11 @@ class TestT007_DataGroupToLogicalFunction:
         cfm = _make_cfm(data_groups={"dg-001": dg})
         counter = SFPCounter()
         result = counter.count(cfm)
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert len(lfs) == 1
 
 
@@ -137,7 +165,11 @@ class TestT008_FixedContributionValues:
         cfm = _make_cfm(operations={"op-001": op})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert fps[0].contribution == DEFAULT_FP_CONTRIBUTION
 
     def test_logical_function_gets_default_lf_value(self):
@@ -145,7 +177,11 @@ class TestT008_FixedContributionValues:
         cfm = _make_cfm(data_groups={"dg-001": dg})
         counter = SFPCounter()
         result = counter.count(cfm)
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert lfs[0].contribution == DEFAULT_LF_CONTRIBUTION
 
     def test_contribution_overrides_are_applied(self):
@@ -157,8 +193,16 @@ class TestT008_FixedContributionValues:
             cfm,
             contribution_overrides={"functional_process": 5.0, "logical_function": 8.0},
         )
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert fps[0].contribution == 5.0
         assert lfs[0].contribution == 8.0
 
@@ -181,7 +225,11 @@ class TestT010_DuplicateMerging:
         cfm = _make_cfm(operations={"op-001": op1, "op-002": op2})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 1
         warnings = [w for w in result.warnings if w.code == "DUPLICATE_MERGED"]
         assert len(warnings) == 1
@@ -194,7 +242,11 @@ class TestT010_DuplicateMerging:
         cfm = _make_cfm(operations={"op-001": op1, "op-002": op2})
         counter = SFPCounter()
         result = counter.count(cfm)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 2
 
 
@@ -247,7 +299,9 @@ class TestT034_IncrementalRecomputation:
         op1 = _make_operation("op-001", "Create Order", evidence=ev1)
         op2 = _make_operation("op-002", "Delete Order", evidence=ev2)
         dg = _make_data_group("dg-001", "Customer")
-        cfm = _make_cfm(operations={"op-001": op1, "op-002": op2}, data_groups={"dg-001": dg})
+        cfm = _make_cfm(
+            operations={"op-001": op1, "op-002": op2}, data_groups={"dg-001": dg}
+        )
         counter = SFPCounter()
         result = counter.count(cfm)
         assert result.summary.total_component_count == 3
@@ -283,6 +337,7 @@ class TestPerformance:
             dgs[f"dg-{i:03d}"] = _make_data_group(f"dg-{i:03d}", f"Entity {i}")
         cfm = _make_cfm(operations=ops, data_groups=dgs)
         import time
+
         counter = SFPCounter()
         start = time.monotonic()
         counter.count(cfm)

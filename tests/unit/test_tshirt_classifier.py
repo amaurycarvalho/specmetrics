@@ -19,7 +19,9 @@ class TestTShirtClassifier:
             mn, mx = size.story_point_range
             for sp in range(mn, mx + 1):
                 label, rule = classifier.classify(sp)
-                assert label == size.label, f"SP={sp} should be {size.label}, got {label}"
+                assert label == size.label, (
+                    f"SP={sp} should be {size.label}, got {label}"
+                )
 
     def test_sp1_is_xs(self):
         classifier = TShirtClassifier()
@@ -40,26 +42,31 @@ class TestTShirtClassifier:
         classifier = TShirtClassifier()
         label, rule = classifier.classify(5)
         assert label == "M"
+        assert "default: 5 → M" in rule
 
-    def test_sp8_is_m(self):
+    def test_sp8_is_l(self):
         classifier = TShirtClassifier()
         label, rule = classifier.classify(8)
-        assert label == "M"
+        assert label == "L"
+        assert "default: 8-13 → L" in rule
 
     def test_sp13_is_l(self):
         classifier = TShirtClassifier()
         label, rule = classifier.classify(13)
         assert label == "L"
+        assert "default: 8-13 → L" in rule
 
     def test_sp20_is_xl(self):
         classifier = TShirtClassifier()
         label, rule = classifier.classify(20)
         assert label == "XL"
+        assert "default: 20-40 → XL" in rule
 
-    def test_sp40_is_xxl(self):
+    def test_sp40_is_xl(self):
         classifier = TShirtClassifier()
         label, rule = classifier.classify(40)
-        assert label == "XXL"
+        assert label == "XL"
+        assert "default: 20-40 → XL" in rule
 
     def test_sp100_is_xxl(self):
         classifier = TShirtClassifier()
@@ -162,7 +169,7 @@ class TestClassifyAll:
         items, warnings = classify_all(sp_items)
         assert len(items) == 3
         assert items[0].tshirt_size == "S"
-        assert items[1].tshirt_size == "M"
+        assert items[1].tshirt_size == "L"
         assert items[2].tshirt_size == "XL"
 
     def test_missing_sp_skipped_with_warning(self):
@@ -173,6 +180,23 @@ class TestClassifyAll:
         assert len(items) == 0
         assert len(warnings) == 1
         assert warnings[0].code == "MISSING_SP_VALUE"
+
+
+class TestFullCoverage:
+    def test_all_9_fibonacci_values_mapped_to_6_sizes(self):
+        classifier = TShirtClassifier()
+        seen: set[str] = set()
+        for sp in [1, 2, 3, 5, 8, 13, 20, 40, 100]:
+            label, _ = classifier.classify(sp)
+            assert label != "UNKNOWN", f"SP={sp} produced UNKNOWN"
+            seen.add(label)
+        assert seen == {"XS", "S", "M", "L", "XL", "XXL"}
+
+    def test_m_range_is_exactly_5(self):
+        classifier = TShirtClassifier()
+        assert classifier.classify(5)[0] == "M"
+        assert classifier.classify(3)[0] != "M"
+        assert classifier.classify(8)[0] != "M"
 
 
 class TestPerformance:

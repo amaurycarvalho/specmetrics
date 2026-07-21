@@ -36,10 +36,16 @@ def _format_metric(metric: MetricExplanation, indent: str = "  ") -> str:
             for ev in el.evidence[:5]:
                 section = f" in {ev.section_id}" if ev.section_id else ""
                 snippet = ev.text[:80] + "..." if len(ev.text) > 80 else ev.text
-                conf = f" (confidence: {ev.confidence:.2f})" if ev.confidence is not None else ""
-                lines.append(f"{indent}    Evidence{section}{conf}: \"{snippet}\"")
+                conf = (
+                    f" (confidence: {ev.confidence:.2f})"
+                    if ev.confidence is not None
+                    else ""
+                )
+                lines.append(f'{indent}    Evidence{section}{conf}: "{snippet}"')
             if len(el.evidence) > 5:
-                lines.append(f"{indent}    ... and {len(el.evidence) - 5} more evidence references")
+                lines.append(
+                    f"{indent}    ... and {len(el.evidence) - 5} more evidence references"
+                )
         for rule in el.applied_rules:
             lines.append(f"{indent}    Rule: {rule.rule_id} ({rule.effect})")
     for rule in metric.applied_rules:

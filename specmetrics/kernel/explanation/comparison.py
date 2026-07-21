@@ -14,19 +14,23 @@ def _compare_element_fields(be, ce) -> list[dict]:
         bv = getattr(be, field, None)
         cv = getattr(ce, field, None)
         if bv != cv:
-            changes.append({
-                "field": field,
-                "baseline": bv,
-                "comparison": cv,
-            })
+            changes.append(
+                {
+                    "field": field,
+                    "baseline": bv,
+                    "comparison": cv,
+                }
+            )
     be_evidence_ids = sorted(e.node_id for e in (be.evidence or []))
     ce_evidence_ids = sorted(e.node_id for e in (ce.evidence or []))
     if be_evidence_ids != ce_evidence_ids:
-        changes.append({
-            "field": "evidence",
-            "baseline": be_evidence_ids,
-            "comparison": ce_evidence_ids,
-        })
+        changes.append(
+            {
+                "field": "evidence",
+                "baseline": be_evidence_ids,
+                "comparison": ce_evidence_ids,
+            }
+        )
     return changes
 
 
@@ -66,7 +70,12 @@ def compare_explanations(
                             ElementChange(
                                 element_id=eid,
                                 change_type="added",
-                                comparison_state={"element_type": ce.element_type, "element_label": ce.element_label} if ce else {},
+                                comparison_state={
+                                    "element_type": ce.element_type,
+                                    "element_label": ce.element_label,
+                                }
+                                if ce
+                                else {},
                             )
                         )
                     elif ce is None:
@@ -74,7 +83,10 @@ def compare_explanations(
                             ElementChange(
                                 element_id=eid,
                                 change_type="removed",
-                                baseline_state={"element_type": be.element_type, "element_label": be.element_label},
+                                baseline_state={
+                                    "element_type": be.element_type,
+                                    "element_label": be.element_label,
+                                },
                             )
                         )
                     else:
@@ -88,8 +100,14 @@ def compare_explanations(
                                 ElementChange(
                                     element_id=eid,
                                     change_type=change_type,
-                                    baseline_state={fc["field"]: fc["baseline"] for fc in field_changes},
-                                    comparison_state={fc["field"]: fc["comparison"] for fc in field_changes},
+                                    baseline_state={
+                                        fc["field"]: fc["baseline"]
+                                        for fc in field_changes
+                                    },
+                                    comparison_state={
+                                        fc["field"]: fc["comparison"]
+                                        for fc in field_changes
+                                    },
                                 )
                             )
 

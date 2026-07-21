@@ -11,9 +11,7 @@ def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
     actor_names = _resolve_actor_names(fp, cfm)
     if actor_names:
         description = fp.description or fp.name
-        lines.append(
-            f"As a {actor_names}, I want to {description}"
-        )
+        lines.append(f"As a {actor_names}, I want to {description}")
         lines.append("")
 
     ops = _resolve_operations(fp, cfm)
@@ -46,9 +44,7 @@ def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
     return "\n".join(lines).strip()
 
 
-def _resolve_actor_names(
-    fp: FunctionalProcess, cfm: CanonicalFunctionalModel
-) -> str:
+def _resolve_actor_names(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
     names: list[str] = []
     for aid in fp.actor_ids:
         actor = cfm.actors.get(aid)
@@ -95,7 +91,5 @@ def _resolve_relationships(
     texts: list[str] = []
     for rel in cfm.relationships:
         if rel.source_id == fp.id or rel.target_id == fp.id:
-            texts.append(
-                f"{rel.relationship_type}: {rel.source_id} → {rel.target_id}"
-            )
+            texts.append(f"{rel.relationship_type}: {rel.source_id} → {rel.target_id}")
     return texts

@@ -12,7 +12,9 @@ from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry
 
 
 class _MockAdapter:
-    def __init__(self, adapter_id: str, supported_paths: Optional[list[str]] = None) -> None:
+    def __init__(
+        self, adapter_id: str, supported_paths: Optional[list[str]] = None
+    ) -> None:
         self._adapter_id = adapter_id
         self._supported_paths = supported_paths or []
 
@@ -30,7 +32,9 @@ class _MockAdapter:
         ]
 
 
-def _make_descriptor(adapter_id: str, supported_paths: Optional[list[str]] = None) -> PluginDescriptor:
+def _make_descriptor(
+    adapter_id: str, supported_paths: Optional[list[str]] = None
+) -> PluginDescriptor:
     adapter = _MockAdapter(adapter_id, supported_paths)
     metadata = PluginMetadata(
         id=adapter_id,
@@ -38,7 +42,9 @@ def _make_descriptor(adapter_id: str, supported_paths: Optional[list[str]] = Non
         plugin_type=PluginType.ADAPTER,
         handler_factory=lambda a=adapter: a,
     )
-    return PluginDescriptor(metadata=metadata, entry_point_name=adapter_id, status=PluginStatus.REGISTERED)
+    return PluginDescriptor(
+        metadata=metadata, entry_point_name=adapter_id, status=PluginStatus.REGISTERED
+    )
 
 
 @pytest.fixture
@@ -49,36 +55,50 @@ def registry() -> tuple[PluginRegistry, AdapterRegistry]:
 
 
 class TestAdapterRegistry:
-    def test_list_adapters_returns_all_registered(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_list_adapters_returns_all_registered(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
         plugin_reg.register(_make_descriptor("adapter-a"))
         plugin_reg.register(_make_descriptor("adapter-b"))
         adapters = adapter_reg.list_adapters()
         assert len(adapters) == 2
 
-    def test_find_adapter_returns_correct_adapter_for_path(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_find_adapter_returns_correct_adapter_for_path(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
         plugin_reg.register(_make_descriptor("adapter-a", supported_paths=["/repo/a"]))
         plugin_reg.register(_make_descriptor("adapter-b", supported_paths=["/repo/b"]))
         found = adapter_reg.find_adapter(Path("/repo/a"))
         assert found is not None
 
-    def test_find_adapter_returns_none_when_no_adapter_supports_path(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_find_adapter_returns_none_when_no_adapter_supports_path(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
         plugin_reg.register(_make_descriptor("adapter-a", supported_paths=["/repo/a"]))
         found = adapter_reg.find_adapter(Path("/repo/unknown"))
         assert found is None
 
-    def test_scan_all_returns_results_from_multiple_adapters(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_scan_all_returns_results_from_multiple_adapters(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
-        plugin_reg.register(_make_descriptor("adapter-a", supported_paths=["/repo/multi"]))
-        plugin_reg.register(_make_descriptor("adapter-b", supported_paths=["/repo/multi"]))
+        plugin_reg.register(
+            _make_descriptor("adapter-a", supported_paths=["/repo/multi"])
+        )
+        plugin_reg.register(
+            _make_descriptor("adapter-b", supported_paths=["/repo/multi"])
+        )
         results = adapter_reg.scan_all(Path("/repo/multi"))
         assert len(results) == 2
         assert "adapter-a" in results
         assert "adapter-b" in results
 
-    def test_two_adapters_find_adapter_returns_correct_one_for_each_path(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_two_adapters_find_adapter_returns_correct_one_for_each_path(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
         plugin_reg.register(_make_descriptor("adapter-a", supported_paths=["/repo/a"]))
         plugin_reg.register(_make_descriptor("adapter-b", supported_paths=["/repo/b"]))
@@ -87,10 +107,16 @@ class TestAdapterRegistry:
         assert found_a is not None
         assert found_b is not None
 
-    def test_scan_all_with_two_adapters_returns_combined_results(self, registry: tuple[PluginRegistry, AdapterRegistry]):
+    def test_scan_all_with_two_adapters_returns_combined_results(
+        self, registry: tuple[PluginRegistry, AdapterRegistry]
+    ):
         plugin_reg, adapter_reg = registry
-        plugin_reg.register(_make_descriptor("adapter-a", supported_paths=["/repo/combo"]))
-        plugin_reg.register(_make_descriptor("adapter-b", supported_paths=["/repo/combo"]))
+        plugin_reg.register(
+            _make_descriptor("adapter-a", supported_paths=["/repo/combo"])
+        )
+        plugin_reg.register(
+            _make_descriptor("adapter-b", supported_paths=["/repo/combo"])
+        )
         results = adapter_reg.scan_all(Path("/repo/combo"))
         assert len(results["adapter-a"]) == 1
         assert len(results["adapter-b"]) == 1

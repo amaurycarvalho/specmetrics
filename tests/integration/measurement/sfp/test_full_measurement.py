@@ -11,7 +11,10 @@ from specmetrics.kernel.cfm.model import (
 )
 from specmetrics.plugins.measurement.sfp.plugin import SFPMeasurementPlugin
 from specmetrics.plugins.measurement.sfp.models import RulePack
-from specmetrics.plugins.measurement.sfp.counter import DEFAULT_FP_CONTRIBUTION, DEFAULT_LF_CONTRIBUTION
+from specmetrics.plugins.measurement.sfp.counter import (
+    DEFAULT_FP_CONTRIBUTION,
+    DEFAULT_LF_CONTRIBUTION,
+)
 
 
 def _make_evidence(
@@ -36,21 +39,33 @@ def _build_synthetic_cfm() -> CanonicalFunctionalModel:
                 id="op-001",
                 name="Create Order",
                 parent_process_id="fp-001",
-                evidence=_make_evidence(graph_node_id="gn-op-001", document_id="spec-001", text="User submits order"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-op-001",
+                    document_id="spec-001",
+                    text="User submits order",
+                ),
                 metadata={"node_type": "elementary_process"},
             ),
             "op-002": Operation(
                 id="op-002",
                 name="Approve Order",
                 parent_process_id="fp-001",
-                evidence=_make_evidence(graph_node_id="gn-op-002", document_id="spec-001", text="Manager approves order"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-op-002",
+                    document_id="spec-001",
+                    text="Manager approves order",
+                ),
                 metadata={"node_type": "elementary_process"},
             ),
             "op-003": Operation(
                 id="op-003",
                 name="Ship Order",
                 parent_process_id="fp-002",
-                evidence=_make_evidence(graph_node_id="gn-op-003", document_id="spec-002", text="Warehouse ships order"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-op-003",
+                    document_id="spec-002",
+                    text="Warehouse ships order",
+                ),
                 metadata={"node_type": "elementary_process"},
             ),
         },
@@ -58,23 +73,37 @@ def _build_synthetic_cfm() -> CanonicalFunctionalModel:
             "dg-001": DataGroup(
                 id="dg-001",
                 name="Customer",
-                evidence=_make_evidence(graph_node_id="gn-dg-001", document_id="spec-001", text="Customer entity"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-dg-001",
+                    document_id="spec-001",
+                    text="Customer entity",
+                ),
                 metadata={"node_type": "data_group"},
             ),
             "dg-002": DataGroup(
                 id="dg-002",
                 name="Order",
-                evidence=_make_evidence(graph_node_id="gn-dg-002", document_id="spec-001", text="Order entity"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-dg-002",
+                    document_id="spec-001",
+                    text="Order entity",
+                ),
                 metadata={"node_type": "data_group"},
             ),
             "dg-003": DataGroup(
                 id="dg-003",
                 name="Product",
-                evidence=_make_evidence(graph_node_id="gn-dg-003", document_id="spec-002", text="Product entity"),
+                evidence=_make_evidence(
+                    graph_node_id="gn-dg-003",
+                    document_id="spec-002",
+                    text="Product entity",
+                ),
                 metadata={"node_type": "data_group"},
             ),
         },
-        metadata=BuildMetadata(run_id="integration-test-cfm", version="1.0", source="test"),
+        metadata=BuildMetadata(
+            run_id="integration-test-cfm", version="1.0", source="test"
+        ),
     )
 
 
@@ -91,8 +120,16 @@ class TestT015_FullMeasurement:
         expected_total = (3 * DEFAULT_FP_CONTRIBUTION) + (3 * DEFAULT_LF_CONTRIBUTION)
         assert result.summary.total_sfp == expected_total
 
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert len(fps) == 3
         assert len(lfs) == 3
 
@@ -141,9 +178,17 @@ class TestT031_RulePackIntegration:
         )
         plugin = SFPMeasurementPlugin()
         result = plugin.measure(cfm, rule_pack=rule_pack)
-        lfs = [c for c in result.measured_components if c.component_type == "logical_function"]
+        lfs = [
+            c
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        ]
         assert len(lfs) == 0
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 3
 
     def test_rule_pack_overrides_contributions(self):
@@ -170,7 +215,11 @@ class TestT031_RulePackIntegration:
         )
         plugin = SFPMeasurementPlugin()
         result = plugin.measure(cfm, rule_pack=rule_pack)
-        fps = [c for c in result.measured_components if c.component_type == "functional_process"]
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
         assert len(fps) == 2
         assert all(c.cfm_element_id != "op-001" for c in fps)
 
@@ -198,15 +247,18 @@ class TestT043_Scalability:
             for i in range(count):
                 ev = _make_evidence(text=f"{prefix}process {i}")
                 ops[f"op-{prefix}{i:04d}"] = Operation(
-                    id=f"op-{prefix}{i:04d}", name=f"Process {i}",
-                    parent_process_id="fp-001", evidence=ev,
+                    id=f"op-{prefix}{i:04d}",
+                    name=f"Process {i}",
+                    parent_process_id="fp-001",
+                    evidence=ev,
                     metadata={"node_type": "elementary_process"},
                 )
             return ops
 
         def _timed(ops) -> float:
             cfm = CanonicalFunctionalModel(
-                run_id="test", operations=ops,
+                run_id="test",
+                operations=ops,
                 metadata=BuildMetadata(run_id="test", version="1.0", source="test"),
             )
             durations = []

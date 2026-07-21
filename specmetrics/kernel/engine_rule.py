@@ -113,7 +113,11 @@ class RulePackLoader:
                     continue
 
                 confidence = entry.get("confidence", 0.0)
-                if not isinstance(confidence, (int, float)) or confidence < 0 or confidence > 1:
+                if (
+                    not isinstance(confidence, (int, float))
+                    or confidence < 0
+                    or confidence > 1
+                ):
                     logger.warning(
                         "rule_invalid_confidence",
                         path=str(path),
@@ -186,7 +190,10 @@ class RulePackLoader:
 
             heading_match = pat.get("heading", "")
             if heading_match:
-                if isinstance(heading_match, str) and heading_match.lower() == heading_text.lower():
+                if (
+                    isinstance(heading_match, str)
+                    and heading_match.lower() == heading_text.lower()
+                ):
                     candidates.append(rule)
                 elif isinstance(heading_match, list):
                     for h in heading_match:

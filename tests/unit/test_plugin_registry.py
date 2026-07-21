@@ -97,12 +97,8 @@ class TestPluginRegistry:
 
     def test_install_handlers_skips_non_registered_plugins(self) -> None:
         plugin_registry = PluginRegistry()
-        plugin_registry.register(
-            _make_descriptor("p1", status=PluginStatus.REJECTED)
-        )
-        plugin_registry.register(
-            _make_descriptor("p2", status=PluginStatus.PENDING)
-        )
+        plugin_registry.register(_make_descriptor("p1", status=PluginStatus.REJECTED))
+        plugin_registry.register(_make_descriptor("p2", status=PluginStatus.PENDING))
 
         handler_registry = HandlerRegistry()
         plugin_registry.install_handlers(handler_registry)

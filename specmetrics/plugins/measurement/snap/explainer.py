@@ -4,7 +4,9 @@ from .models import SNAPMeasurementResult, AssessedItem, AssessmentExplanation
 
 
 class AssessmentExplainer:
-    def build_explanations(self, result: SNAPMeasurementResult) -> list[AssessmentExplanation]:
+    def build_explanations(
+        self, result: SNAPMeasurementResult
+    ) -> list[AssessmentExplanation]:
         explanations: list[AssessmentExplanation] = []
         for item in result.assessed_items:
             explanation = self._explain_item(item, result)
@@ -19,10 +21,7 @@ class AssessmentExplainer:
         identification_reason = self._build_identification_reason(item)
         contribution_reason = self._build_contribution_reason(item)
         evidence_chain = self._build_evidence_chain(item)
-        rule_exceptions = [
-            r for r in [item.rule_applied]
-            if r is not None
-        ]
+        rule_exceptions = [r for r in [item.rule_applied] if r is not None]
         return AssessmentExplanation(
             item_id=item.id,
             cfm_element_id=item.cfm_element_id,
@@ -47,10 +46,7 @@ class AssessmentExplainer:
                 f"Contribution value {item.contribution} SNAP assigned "
                 f"via Rule Pack override (rule: {item.rule_applied})"
             )
-        return (
-            f"Default SNAP weight for {item.category_id}: "
-            f"{item.contribution} SNAP"
-        )
+        return f"Default SNAP weight for {item.category_id}: {item.contribution} SNAP"
 
     def _build_evidence_chain(self, item: AssessedItem) -> list[str]:
         chain: list[str] = []
