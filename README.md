@@ -148,6 +148,8 @@ specmetrics measure --output json:./results.json             # Output to file
 specmetrics measure --verbose                                # Detailed output
 ```
 
+> **Note**: Measure detailed results is stored in `.specmetrics/runs/{measure id}/`.
+
 #### `specmetrics clean`
 
 Remove old measurement run folders.

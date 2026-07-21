@@ -107,6 +107,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix `metrics.json` output: use `unit: "entities"` and include per-entity T-shirt classifications with mapping metadata
 - Fix CLI display to show entity count and per-size breakdown line
 
+### [042-cognitive-points-breakdown](specs/042-cognitive-points-breakdown) Add a Bloom-level score breakdown to the Cognitive Points output in `measure.json` and CLI display
+
+#### Added
+
+- Add `cognitive_bloom_breakdown` payload key computation in plugin.py — aggregate `partial_score` by `bloom_level` from `all_cognitive_contributions`, wrap into `{level: {total: float}}` format, and add to payload dict
+- Add test for `cognitive_bloom_breakdown` presence and structure in integration tests — verify breakdown key exists in payload, contains `{level: {total: float}}`, and totals sum to `cognitive_raw_score`
+- Add test for measure.json breakdown output in integration tests — verify the measure stage entry for cognitive_points includes a `breakdown` field when elements are present
+- Add CLI display block for Cognitive Points breakdown in formatters.py — read `cognitive_bloom_breakdown` from `result.measurement_result_raw`, iterate levels, and append indented lines
+- Add test for CLI text output containing breakdown lines in unit tests — mock a `PipelineResult` with `cognitive_bloom_breakdown` and verify `format_text_result()` includes indented per-level lines
+- Add test for CLI behavior with empty breakdown in unit tests — verify no indented lines appear when breakdown is missing or empty
+
+#### Changed
+
+- Update `key_map` for `cognitive_points` in orchestrator.py from `("cognitive_raw_score", None)` to `("cognitive_raw_score", "cognitive_bloom_breakdown")`
+- Handle edge cases in formatter — skip when `cognitive_bloom_breakdown` is missing, empty dict, or contains zero totals
+
 [Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.5.0...HEAD
 [0.5.0]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.5.0
 

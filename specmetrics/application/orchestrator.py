@@ -599,7 +599,7 @@ class PipelineOrchestrator:
                         "simplified_function_points": ("sfp_total_sfp", None),
                         "business_complexity_points": ("bcp_measured_items", None),
                         "token_points": ("token_total_score", None),
-                        "cognitive_points": ("cognitive_raw_score", None),
+                        "cognitive_points": ("cognitive_raw_score", "cognitive_bloom_breakdown"),
                         "story_points": ("storypoints_total_story_points", None),
                         "snap": ("snap_total_snap", None),
                         "tshirt": ("tshirt", "tshirt_breakdown"),
@@ -610,6 +610,8 @@ class PipelineOrchestrator:
                             metric_name, (None, None)
                         )
                         total = mr.get(total_key, 0) if total_key else 0
+                        if metric_name in ("token_points", "cognitive_points"):
+                            total = round(total, 1)
                         entry: dict = {
                             "metric": metric_name,
                             "total": total,
@@ -617,7 +619,13 @@ class PipelineOrchestrator:
                             "duration_ms": 0,
                         }
                         if breakdown_key and breakdown_key in mr:
-                            entry["breakdown"] = mr[breakdown_key]
+                            bd = mr[breakdown_key]
+                            if metric_name == "cognitive_points" and isinstance(bd, dict):
+                                bd = {
+                                    k: {"total": round(v["total"], 1)} if isinstance(v, dict) else round(v, 1)
+                                    for k, v in bd.items()
+                                }
+                            entry["breakdown"] = bd
                         cli_id = metric_name_to_cli.get(metric_name)
                         if cli_id:
                             warning_key = f"{cli_id}_warnings"

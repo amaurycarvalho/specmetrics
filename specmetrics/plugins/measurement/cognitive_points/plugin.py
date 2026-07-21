@@ -67,6 +67,18 @@ class CognitivePointsHandler:
             c.model_dump(mode="json") for c in all_cognitive_contributions
         ]
 
+        bloom_breakdown: dict[str, float] = {}
+        for c in all_cognitive_contributions:
+            level = c.bloom_level
+            bloom_breakdown[level] = bloom_breakdown.get(level, 0.0) + c.partial_score
+
+        bloom_levels = ["remember", "understand", "apply", "analyze", "evaluate", "create"]
+        cognitive_bloom_breakdown = {
+            level: {"total": bloom_breakdown[level]}
+            for level in bloom_levels
+            if bloom_breakdown.get(level, 0.0) > 0
+        }
+
         cognitive_content_tokens: dict[str, int] = {}
         for c in all_cognitive_contributions:
             etype = c.element_type
@@ -106,6 +118,7 @@ class CognitivePointsHandler:
                 w.model_dump() for w in result.measurement_metadata.warnings
             ],
             "cognitive_entities": cognitive_entities,
+            "cognitive_bloom_breakdown": cognitive_bloom_breakdown,
         }
 
         cognitive_event = PipelineEvent(

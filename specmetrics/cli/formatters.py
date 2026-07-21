@@ -38,7 +38,20 @@ def format_text_result(result: PipelineResult, verbose: bool = False) -> str:
                     bcp_warnings = result.measurement_result_raw.get("bcp_warnings", [])
                     if bcp_warnings:
                         extra_tag = " (SDK is missing)"
-                lines.append(f"  {display_name}: {mr.total}{status_tag}{extra_tag}")
+                if mr.name in ("cognitive_points", "token_points"):
+                    lines.append(f"  {display_name}: {mr.total:.1f}{status_tag}{extra_tag}")
+                else:
+                    lines.append(f"  {display_name}: {mr.total}{status_tag}{extra_tag}")
+
+            if mr.name == "cognitive_points" and result.measurement_result_raw:
+                cp_breakdown = result.measurement_result_raw.get("cognitive_bloom_breakdown")
+                if isinstance(cp_breakdown, dict) and cp_breakdown:
+                    for level_name, level_data in cp_breakdown.items():
+                        if isinstance(level_data, dict):
+                            total = level_data.get("total", 0)
+                        else:
+                            total = level_data
+                        lines.append(f"    {level_name.title()}: {total:.1f}")
 
             if mr.name == "tshirt" and result.measurement_result_raw:
                 tshirt_breakdown = result.measurement_result_raw.get("tshirt_breakdown")

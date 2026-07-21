@@ -205,7 +205,7 @@ class EntityScoreBuilder:
             ),
             name=entity.get("element_name", ""),
             type=canonical,
-            score=float(entity.get("partial_score", 0)),
+            score=round(float(entity.get("partial_score", 0)), 1),
             metadata={
                 "applied_weight": entity.get("applied_weight"),
                 "model_source": entity.get("model_source"),
@@ -229,7 +229,7 @@ class EntityScoreBuilder:
             ),
             name=entity.get("element_name", ""),
             type=canonical,
-            score=float(entity.get("partial_score", 0)),
+            score=round(float(entity.get("partial_score", 0)), 1),
             metadata={
                 "bloom_level": entity.get("bloom_level"),
                 "cognitive_weight": entity.get("cognitive_weight"),
@@ -311,18 +311,21 @@ def _build_metric_metadata(cli_id: str, raw: dict[str, Any]) -> dict[str, Any] |
         spec_cost = raw.get("token_specification_cost")
         code_cost = raw.get("token_code_generation_cost")
         if spec_cost is not None:
-            meta["specification_cost"] = spec_cost
+            meta["specification_cost"] = round(spec_cost, 1)
         if code_cost is not None:
-            meta["code_generation_cost"] = code_cost
+            meta["code_generation_cost"] = round(code_cost, 1)
         return meta
     if cli_id == "cp":
         meta = {"calibration_version": raw.get("cognitive_calibration_version", "1.0")}
         raw_score = raw.get("cognitive_raw_score")
         if raw_score is not None:
-            meta["raw_score"] = raw_score
+            meta["raw_score"] = round(raw_score, 1)
         fib = raw.get("cognitive_fibonacci_normalization")
         if fib is not None:
-            meta["fibonacci_normalization"] = fib
+            meta["fibonacci_normalization"] = {
+                k: round(v, 1) if isinstance(v, float) else v
+                for k, v in fib.items()
+            }
         return meta
     if cli_id == "tshirt":
         from specmetrics.plugins.measurement.tshirt.classifier import DEFAULT_MAPPING
@@ -380,6 +383,8 @@ class MetricBreakdownBuilder:
             total = float(len(entities))
         else:
             total = sum(e.score for e in entities)
+            if cli_id in ("tp", "cp"):
+                total = round(total, 1)
         unit = METRIC_UNIT_MAP.get(cli_id, "")
         json_name = METRIC_JSON_NAME_MAP.get(cli_id, cli_id)
         metric_metadata = _build_metric_metadata(cli_id, self._raw)

@@ -157,3 +157,50 @@ class TestCognitivePointsPipeline:
         payload = result_ctx.measurement_result
         assert payload["cognitive_total_cognitive_points"] == 1
         assert payload["cognitive_raw_score"] == 0
+
+    def test_payload_contains_bloom_breakdown(self):
+        cfm = _make_cfm()
+        csm = _make_csm()
+        ctx = PipelineContext(
+            canonical_model=cfm,
+            canonical_spec_model=csm,
+        )
+        event = PipelineEvent(
+            event_type=EventType.MEASUREMENT_COMPLETED,
+            publisher="test",
+            payload={},
+            context=ctx,
+        )
+        handler = CognitivePointsHandler()
+        result_ctx = handler.handle(event)
+        payload = result_ctx.measurement_result
+
+        assert "cognitive_bloom_breakdown" in payload
+        bd = payload["cognitive_bloom_breakdown"]
+        assert isinstance(bd, dict)
+        assert len(bd) > 0
+        for level, data in bd.items():
+            assert isinstance(data, dict)
+            assert "total" in data
+            assert isinstance(data["total"], float)
+
+        bd_total = sum(v["total"] for v in bd.values())
+        assert abs(bd_total - payload["cognitive_raw_score"]) < 0.01
+
+    def test_payload_bloom_breakdown_empty_when_no_elements(self):
+        ctx = PipelineContext(
+            canonical_model=None,
+            canonical_spec_model=None,
+        )
+        event = PipelineEvent(
+            event_type=EventType.MEASUREMENT_COMPLETED,
+            publisher="test",
+            payload={},
+            context=ctx,
+        )
+        handler = CognitivePointsHandler()
+        result_ctx = handler.handle(event)
+        payload = result_ctx.measurement_result
+
+        assert "cognitive_bloom_breakdown" in payload
+        assert payload["cognitive_bloom_breakdown"] == {}

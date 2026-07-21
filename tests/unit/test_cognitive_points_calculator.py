@@ -38,6 +38,8 @@ from specmetrics.plugins.measurement.cognitive_points.calibration import (
 from specmetrics.plugins.measurement.cognitive_points.models import (
     CognitivePointsMeasurement,
 )
+from specmetrics.application.models import PipelineResult, MetricOutputItem
+from specmetrics.cli.formatters import format_text_result
 
 
 def _uid() -> str:
@@ -327,3 +329,51 @@ class TestPerformance:
         calculate(cfm, csm, _make_default_calibration(), run_id="perf")
         elapsed = time.monotonic() - start
         assert elapsed < 2.0
+
+
+class TestCognitivePointsCLIFormatter:
+    def test_format_text_shows_breakdown_lines(self):
+        result = PipelineResult(
+            status="success",
+            metric_results=[
+                MetricOutputItem(name="cognitive_points", total=100.0),
+            ],
+            measurement_result_raw={
+                "cognitive_bloom_breakdown": {
+                    "remember": {"total": 10.0},
+                    "understand": {"total": 30.0},
+                    "apply": {"total": 60.0},
+                },
+            },
+        )
+        output = format_text_result(result)
+        assert "Remember: 10.0" in output
+        assert "Understand: 30.0" in output
+        assert "Apply: 60.0" in output
+
+    def test_format_text_no_breakdown_when_empty(self):
+        result = PipelineResult(
+            status="success",
+            metric_results=[
+                MetricOutputItem(name="cognitive_points", total=0.0),
+            ],
+            measurement_result_raw={},
+        )
+        output = format_text_result(result)
+        assert "    " not in output or "Cognitive Points" in output
+
+    def test_format_text_no_breakdown_when_missing_key(self):
+        result = PipelineResult(
+            status="success",
+            metric_results=[
+                MetricOutputItem(name="cognitive_points", total=50.0),
+            ],
+            measurement_result_raw={
+                "cognitive_bloom_breakdown": {},
+            },
+        )
+        output = format_text_result(result)
+        lines = output.split("\n")
+        cp_lines = [line for line in lines if "Cognitive Points" in line or line.startswith("    ")]
+        assert any("Cognitive Points" in line for line in cp_lines)
+        assert not any(line.startswith("    ") for line in cp_lines)
