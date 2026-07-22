@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-07-22
+
+#### Fixed
+
+- Package dependencies.
 
 ## [0.5.0] — 2026-07-21
 
@@ -123,7 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `key_map` for `cognitive_points` in orchestrator.py from `("cognitive_raw_score", None)` to `("cognitive_raw_score", "cognitive_bloom_breakdown")`
 - Handle edge cases in formatter — skip when `cognitive_bloom_breakdown` is missing, empty dict, or contains zero totals
 
-[Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/amaurycarvalho/specmetrics/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.5.1
 [0.5.0]: https://github.com/amaurycarvalho/specmetrics/releases/tag/v0.5.0
 
 See [CHANGELOG Archive](CHANGELOG-ARCHIVE.md) for older releases.
