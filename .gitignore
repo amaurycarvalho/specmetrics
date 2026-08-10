@@ -55,10 +55,9 @@ mutation_report.html
 cover/
 
 # Mutation testing
-mutants/
-.mutmut-cache
+mutants/*
 !mutants/mutmut-cicd-stats.json
-!mutants/survivor-analysis.md
+.mutmut-cache
 
 # Translations
 *.mo
