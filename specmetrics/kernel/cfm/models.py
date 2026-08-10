@@ -1,9 +1,10 @@
+"""Supporting data models for CFM rule packs and validation."""
+
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel
-
 
 FunctionType = Literal["ILF", "EIF", "EI", "EO", "EQ"]
 ComplexityRating = Literal["Low", "Average", "High"]
@@ -17,16 +18,20 @@ RuleTypeName = Literal[
 
 
 class RuleConfig(BaseModel):
-    function_types: Optional[list[str]] = None
-    function_type: Optional[str] = None
-    complexity: Optional[str] = None
-    weight: Optional[int] = None
-    thresholds: Optional[dict[str, list[int]]] = None
-    element_ids: Optional[list[str]] = None
-    gsc: Optional[dict[str, int]] = None
+    """Configuration for a rule pack rule."""
+
+    function_types: list[str] | None = None
+    function_type: str | None = None
+    complexity: str | None = None
+    weight: int | None = None
+    thresholds: dict[str, list[int]] | None = None
+    element_ids: list[str] | None = None
+    gsc: dict[str, int] | None = None
 
 
 class Rule(BaseModel):
+    """A single rule within a rule pack."""
+
     id: str
     type: RuleTypeName
     description: str = ""
@@ -34,6 +39,8 @@ class Rule(BaseModel):
 
 
 class RulePack(BaseModel):
+    """A set of rules applied during measurement."""
+
     id: str
     description: str = ""
     methodology: str = "FPA"
@@ -42,6 +49,8 @@ class RulePack(BaseModel):
 
 
 class AppliedRuleRecord(BaseModel):
+    """Record of a rule applied during measurement."""
+
     rule_pack_id: str
     rule_id: str
     rule_type: str
@@ -52,6 +61,8 @@ class AppliedRuleRecord(BaseModel):
 
 
 class FileLoadResult(BaseModel):
+    """Outcome of loading a rule pack file."""
+
     file_path: str
     rule_pack_id: str = ""
     status: str = "loaded"
@@ -60,19 +71,25 @@ class FileLoadResult(BaseModel):
 
 
 class ValidationError(BaseModel):
+    """An error found while validating a rule pack."""
+
     file_path: str
     message: str
-    rule_id: Optional[str] = None
-    field: Optional[str] = None
+    rule_id: str | None = None
+    field: str | None = None
 
 
 class ValidationWarning(BaseModel):
+    """A warning found while validating a rule pack."""
+
     file_path: str
     message: str
-    rule_id: Optional[str] = None
+    rule_id: str | None = None
 
 
 class RuleValidationReport(BaseModel):
+    """Report summarizing rule pack loading and validation."""
+
     loaded_files: list[FileLoadResult] = []
     total_rules: int = 0
     active_rules: int = 0

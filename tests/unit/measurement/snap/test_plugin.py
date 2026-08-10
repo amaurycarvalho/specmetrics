@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-
 from specmetrics.kernel.cfm.model import (
-    CanonicalFunctionalModel,
     BuildMetadata,
+    CanonicalFunctionalModel,
+)
+from specmetrics.plugins.measurement.snap.explainer import AssessmentExplainer
+from specmetrics.plugins.measurement.snap.models import (
+    AssessedItem,
+    AssessmentSummary,
+    CategoryAssessment,
+    CategoryBreakdown,
+    SNAPMeasurementResult,
 )
 from specmetrics.plugins.measurement.snap.plugin import (
     SNAPMeasurementPlugin,
     create_snap_measurement_metadata,
 )
-from specmetrics.plugins.measurement.snap.models import (
-    SNAPMeasurementResult,
-    AssessedItem,
-    AssessmentSummary,
-    CategoryAssessment,
-    CategoryBreakdown,
-)
-from specmetrics.plugins.measurement.snap.explainer import AssessmentExplainer
 
 
 def _make_cfm() -> CanonicalFunctionalModel:

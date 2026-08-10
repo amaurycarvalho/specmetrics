@@ -1,6 +1,8 @@
+"""SNAP measurement plugin: handler, plugin, and metadata factory."""
+
 from __future__ import annotations
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol, Self
 
 import structlog
 
@@ -17,15 +19,28 @@ logger = structlog.get_logger(__name__)
 
 
 class MeasurementPlugin(Protocol):
-    def plugin_id(self) -> str: ...
-    def supported_methodology(self) -> str: ...
-    def supported_function_types(self) -> list[str]: ...
+    """Protocol that every measurement engine plugin must satisfy."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
+        ...
+
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
+        ...
+
+    def supported_function_types(self: Self) -> list[str]:
+        """Return the function types measured by this plugin."""
+        ...
+
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
+        rule_pack: RulePack | None = None,
         async_execution: bool = False,
-    ) -> SNAPMeasurementResult: ...
+    ) -> SNAPMeasurementResult:
+        """Measure SNAP for the given canonical functional model."""
+        ...
 
 
 try:
@@ -47,13 +62,18 @@ except Exception:
 
 
 class SNAPMeasurementPlugin:
-    def plugin_id(self) -> str:
+    """Measurement engine plugin for SNAP assessment."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
         return "snap"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
         return "SNAP (Software Non-functional Assessment Process)"
 
-    def supported_function_types(self) -> list[str]:
+    def supported_function_types(self: Self) -> list[str]:
+        """Return the function types measured by this plugin."""
         return [
             "presentation",
             "data_operations",
@@ -62,11 +82,12 @@ class SNAPMeasurementPlugin:
         ]
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
+        rule_pack: RulePack | None = None,
         async_execution: bool = False,
     ) -> SNAPMeasurementResult:
+        """Measure SNAP for the given canonical functional model."""
         if cfm is None:
             raise ValueError("CFM input cannot be None")
 
@@ -132,19 +153,25 @@ class SNAPMeasurementPlugin:
 
 
 class SNAPMeasurementHandler:
+    """Pipeline event handler for SNAP measurement."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler consumes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "snap_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the human-readable name of this handler stage."""
         return "SNAP Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Measure SNAP for the event context and merge stage output."""
         ctx = event.context
         cfm = ctx.canonical_model
 
@@ -176,6 +203,7 @@ class SNAPMeasurementHandler:
 
 
 def create_snap_measurement_metadata() -> PluginMetadata:
+    """Build the plugin metadata entry for the SNAP measurement plugin."""
     return PluginMetadata(
         id="snap",
         api_version="0.1.0",

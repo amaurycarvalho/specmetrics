@@ -1,5 +1,8 @@
+"""Rule Pack engine plugin that applies rules to the CFM."""
+
 from __future__ import annotations
 
+from typing import Self
 
 import structlog
 
@@ -24,10 +27,13 @@ RULES_DIR = ".specmetrics/rules"
 
 
 class RulePackEnginePlugin:
+    """Plugin that loads, validates, and applies rule packs to the CFM."""
+
     def __init__(
-        self,
+        self: Self,
         rules_dir: str = RULES_DIR,
     ) -> None:
+        """Initialize the plugin with loaders, validators, and applicators."""
         self._loader = RulePackLoader(rules_dir)
         self._validator = RulePackValidator()
         self._applicator = RuleApplicator()
@@ -35,18 +41,22 @@ class RulePackEnginePlugin:
         self._rules_dir = rules_dir
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the handled event type."""
         return EventType.RULE_PACK_APPLIED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the handler identifier."""
         return "rule_pack_engine"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return "Rule Pack Engine"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle the event and return the updated pipeline context."""
         ctx = event.context
         cfm = ctx.canonical_model
 
@@ -100,7 +110,7 @@ class RulePackEnginePlugin:
 
         return ctx.with_stage_output("canonical_model", annotated_cfm)
 
-    def _load_and_validate(self) -> tuple[list[RulePack], RuleValidationReport]:
+    def _load_and_validate(self: Self) -> tuple[list[RulePack], RuleValidationReport]:
         merged_report = RuleValidationReport()
         valid_packs: list[RulePack] = []
 
@@ -130,10 +140,11 @@ class RulePackEnginePlugin:
         return valid_packs, merged_report
 
     def apply_rules(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
         packs: list[RulePack] | None = None,
     ) -> CanonicalFunctionalModel:
+        """Apply the given rule packs to the CFM and return the updated model."""
         if packs is None:
             packs, _ = self._load_and_validate()
         if not packs:
@@ -142,6 +153,7 @@ class RulePackEnginePlugin:
 
 
 def create_rule_pack_engine_metadata() -> PluginMetadata:
+    """Create metadata for the rule pack engine plugin."""
     return PluginMetadata(
         id="rule_pack_engine",
         api_version="0.1.0",

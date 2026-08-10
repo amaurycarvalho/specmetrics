@@ -1,16 +1,23 @@
+"""Explanation builder for SFP measurement results."""
+
 from __future__ import annotations
 
+from typing import Self
+
 from .models import (
-    SFPMeasurementResult,
     MeasuredComponent,
     MeasurementExplanation,
+    SFPMeasurementResult,
 )
 
 
 class MeasurementExplainer:
+    """Builds human-readable explanations for measured components."""
+
     def build_explanations(
-        self, result: SFPMeasurementResult
+        self: Self, result: SFPMeasurementResult
     ) -> list[MeasurementExplanation]:
+        """Build explanations for every measured component in the result."""
         explanations: list[MeasurementExplanation] = []
         for component in result.measured_components:
             explanation = self._explain_component(component, result)
@@ -18,7 +25,7 @@ class MeasurementExplainer:
         return explanations
 
     def _explain_component(
-        self,
+        self: Self,
         component: MeasuredComponent,
         result: SFPMeasurementResult,
     ) -> MeasurementExplanation:
@@ -36,7 +43,7 @@ class MeasurementExplainer:
             evidence_chain=evidence_chain,
         )
 
-    def _build_identification_reason(self, component: MeasuredComponent) -> str:
+    def _build_identification_reason(self: Self, component: MeasuredComponent) -> str:
         if component.component_type == "functional_process":
             return (
                 f"CFM element '{component.cfm_element_id}' of type "
@@ -47,7 +54,7 @@ class MeasurementExplainer:
             f"{component.cfm_element_type} → classified as Logical Function"
         )
 
-    def _build_contribution_reason(self, component: MeasuredComponent) -> str:
+    def _build_contribution_reason(self: Self, component: MeasuredComponent) -> str:
         if component.rule_applied:
             return (
                 f"Contribution value {component.contribution} SFP assigned "
@@ -58,7 +65,7 @@ class MeasurementExplainer:
             f"{component.contribution} SFP"
         )
 
-    def _build_evidence_chain(self, component: MeasuredComponent) -> list[str]:
+    def _build_evidence_chain(self: Self, component: MeasuredComponent) -> list[str]:
         chain: list[str] = []
         for ref in component.evidence_refs:
             section = f" (section {ref.section_id})" if ref.section_id else ""

@@ -14,6 +14,22 @@ class TestFibonacciNormalizer:
         result = normalize(0.0)
         assert result.output_value == 1
 
+    def test_default_threshold_boundaries(self):
+        assert normalize(4.5).output_value == 3
+        assert normalize(8.5).output_value == 5
+        assert normalize(22.5).output_value == 13
+        assert normalize(35.5).output_value == 20
+        assert normalize(55.5).output_value == 40
+        assert normalize(85.5).output_value == 100
+
+    def test_above_max_threshold_applied_reports_last(self):
+        assert normalize(200.0).threshold_applied == 85
+
+    def test_default_ranking_strategy(self):
+        normalizer = RelativeRankingNormalizer()
+        assert normalizer.ranking_strategy == "percentile"
+        assert normalizer.fibonacci_scale == [1, 2, 3, 5, 8, 13, 20, 40, 100]
+
     def test_below_first_threshold_non_zero(self):
         result = normalize(1.0)
         assert result.output_value == 1
@@ -80,6 +96,11 @@ class TestFibonacciNormalizerCustom:
     def test_invalid_validation(self):
         with pytest.raises(ValueError, match="len.*must equal"):
             FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3, 4])
+
+    def test_validation_message_exact(self):
+        with pytest.raises(ValueError) as excinfo:
+            FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3, 4])
+        assert "len(thresholds) + 1 (3)" in str(excinfo.value)
 
     def test_thresholds_property(self):
         normalizer = FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3])
@@ -159,3 +180,48 @@ class TestRelativeRankingNormalizer:
         assert results["low"].rank_position == 0
         assert results["mid"].rank_position == 1
         assert results["high"].rank_position == 2
+
+    def test_single_entity_maps_to_first_band(self):
+        normalizer = RelativeRankingNormalizer()
+        results = normalizer.normalize_all([("only", 42.0)])
+        assert results["only"].output_value == 1
+        assert results["only"].rank_position == 0
+
+    def test_two_entities_spread_scale(self):
+        normalizer = RelativeRankingNormalizer()
+        results = normalizer.normalize_all([("lo", 1.0), ("hi", 50.0)])
+        assert results["lo"].output_value == 1
+        assert results["hi"].output_value == 100
+
+    def test_band_mapping_many_items(self):
+        scores = [(f"e{i}", float(i * 10)) for i in range(20)]
+        normalizer = RelativeRankingNormalizer()
+        results = normalizer.normalize_all(scores)
+        assert results["e0"].output_value == 1
+        assert results["e4"].output_value == 2
+        assert results["e9"].output_value == 8
+        assert results["e19"].output_value == 100
+
+    def test_rank_positions_many_items(self):
+        scores = [(f"e{i}", float(i * 10)) for i in range(20)]
+        normalizer = RelativeRankingNormalizer()
+        results = normalizer.normalize_all(scores)
+        for idx, (eid, _) in enumerate(scores):
+            assert results[eid].rank_position == idx
+
+
+def test_normalization_profile_default_thresholds_exact():
+    """Mutmut 3/4/6/7/8/9: NormalizationProfile defaults to the exact threshold list."""
+    from specmetrics.plugins.measurement.storypoints.normalizer import (
+        NormalizationProfile,
+    )
+
+    profile = NormalizationProfile()
+    assert profile.thresholds == [2, 4, 8, 14, 22, 35, 55, 85]
+    assert profile.output_values == [1, 2, 3, 5, 8, 13, 20, 40, 100]
+
+
+def test_relative_ranking_default_strategy_exact():
+    """Mutmut 1/2/6: the default ranking strategy is 'percentile'."""
+    normalizer = RelativeRankingNormalizer()
+    assert normalizer.ranking_strategy == "percentile"

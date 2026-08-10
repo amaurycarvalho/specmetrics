@@ -1,10 +1,16 @@
+"""Bloom taxonomy classifier for Cognitive Points measurement."""
+
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import Protocol, Self
 
 
 class BloomClassifier(Protocol):
-    def classify(self, element_type: str, element: Any = None) -> str: ...
+    """Protocol for classifiers that map specification elements to Bloom levels."""
+
+    def classify(self: Self, element_type: str, element: object = None) -> str:
+        """Return the Bloom level for the given element type and optional element."""
+        ...
 
 
 SUB_TYPE_ATTRS: dict[str, str] = {
@@ -54,12 +60,15 @@ _DEFAULT_BLOOM_WEIGHTS: dict[str, float] = {
 
 
 class DefaultBloomClassifier:
+    """Default Bloom classifier using built-in mappings and weights."""
+
     def __init__(
-        self,
+        self: Self,
         bloom_mappings: dict[str, str] | None = None,
         bloom_weights: dict[str, float] | None = None,
         default_bloom_level: str = "understand",
     ) -> None:
+        """Initialize the classifier with optional custom mappings and weights."""
         self._mappings = _DEFAULT_BLOOM_MAPPINGS.copy()
         if bloom_mappings:
             self._mappings.update(bloom_mappings)
@@ -69,18 +78,22 @@ class DefaultBloomClassifier:
         self._default_bloom_level = default_bloom_level
 
     @property
-    def mappings(self) -> dict[str, str]:
+    def mappings(self: Self) -> dict[str, str]:
+        """Return a copy of the element type to Bloom level mappings."""
         return dict(self._mappings)
 
     @property
-    def weights(self) -> dict[str, float]:
+    def weights(self: Self) -> dict[str, float]:
+        """Return a copy of the Bloom level to weight mappings."""
         return dict(self._weights)
 
     @property
-    def default_bloom_level(self) -> str:
+    def default_bloom_level(self: Self) -> str:
+        """Return the default Bloom level used for unmapped element types."""
         return self._default_bloom_level
 
-    def classify(self, element_type: str, element: Any = None) -> str:
+    def classify(self: Self, element_type: str, element: object = None) -> str:
+        """Return the Bloom level for the given element type and optional element."""
         if element is not None:
             attr_name = SUB_TYPE_ATTRS.get(element_type)
             if attr_name is not None:
@@ -91,5 +104,6 @@ class DefaultBloomClassifier:
                         return self._mappings[key]
         return self._mappings.get(element_type, self._default_bloom_level)
 
-    def get_weight(self, bloom_level: str) -> float:
+    def get_weight(self: Self, bloom_level: str) -> float:
+        """Return the cognitive weight for the given Bloom level."""
         return self._weights.get(bloom_level, 1.0)

@@ -1,10 +1,10 @@
+"""Heuristic classifiers for canonical specification model elements."""
+
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from specmetrics.kernel.evidence_graph import GraphNode
-
 
 FRAMEWORK_PATTERNS = [
     re.compile(
@@ -52,7 +52,8 @@ CLASSIFIER_PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 
-def classify_node(node: GraphNode) -> Optional[str]:
+def classify_node(node: GraphNode) -> str | None:
+    """Classify a graph node into a CSM category, or None if unclassified."""
     if node.node_type != "extracted_element":
         return None
 
@@ -67,6 +68,7 @@ def classify_node(node: GraphNode) -> Optional[str]:
 
 
 def classify_all_categories(node: GraphNode) -> list[str]:
+    """Return all categories matched by a node's text."""
     if node.node_type != "extracted_element":
         return []
 
@@ -82,6 +84,7 @@ def classify_all_categories(node: GraphNode) -> list[str]:
 
 
 def strip_framework_labels(text: str) -> str:
+    """Remove framework-specific prefixes from a node text."""
     for pattern in FRAMEWORK_PATTERNS:
         text = pattern.sub("", text)
     return text.strip()

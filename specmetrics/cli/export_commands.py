@@ -1,27 +1,23 @@
+"""CLI commands for exporting measurement results."""
+
 from __future__ import annotations
 
 import json
-import shutil
-from importlib.metadata import entry_points
 from pathlib import Path
+from typing import Annotated
 
 import structlog
 import typer
 
-from specmetrics.application.enums import OutputFormat
-from specmetrics.application.models import PipelineRequest
 from specmetrics.application.orchestrator import (
-    PipelineOrchestrator,
     read_run_artifacts,
 )
-from specmetrics.plugins.exporter.base import ExporterPlugin
-from specmetrics.plugins.exporter.orchestrator import (
-    ExportOrchestrator,
-    stage_to_csv,
-    stage_to_xml,
+
+from ._impl import (
+    discover_exporter_plugins,
+    export_selected,
+    run_pipeline_export,
 )
-from specmetrics.plugins.publisher.base import PublisherConfig
-from specmetrics.plugins.publisher.orchestrator import publish_all
 
 logger = structlog.get_logger(__name__)
 
@@ -29,6 +25,7 @@ MEASURE_ID_PATTERN = "????????-??????-????????"
 
 
 def list_measure_runs(project_path: Path) -> list[dict]:
+    """List stored measure runs, newest first, with their creation times."""
     runs_dir = project_path / ".specmetrics" / "runs"
     if not runs_dir.exists():
         return []
@@ -56,64 +53,67 @@ export_app = typer.Typer(
 )
 
 
-def _discover_exporter_plugins() -> list[ExporterPlugin]:
-    plugins: list[ExporterPlugin] = []
-    for ep in entry_points(group="specmetrics.exporters"):
-        try:
-            cls = ep.load()
-            if isinstance(cls, type) and issubclass(cls, ExporterPlugin):
-                plugins.append(cls())
-        except Exception as exc:
-            logger.warning("exporter_load_failed", entry_point=ep.name, error=str(exc))
-    return plugins
-
-
 @export_app.command()
 def run(
-    measure_id: str = typer.Argument(
-        None,
-        help="Measure ID to export (default: most recent run)",
-    ),
-    project_path: Path = typer.Argument(
-        ".",
-        help="Path to the SpecMetrics project",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-    ),
-    formats: str = typer.Option(
-        "json",
-        "--format",
-        "-f",
-        help="Comma-separated list of export formats (json, csv, xml)",
-    ),
-    output_dir: Path = typer.Option(
-        None,
-        "--output-dir",
-        "-o",
-        help="Directory to write export files to",
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-    ),
-    publish: bool = typer.Option(
-        False,
-        "--publish",
-        help="Publish results to configured telemetry backends",
-    ),
-    otel_endpoint: str = typer.Option(
-        None,
-        "--otel-endpoint",
-        help="OpenTelemetry OTLP HTTP endpoint URL",
-    ),
-    verbose: bool = typer.Option(
-        False,
-        "--verbose",
-        "-v",
-        help="Show detailed progress",
-    ),
+    measure_id: Annotated[
+        str | None,
+        typer.Argument(
+            help="Measure ID to export (default: most recent run)",
+        ),
+    ] = None,
+    project_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path to the SpecMetrics project",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = ".",
+    formats: Annotated[
+        str,
+        typer.Option(
+            "--format",
+            "-f",
+            help="Comma-separated list of export formats (json, csv, xml)",
+        ),
+    ] = "json",
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Directory to write export files to",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+    publish: Annotated[
+        bool,
+        typer.Option(
+            "--publish",
+            help="Publish results to configured telemetry backends",
+        ),
+    ] = False,
+    otel_endpoint: Annotated[
+        str | None,
+        typer.Option(
+            "--otel-endpoint",
+            help="OpenTelemetry OTLP HTTP endpoint URL",
+        ),
+    ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Show detailed progress",
+        ),
+    ] = False,
 ) -> None:
+    """Export a stored measure run to the selected output formats."""
     out_dir = output_dir or (project_path / ".specmetrics" / "exports")
     out_dir.mkdir(parents=True, exist_ok=True)
     selected_formats = [f.strip().lower() for f in formats.split(",") if f.strip()]
@@ -125,140 +125,76 @@ def run(
         )
         raise typer.Exit(code=1)
 
-    target_measure_id = measure_id
     runs_dir = project_path / ".specmetrics" / "runs"
 
+    target_measure_id = _resolve_target_run(
+        measure_id,
+        project_path,
+        out_dir,
+        selected_formats,
+        publish,
+        otel_endpoint,
+        verbose,
+    )
     if target_measure_id is None:
-        runs = list_measure_runs(project_path)
-        if not runs:
-            typer.echo(
-                "No measure runs found. Running measurement pipeline directly..."
-            )
-            _run_pipeline_export(
-                project_path, out_dir, selected_formats, publish, otel_endpoint, verbose
-            )
-            typer.echo(f"Export complete — {out_dir}")
-            return
-        target_measure_id = runs[0]["id"]
+        return
 
     run_dir = runs_dir / target_measure_id
     if not run_dir.exists():
-        available = list_measure_runs(project_path)
-        msg = f'Measure run "{target_measure_id}" not found.'
-        if available:
-            ids = ", ".join(r["id"] for r in available[:5])
-            msg += f" Available runs: {ids}"
-        typer.echo(msg, err=True)
-        raise typer.Exit(code=1)
+        _fail_run_not_found(target_measure_id, project_path)
 
     artifacts = read_run_artifacts(run_dir)
+    export_selected(selected_formats, run_dir, artifacts, out_dir)
 
-    for fmt in selected_formats:
-        if fmt == "json":
-            for src in run_dir.glob("*.json"):
-                if src.name == "metadata.json":
-                    continue
-                dst = out_dir / src.name
-                shutil.copy2(src, dst)
-                typer.echo(f"  \u2713 json: {dst.name}")
-        elif fmt == "csv":
-            for fname, data in artifacts.items():
-                if fname == "metadata":
-                    continue
-                csv_content = stage_to_csv(fname, data)
-                dst = out_dir / f"{fname}.csv"
-                dst.write_text(csv_content)
-                typer.echo(f"  \u2713 csv: {dst.name}")
-        elif fmt == "xml":
-            for fname, data in artifacts.items():
-                if fname == "metadata":
-                    continue
-                xml_content = stage_to_xml(fname, data)
-                dst = out_dir / f"{fname}.xml"
-                dst.write_text(xml_content)
-                typer.echo(f"  \u2713 xml: {dst.name}")
-
-    typer.echo(f"Export complete — {out_dir}")
+    typer.echo(f"Export complete \u2014 {out_dir}")
 
 
-def _run_pipeline_export(
+def _resolve_target_run(
+    measure_id: str | None,
     project_path: Path,
     out_dir: Path,
     selected_formats: list[str],
     publish: bool,
     otel_endpoint: str | None,
     verbose: bool,
-) -> None:
-
-    orch = PipelineOrchestrator()
-    request = PipelineRequest(
-        project_path=project_path,
-        output_format=OutputFormat.NONE,
-        verbose=verbose,
-    )
-    result = orch.execute(request)
-
-    if result.status.value == "failed":
-        typer.echo(f"Pipeline failed: {result.error}", err=True)
-        raise typer.Exit(code=1)
-
-    cfm = result.canonical_model
-    if cfm is None:
-        typer.echo("No measurement data available to export", err=True)
-        raise typer.Exit(code=1)
-
-    exporters = _discover_exporter_plugins()
-    if not exporters:
-        typer.echo("No exporter plugins found", err=True)
-        raise typer.Exit(code=1)
-
-    if "json" in selected_formats or not selected_formats:
-        export_orch = ExportOrchestrator(exporters)
-        export_results = export_orch.export_to_dir(
-            cfm=cfm,
-            output_dir=out_dir,
-            formats=selected_formats,
+) -> str | None:
+    if measure_id is not None:
+        return measure_id
+    runs = list_measure_runs(project_path)
+    if not runs:
+        typer.echo("No measure runs found. Running measurement pipeline directly...")
+        run_pipeline_export(
+            project_path, out_dir, selected_formats, publish, otel_endpoint, verbose
         )
-        for r in export_results:
-            status = "\u2713" if r["status"] == "completed" else "\u2717"
-            typer.echo(
-                f"  {status} {r['format']}: {r.get('path', r.get('error', 'unknown'))}"
-            )
+        typer.echo(f"Export complete \u2014 {out_dir}")
+        return None
+    return runs[0]["id"]
 
-    if publish:
-        from specmetrics.plugins.exporter.models import ExportMetadata
 
-        measurements = _extract_measurements(cfm)
-        metadata = ExportMetadata(
-            run_id=cfm.run_id,
-            function_count=len(measurements),
-        )
-        configs: dict[str, PublisherConfig] = {}
-        if otel_endpoint:
-            configs["otel"] = PublisherConfig(endpoint_url=otel_endpoint)
-
-        pub_results = publish_all(
-            measurements,
-            metadata,
-            configs=configs,
-            publisher_configs=[],
-        )
-        for r in pub_results:
-            status = "\u2713" if r["success"] else "\u2717"
-            typer.echo(f"  {status} {r['publisher']}: {r['message']}")
+def _fail_run_not_found(target_measure_id: str, project_path: Path) -> None:
+    available = list_measure_runs(project_path)
+    msg = f'Measure run "{target_measure_id}" not found.'
+    if available:
+        ids = ", ".join(r["id"] for r in available[:5])
+        msg += f" Available runs: {ids}"
+    typer.echo(msg, err=True)
+    raise typer.Exit(code=1)
 
 
 @export_app.command()
 def list(
-    project_path: Path = typer.Argument(
-        ".",
-        help="Path to the SpecMetrics project",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-    ),
+    project_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path to the SpecMetrics project",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = ".",
 ) -> None:
+    """List stored measure runs."""
     runs = list_measure_runs(project_path)
     if not runs:
         typer.echo("No measure runs found.")
@@ -272,7 +208,8 @@ def list(
 
 @export_app.command()
 def list_formats() -> None:
-    exporters = _discover_exporter_plugins()
+    """List available export formats."""
+    exporters = discover_exporter_plugins()
     if not exporters:
         typer.echo("No exporter plugins discovered")
         return
@@ -283,15 +220,18 @@ def list_formats() -> None:
 
 @export_app.command()
 def publisher_status(
-    project_path: Path = typer.Argument(
-        ".",
-        help="Path to the SpecMetrics project",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-    ),
+    project_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path to the SpecMetrics project",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = ".",
 ) -> None:
+    """Show the status of configured publisher endpoints."""
     from specmetrics.plugins.publisher.config import load_publisher_configs
 
     project_config = project_path / "specmetrics.yml"
@@ -319,25 +259,3 @@ def publisher_status(
         if s.last_error_message:
             typer.echo(f"     Last Error: {s.last_error_message}")
         typer.echo(f"     Uptime: {s.uptime_seconds:.1f}s")
-
-
-def _extract_measurements(cfm: object) -> list:
-    from specmetrics.plugins.exporter.models import Measurement
-
-    measurements: list[Measurement] = []
-    try:
-        processes = getattr(cfm, "functional_processes", {})
-        for proc in processes.values():
-            measurements.append(
-                Measurement(
-                    function_id=getattr(proc, "id", ""),
-                    function_name=getattr(proc, "name", ""),
-                    category="functional_process",
-                    evidence=[getattr(proc, "evidence")]
-                    if hasattr(proc, "evidence")
-                    else [],
-                )
-            )
-    except Exception:
-        pass
-    return measurements

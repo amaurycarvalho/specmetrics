@@ -67,6 +67,43 @@ class TestStoryPointsCalibrationProfile:
         with pytest.raises(ValueError, match="ranking_strategy"):
             StoryPointsCalibrationProfile(ranking_strategy="linear")
 
+    def test_zero_weight_allowed(self):
+        profile = StoryPointsCalibrationProfile(
+            factor_coefficients={"business_interactions": 0.0}
+        )
+        assert profile.factor_coefficients["business_interactions"] == 0.0
+
+    def test_fibonacci_scale_length_two_allowed(self):
+        profile = StoryPointsCalibrationProfile(fibonacci_scale=[5, 10])
+        assert profile.fibonacci_scale == [5, 10]
+
+    def test_fibonacci_scale_equal_values_rejected(self):
+        with pytest.raises(ValueError, match="sorted ascending"):
+            StoryPointsCalibrationProfile(fibonacci_scale=[1, 1, 3])
+
+    def test_factor_coefficient_message_exact(self):
+        with pytest.raises(ValueError) as excinfo:
+            StoryPointsCalibrationProfile(
+                factor_coefficients={"business_interactions": -1.0}
+            )
+        assert "factor_coefficients.business_interactions must be >= 0.0, got -1.0" in str(
+            excinfo.value
+        )
+
+    def test_csm_weight_message_exact(self):
+        with pytest.raises(ValueError) as excinfo:
+            StoryPointsCalibrationProfile(csm_base_weights={"decision": -1.0})
+        assert "csm_base_weights.decision must be >= 0.0, got -1.0" in str(
+            excinfo.value
+        )
+
+    def test_cfm_weight_message_exact(self):
+        with pytest.raises(ValueError) as excinfo:
+            StoryPointsCalibrationProfile(cfm_base_weights={"actor": -1.0})
+        assert "cfm_base_weights.actor must be >= 0.0, got -1.0" in str(
+            excinfo.value
+        )
+
     def test_custom_values(self):
         profile = StoryPointsCalibrationProfile(
             content_multiplier=0.5,
@@ -168,8 +205,8 @@ class TestUserStory4CalibrationIntegration:
         result_default = calculate(cfm, run_id="us4-def", calibration=cal_default)
         result_custom = calculate(cfm, run_id="us4-cus", calibration=cal_custom)
         assert result_custom.content_multiplier == 0.5
-        fp_def = [i for i in result_default.items if i.element_type == "functional_process"][0]
-        fp_cus = [i for i in result_custom.items if i.element_type == "functional_process"][0]
+        fp_def = next(i for i in result_default.items if i.element_type == "functional_process")
+        fp_cus = next(i for i in result_custom.items if i.element_type == "functional_process")
         expected_ratio = 0.5 / 0.1
         actual_ratio = (fp_cus.content_score / fp_def.content_score) if fp_def.content_score > 0 else 0.0
         assert abs(actual_ratio - expected_ratio) < 0.01
@@ -200,3 +237,31 @@ class TestUserStory4CalibrationIntegration:
         result_default = calculate(cfm, run_id="us4-fdef", calibration=cal_default)
         result_custom = calculate(cfm, run_id="us4-fcus", calibration=cal_custom)
         assert result_custom.total_raw_score != result_default.total_raw_score
+
+
+def test_zero_csm_weight_allowed():
+    """Mutmut 7: a zero weight must be accepted by _validate_weight_entries."""
+    profile = StoryPointsCalibrationProfile(csm_base_weights={"decision": 0.0})
+    assert profile.csm_base_weights["decision"] == 0.0
+
+
+def test_csm_weight_negative_message_exact():
+    """Mutmut 9: the negative-weight error message is exact."""
+    with pytest.raises(ValueError) as excinfo:
+        StoryPointsCalibrationProfile(csm_base_weights={"decision": -0.5})
+    assert "csm_base_weights.decision must be >= 0.0, got -0.5" in str(
+        excinfo.value
+    )
+
+
+def test_fibonacci_scale_length_two_allowed_exact():
+    """Mutmut 1/2: a two-value Fibonacci scale must be accepted."""
+    profile = StoryPointsCalibrationProfile(fibonacci_scale=[5, 10])
+    assert profile.fibonacci_scale == [5, 10]
+
+
+def test_fibonacci_scale_equal_values_rejected_exact():
+    """Mutmut 9: duplicate scale values must be rejected as not ascending."""
+    with pytest.raises(ValueError) as excinfo:
+        StoryPointsCalibrationProfile(fibonacci_scale=[1, 1, 3])
+    assert "sorted ascending" in str(excinfo.value)

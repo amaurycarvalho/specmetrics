@@ -1,37 +1,18 @@
+"""T-Shirt Sizing measurement plugin."""
+
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Self
 
 import structlog
-
-try:
-    from opentelemetry import metrics as otel_metrics
-
-    _meter = otel_metrics.get_meter("specmetrics.tshirt")
-    _classify_duration = _meter.create_histogram(
-        name="tshirt.classification.duration",
-        description="Duration of T-Shirt classification execution",
-        unit="ms",
-    )
-    _item_gauge = _meter.create_gauge(
-        name="tshirt.classified_items",
-        description="Number of Functional Processes classified",
-    )
-    _distribution_histogram = _meter.create_histogram(
-        name="tshirt.distribution",
-        description="Distribution of T-Shirt sizes",
-        unit="1",
-    )
-except Exception:
-    _classify_duration = None
-    _item_gauge = None
-    _distribution_histogram = None
 
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
 from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
+from ._extractors import _ItemExtractionMixin
+from ._telemetry import _classify_duration, _distribution_histogram, _item_gauge
 from .classifier import DEFAULT_MAPPING, TShirtClassifier
 from .models import (
     ExecutionMetadata,
@@ -42,20 +23,26 @@ from .models import (
 logger = structlog.get_logger(__name__)
 
 
-class TShirtHandler:
+class TShirtHandler(_ItemExtractionMixin):
+    """Pipeline handler that classifies Story Points into T-Shirt sizes."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler processes."""
         return EventType.TSHIRT_CLASSIFICATION_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "tshirt_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the display name of this handler stage."""
         return "T-Shirt Sizing"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Classify Story Points into T-Shirt sizes for the given pipeline event."""
         ctx = event.context
         start = time.monotonic()
         warnings: list[MeasurementWarning] = []
@@ -102,7 +89,8 @@ class TShirtHandler:
                 continue
 
             tshirt_size, rule = classifier.classify(sp_value)
-            from .models import FunctionalWorkItem as TWItem, MeasurementEvidence
+            from .models import FunctionalWorkItem as TWItem
+            from .models import MeasurementEvidence
 
             classified_items.append(
                 TWItem(
@@ -143,7 +131,7 @@ class TShirtHandler:
         return self._finalize(ctx, result, start)
 
     def _finalize(
-        self,
+        self: Self,
         ctx: PipelineContext,
         result: TShirtMeasurementResult,
         start: float,
@@ -191,97 +179,28 @@ class TShirtHandler:
 
         return ctx.merge_stage_output("measurement_result", payload, event=tshirt_event)
 
-    def _extract_sp_items(self, measurement_result: Any) -> list | None:
-        if measurement_result is None:
-            return None
-        if isinstance(measurement_result, dict):
-            return (
-                measurement_result.get("storypoints_entities")
-                or measurement_result.get("items")
-                or measurement_result.get("estimated_items")
-            )
-        if hasattr(measurement_result, "items"):
-            return measurement_result.items
-        return None
-
-    def _extract_run_id(self, measurement_result: Any) -> str | None:
-        if measurement_result is None:
-            return None
-        if isinstance(measurement_result, dict):
-            return (
-                measurement_result.get("run_id")
-                or measurement_result.get("storypoints_run_id")
-                or measurement_result.get("execution_id")
-            )
-        if hasattr(measurement_result, "run_id"):
-            return measurement_result.run_id
-        return None
-
-    def _get_sp_value(self, item: Any) -> int | None:
-        if isinstance(item, dict):
-            val = (
-                item.get("normalized_value")
-                or item.get("story_point_value")
-                or item.get("value")
-            )
-            return int(val) if val is not None else None
-        for attr in ("normalized_value", "story_point_value", "value"):
-            val = getattr(item, attr, None)
-            if val is not None:
-                return int(val)
-        return None
-
-    def _get_elem_id(self, item: Any) -> str:
-        if isinstance(item, dict):
-            return str(item.get("element_id", ""))
-        return str(getattr(item, "element_id", ""))
-
-    def _get_elem_name(self, item: Any) -> str:
-        if isinstance(item, dict):
-            return str(item.get("element_name", ""))
-        return str(getattr(item, "element_name", ""))
-
-    def _resolve_mapping_override(self, ctx: PipelineContext) -> list | None:
-        metadata = ctx.metadata
-        if metadata is None:
-            return None
-        extra = (
-            metadata
-            if isinstance(metadata, dict)
-            else getattr(metadata, "extra", None) or {}
-        )
-        raw = extra.get("tshirt_mapping") if isinstance(extra, dict) else None
-        if raw is None:
-            return None
-        from .models import TShirtSize
-
-        sizes: list[TShirtSize] = []
-        for entry in raw:
-            sizes.append(
-                TShirtSize(
-                    label=entry["label"],
-                    story_point_range=tuple(entry["story_point_range"]),
-                    ordinal=entry.get("ordinal", len(sizes) + 1),
-                )
-            )
-        return sizes
-
 
 class TShirtPlugin:
-    def plugin_id(self) -> str:
+    """Plugin facade exposing the T-Shirt sizing methodology."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the unique plugin identifier."""
         return "tshirt"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name supported by this plugin."""
         return "T-Shirt Sizing"
 
-    def supported_component_types(self) -> list[str]:
+    def supported_component_types(self: Self) -> list[str]:
+        """Return the component types this plugin supports."""
         return ["functional_process"]
 
     def measure(
-        self,
-        story_points_result: Any,
+        self: Self,
+        story_points_result: object,
         mapping_override: list | None = None,
     ) -> TShirtMeasurementResult:
+        """Measure T-Shirt sizes from a Story Points result."""
         from .classifier import classify_all
         from .models import ExecutionMetadata
 
@@ -318,7 +237,7 @@ class TShirtPlugin:
             warnings=warnings,
         )
 
-    def _extract_items(self, result: Any) -> list:
+    def _extract_items(self: Self, result: object) -> list:
         if isinstance(result, dict):
             return result.get("items") or result.get("estimated_items") or []
         if hasattr(result, "items"):
@@ -327,6 +246,7 @@ class TShirtPlugin:
 
 
 def create_tshirt_measurement_metadata() -> PluginMetadata:
+    """Create the plugin metadata for the T-Shirt sizing plugin."""
     return PluginMetadata(
         id="tshirt",
         api_version="0.1.0",

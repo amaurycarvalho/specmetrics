@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-
 from specmetrics.kernel.adapter_interface import Document, DocumentSection
 
 

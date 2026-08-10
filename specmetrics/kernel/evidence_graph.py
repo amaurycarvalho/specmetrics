@@ -1,7 +1,9 @@
+"""Core data model and backend protocol for the evidence graph."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Literal, Optional, Protocol
+from datetime import UTC, datetime
+from typing import Any, Literal, Protocol, Self
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +15,8 @@ class EvidenceGraphError(Exception):
 class NodeNotFoundError(EvidenceGraphError):
     """Raised when a referenced node ID does not exist in the graph."""
 
-    def __init__(self, node_id: str) -> None:
+    def __init__(self: Self, node_id: str) -> None:
+        """Initialize the error with the missing node ID."""
         super().__init__(f"Node not found: {node_id}")
         self.node_id = node_id
 
@@ -21,7 +24,8 @@ class NodeNotFoundError(EvidenceGraphError):
 class NodeAlreadyExistsError(EvidenceGraphError):
     """Raised when adding a node with an ID that already exists."""
 
-    def __init__(self, node_id: str) -> None:
+    def __init__(self: Self, node_id: str) -> None:
+        """Initialize the error with the duplicate node ID."""
         super().__init__(f"Node already exists: {node_id}")
         self.node_id = node_id
 
@@ -29,8 +33,9 @@ class NodeAlreadyExistsError(EvidenceGraphError):
 class EdgeAlreadyExistsError(EvidenceGraphError):
     """Raised when adding a duplicate edge."""
 
-    def __init__(self, source: str, target: str) -> None:
-        super().__init__(f"Edge already exists: {source} -> {target}")
+    def __init__(self: Self, source: str, target: str) -> None:
+        """Initialize the error with the duplicate edge endpoints."""
+        super().__init__(source, target)
         self.source = source
         self.target = target
 
@@ -38,7 +43,8 @@ class EdgeAlreadyExistsError(EvidenceGraphError):
 class SelfLoopError(EvidenceGraphError):
     """Raised when adding an edge where source equals target."""
 
-    def __init__(self, node_id: str) -> None:
+    def __init__(self: Self, node_id: str) -> None:
+        """Initialize the error with the self-loop node ID."""
         super().__init__(f"Self-loop not allowed: {node_id}")
         self.node_id = node_id
 
@@ -48,35 +54,43 @@ class InvalidGraphDataError(EvidenceGraphError):
 
 
 class GraphNode(BaseModel):
+    """A node in the evidence graph."""
+
     id: str
     node_type: Literal["extracted_element", "evidence"]
-    semantic_type: Optional[Literal["fact", "entity", "relationship", "operation"]] = (
+    semantic_type: Literal["fact", "entity", "relationship", "operation"] | None = (
         None
     )
     document_id: str
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str
-    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
-    element_id: Optional[str] = None
+    confidence: float | None = Field(None, ge=0.0, le=1.0)
+    element_id: str | None = None
 
 
 class GraphEdge(BaseModel):
+    """A directed edge in the evidence graph."""
+
     source: str
     target: str
     edge_type: Literal["derived_from", "references", "composed_of"]
-    metadata: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class GraphMetadata(BaseModel):
+    """Metadata describing the provenance of an evidence graph."""
+
     run_id: str
     node_count: int = 0
     edge_count: int = 0
     documents_covered: list[str] = []
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    pipeline_version: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    pipeline_version: str | None = None
 
 
 class EvidenceGraph(BaseModel):
+    """Container for an evidence graph and its metadata."""
+
     run_id: str
     nodes: dict[str, GraphNode] = {}
     edges: list[GraphEdge] = []
@@ -90,26 +104,37 @@ class GraphBackend(Protocol):
     (iGraph, SQL, Neo4j) can be swapped in by implementing this interface.
     """
 
-    def add_node(self, node_id: str, attrs: dict) -> None: ...
+    def add_node(self: Self, node_id: str, attrs: dict) -> None:
+        """Add a node with the given ID and attributes."""
 
-    def add_edge(self, source: str, target: str, attrs: dict) -> None: ...
+    def add_edge(self: Self, source: str, target: str, attrs: dict) -> None:
+        """Add a directed edge between two nodes with the given attributes."""
 
-    def get_node(self, node_id: str) -> dict | None: ...
+    def get_node(self: Self, node_id: str) -> dict | None:
+        """Return the node with the given ID, or None if it does not exist."""
 
-    def query_nodes(self, filters: dict) -> list[dict]: ...
+    def query_nodes(self: Self, filters: dict) -> list[dict]:
+        """Return nodes matching all the given filter attributes."""
 
     def traverse(
-        self, start_id: str, direction: Literal["forward", "reverse"], max_depth: int
-    ) -> list[list[dict]]: ...
+        self: Self,
+        start_id: str,
+        direction: Literal["forward", "reverse"],
+        max_depth: int,
+    ) -> list[list[dict]]:
+        """Return all paths from the start node up to the given depth."""
 
-    def to_serializable(self) -> dict: ...
+    def to_serializable(self: Self) -> dict:
+        """Serialize the graph to a JSON-serializable structure."""
 
-    def from_serializable(self, data: dict) -> None: ...
+    def from_serializable(self: Self, data: dict) -> None:
+        """Restore the graph from a serialized structure."""
 
 
 def fingerprint_node(
     document_id: str, section_id: str | None, text: str, semantic_type: str | None
 ) -> str:
+    """Generate a deterministic UUID-style fingerprint for a node."""
     import hashlib
     import uuid
 

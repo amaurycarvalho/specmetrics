@@ -1,14 +1,18 @@
+"""Pipeline event types and the event envelope used by the event bus."""
+
 from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from .pipeline_context import PipelineContext
 
 
 class EventType(enum.Enum):
+    """Canonical event types emitted during a pipeline run."""
+
     REPOSITORY_LOADED = "repository_loaded"
     DOCUMENTS_DISCOVERED = "documents_discovered"
     DOCUMENTS_VALIDATED = "documents_validated"
@@ -30,8 +34,10 @@ class EventType(enum.Enum):
 
 @dataclass(frozen=True)
 class PipelineEvent:
+    """Envelope carrying an event type, publisher, payload, and context."""
+
     event_type: EventType
     publisher: str
     payload: dict[str, Any]
-    context: "PipelineContext"
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    context: PipelineContext
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))

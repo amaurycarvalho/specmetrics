@@ -3,18 +3,26 @@ from __future__ import annotations
 import uuid
 
 from specmetrics.kernel.cfm.model import (
+    BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
     CanonicalFunctionalModel,
-    EvidenceRef as CfmEvidenceRef,
     FunctionalProcess,
     Operation,
-    BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CfmEvidenceRef,
+)
+from specmetrics.kernel.csm.model import (
+    BuildMetadata as CsmBuildMetadata,
 )
 from specmetrics.kernel.csm.model import (
     CanonicalSpecificationModel,
     Decision,
-    EvidenceRef as CsmEvidenceRef,
     SpecificationActivity,
-    BuildMetadata as CsmBuildMetadata,
+)
+from specmetrics.kernel.csm.model import (
+    EvidenceRef as CsmEvidenceRef,
 )
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext

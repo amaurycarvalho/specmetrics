@@ -5,8 +5,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from specmetrics.cli.app import app
 from specmetrics.application.measure_id import generate_measure_id
+from specmetrics.cli.app import app
 
 runner = CliRunner()
 

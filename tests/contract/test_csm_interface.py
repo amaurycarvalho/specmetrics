@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+from specmetrics.kernel.csm.metadata import BuildMetadata
 from specmetrics.kernel.csm.model import (
     CanonicalSpecificationModel,
     CsmConsumer,
     Decision,
     EvidenceRef,
 )
-from specmetrics.kernel.csm.metadata import BuildMetadata
 
 UUID1 = "00000000-0000-4000-8000-000000000001"
 UUID2 = "00000000-0000-4000-8000-000000000002"

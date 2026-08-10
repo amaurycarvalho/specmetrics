@@ -1,3 +1,5 @@
+"""Validation of calibration profile data."""
+
 from __future__ import annotations
 
 import re
@@ -11,6 +13,7 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 def validate_calibration_profile(
     data: dict[str, Any],
 ) -> list[str]:
+    """Validate a calibration profile dict and return error messages."""
     errors: list[str] = []
 
     version = data.get("version", "1.0")
@@ -80,6 +83,7 @@ def _validate_code_cost(data: dict[str, Any], errors: list[str]) -> None:
 
 
 def validate_profile_object(profile: CalibrationProfile) -> list[str]:
+    """Validate a calibration profile object and return error messages."""
     errors: list[str] = []
     if not SEMVER_RE.match(profile.version):
         errors.append(f"version '{profile.version}' is not a valid semver string")

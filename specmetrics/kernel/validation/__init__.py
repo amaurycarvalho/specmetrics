@@ -1,3 +1,5 @@
+"""Validation package for specification documents."""
+
 from .models import (
     BatchReport,
     EvidenceRef,

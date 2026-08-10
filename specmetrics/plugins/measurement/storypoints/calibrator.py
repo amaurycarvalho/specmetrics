@@ -1,10 +1,12 @@
+"""Calibration profiles for Story Points measurement."""
+
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Self
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
-
 
 DEFAULT_FACTOR_COEFFICIENTS: dict[str, float] = {
     "business_interactions": 1.0,
@@ -43,6 +45,8 @@ DEFAULT_FIBONACCI_SCALE: list[int] = [1, 2, 3, 5, 8, 13, 20, 40, 100]
 
 
 class StoryPointsCalibrationProfile(BaseModel):
+    """Configurable calibration profile for Story Points estimation."""
+
     version: str = "1.0"
     content_multiplier: float = 0.1
     factor_coefficients: dict[str, float] = Field(
@@ -61,37 +65,23 @@ class StoryPointsCalibrationProfile(BaseModel):
     ranking_strategy: str = "percentile"
 
     @model_validator(mode="after")
-    def validate_weights(self) -> StoryPointsCalibrationProfile:
+    def validate_weights(self: Self) -> StoryPointsCalibrationProfile:
+        """Validate weights, scales, and ranking strategy configuration."""
         if self.content_multiplier < 0.0:
             raise ValueError(
                 f"content_multiplier must be >= 0.0, got {self.content_multiplier}"
             )
-        for name, weights in [
-            ("factor_coefficients", self.factor_coefficients),
-            ("csm_base_weights", self.csm_base_weights),
-            ("cfm_base_weights", self.cfm_base_weights),
-        ]:
-            for key, val in weights.items():
-                if val < 0.0:
-                    raise ValueError(
-                        f"{name}.{key} must be >= 0.0, got {val}"
-                    )
+        _validate_weight_entries(
+            self.factor_coefficients,
+            self.csm_base_weights,
+            self.cfm_base_weights,
+        )
         if self.default_fallback_weight < 0.0:
             raise ValueError(
                 f"default_fallback_weight must be >= 0.0, "
                 f"got {self.default_fallback_weight}"
             )
-        if len(self.fibonacci_scale) < 2:
-            raise ValueError(
-                f"fibonacci_scale must contain at least 2 values, "
-                f"got {len(self.fibonacci_scale)}"
-            )
-        for i in range(1, len(self.fibonacci_scale)):
-            if self.fibonacci_scale[i] <= self.fibonacci_scale[i - 1]:
-                raise ValueError(
-                    f"fibonacci_scale must be sorted ascending, "
-                    f"got {self.fibonacci_scale}"
-                )
+        _validate_fibonacci_scale(self.fibonacci_scale)
         if self.ranking_strategy not in ("percentile",):
             raise ValueError(
                 f"ranking_strategy must be 'percentile', got {self.ranking_strategy}"
@@ -99,13 +89,46 @@ class StoryPointsCalibrationProfile(BaseModel):
         return self
 
 
+def _validate_weight_entries(
+    factor_coefficients: dict[str, float],
+    csm_base_weights: dict[str, float],
+    cfm_base_weights: dict[str, float],
+) -> None:
+    for name, weights in [
+        ("factor_coefficients", factor_coefficients),
+        ("csm_base_weights", csm_base_weights),
+        ("cfm_base_weights", cfm_base_weights),
+    ]:
+        for key, val in weights.items():
+            if val < 0.0:
+                raise ValueError(
+                    f"{name}.{key} must be >= 0.0, got {val}"
+                )
+
+
+def _validate_fibonacci_scale(scale: list[int]) -> None:
+    if len(scale) < 2:
+        raise ValueError(
+            f"fibonacci_scale must contain at least 2 values, "
+            f"got {len(scale)}"
+        )
+    for i in range(1, len(scale)):
+        if scale[i] <= scale[i - 1]:
+            raise ValueError(
+                f"fibonacci_scale must be sorted ascending, "
+                f"got {scale}"
+            )
+
+
 def get_default_calibration() -> StoryPointsCalibrationProfile:
+    """Return the default Story Points calibration profile."""
     return StoryPointsCalibrationProfile()
 
 
 def load_calibration(
     calibration_dir: str | Path | None = None,
 ) -> StoryPointsCalibrationProfile:
+    """Load a calibration profile, merging overrides from the given directory."""
     profile = get_default_calibration()
 
     if calibration_dir is None:

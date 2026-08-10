@@ -1,6 +1,8 @@
+"""FPA measurement plugin: handler, plugin, and metadata factory."""
+
 from __future__ import annotations
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol, Self
 
 import structlog
 
@@ -20,31 +22,48 @@ logger = structlog.get_logger(__name__)
 class MeasurementPlugin(Protocol):
     """Protocol that every measurement engine plugin must satisfy."""
 
-    def plugin_id(self) -> str: ...
-    def supported_methodology(self) -> str: ...
-    def supported_function_types(self) -> list[str]: ...
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
+        ...
+
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
+        ...
+
+    def supported_function_types(self: Self) -> list[str]:
+        """Return the function types measured by this plugin."""
+        ...
+
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
-    ) -> FPAMeasurementResult: ...
+        rule_pack: RulePack | None = None,
+    ) -> FPAMeasurementResult:
+        """Measure function points for the given canonical functional model."""
+        ...
 
 
 class FPAMeasurementPlugin:
-    def plugin_id(self) -> str:
+    """Measurement engine plugin for IFPUG/FPA Function Point Analysis."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
         return "fpa"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
         return "IFPUG/FPA Function Point Analysis"
 
-    def supported_function_types(self) -> list[str]:
+    def supported_function_types(self: Self) -> list[str]:
+        """Return the function types measured by this plugin."""
         return ["ILF", "EIF", "EI", "EO", "EQ"]
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
+        rule_pack: RulePack | None = None,
     ) -> FPAMeasurementResult:
+        """Measure function points for the given canonical functional model."""
         if cfm is None:
             raise ValueError("CFM input cannot be None")
 
@@ -80,19 +99,25 @@ class FPAMeasurementPlugin:
 
 
 class FPAMeasurementHandler:
+    """Pipeline event handler for FPA measurement."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler consumes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "fpa_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the human-readable name of this handler stage."""
         return "FPA Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Measure FPA for the event context and merge stage output."""
         ctx = event.context
         cfm = ctx.canonical_model
 
@@ -138,6 +163,7 @@ class FPAMeasurementHandler:
 
 
 def create_fpa_measurement_metadata() -> PluginMetadata:
+    """Build the plugin metadata entry for the FPA measurement plugin."""
     return PluginMetadata(
         id="fpa",
         api_version="0.1.0",

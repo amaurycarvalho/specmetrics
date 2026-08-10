@@ -1,7 +1,10 @@
+"""Build a Canonical Functional Model from an evidence graph."""
+
 from __future__ import annotations
 
-import re
 import time
+from datetime import UTC, datetime
+from typing import Self
 
 import structlog
 
@@ -12,85 +15,32 @@ from specmetrics.kernel.cfm.model import (
     BusinessRule,
     CanonicalFunctionalModel,
     DataGroup,
-    EvidenceRef,
     FunctionalProcess,
     Operation,
     Relationship,
     UnclassifiedElement,
 )
-from datetime import datetime, timezone
-
-from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode
 from specmetrics.kernel.events import EventType, PipelineEvent
+from specmetrics.kernel.evidence_graph import EvidenceGraph
 from specmetrics.kernel.pipeline_context import PipelineContext
+
+from ._entities import (
+    _NODE_ENTITY_BUILDERS,
+    DEFAULT_SEMANTIC_MARKER_FALLBACK,
+    DEFAULT_SEMANTIC_MARKER_MAP,
+    _build_functional_processes,
+    _extract_relationship_endpoints,
+    _to_evidence_ref,
+)
 
 logger = structlog.get_logger(__name__)
 
-
-_OPERATION_DIRECTION_PATTERNS = [
-    (re.compile(r"\*\*WHEN\*\*"), "input"),
-    (re.compile(r"\*\*GIVEN\*\*"), "input"),
-    (re.compile(r"#### Scenario:"), "query"),
-    (re.compile(r"\*\*THEN\*\*"), "output"),
+__all__ = [
+    "DEFAULT_SEMANTIC_MARKER_FALLBACK",
+    "DEFAULT_SEMANTIC_MARKER_MAP",
+    "CfmBuilderStage",
+    "build",
 ]
-
-
-def _infer_operation_direction(text: str) -> str:
-    for pattern, direction in _OPERATION_DIRECTION_PATTERNS:
-        if pattern.search(text):
-            return direction
-    return "input"
-
-
-DEFAULT_SEMANTIC_MARKER_MAP: list[tuple[set[str], set[str], str]] = [
-    (
-        {"business_rule"},
-        {"User Scenarios", "User Story", "Scenario", "Acceptance", "UI"},
-        "presentation_interface",
-    ),
-    (
-        {"data_group"},
-        {"Data Model", "Key Entities", "Entities", "Schema"},
-        "data_operation",
-    ),
-    (
-        {"business_rule", "operation"},
-        {"Functional Requirements", "Features", "Requirements", "Specification"},
-        "operational_feature",
-    ),
-    (
-        {"business_rule"},
-        {"Integration", "API", "Contracts", "Technical", "Architecture"},
-        "technical_interface",
-    ),
-]
-
-DEFAULT_SEMANTIC_MARKER_FALLBACK: dict[str, str] = {
-    "data_group": "data_operation",
-    "operation": "operational_feature",
-    "business_rule": "operational_feature",
-    "actor": "operational_feature",
-}
-
-
-def _infer_semantic_marker(
-    category: str,
-    section_id: str | None,
-    marker_map: list[tuple[set[str], set[str], str]] | None = None,
-    fallback_map: dict[str, str] | None = None,
-) -> str:
-    map_ = marker_map if marker_map is not None else DEFAULT_SEMANTIC_MARKER_MAP
-    fallback = (
-        fallback_map if fallback_map is not None else DEFAULT_SEMANTIC_MARKER_FALLBACK
-    )
-    if section_id:
-        section_lower = section_id.lower()
-        for categories, section_patterns, marker in map_:
-            if category in categories:
-                for sp in section_patterns:
-                    if sp.lower() in section_lower:
-                        return marker
-    return fallback.get(category, "operational_feature")
 
 
 def build(
@@ -98,6 +48,7 @@ def build(
     semantic_marker_map: list[tuple[set[str], set[str], str]] | None = None,
     semantic_marker_fallback: dict[str, str] | None = None,
 ) -> CanonicalFunctionalModel:
+    """Build a canonical functional model from the given evidence graph."""
     actors: dict[str, Actor] = {}
     functional_processes: dict[str, FunctionalProcess] = {}
     business_rules: dict[str, BusinessRule] = {}
@@ -108,6 +59,13 @@ def build(
     conflicts: list[ClassificationConflict] = []
 
     started_at = time.monotonic()
+
+    node_containers: dict[str, dict[str, object]] = {
+        "actor": actors,
+        "business_rule": business_rules,
+        "data_group": data_groups,
+        "operation": operations,
+    }
 
     for node_id, node in graph.nodes.items():
         if node.node_type != "extracted_element":
@@ -128,50 +86,7 @@ def build(
 
         section_id = node.section_id
 
-        if category == "actor":
-            actors[node_id] = Actor(
-                id=node_id,
-                name=clean_name,
-                evidence=evidence,
-                metadata={
-                    "semantic_marker": _infer_semantic_marker(
-                        category,
-                        section_id,
-                        semantic_marker_map,
-                        semantic_marker_fallback,
-                    )
-                },
-            )
-        elif category == "business_rule":
-            business_rules[node_id] = BusinessRule(
-                id=node_id,
-                name=clean_name,
-                description=node.text,
-                evidence=evidence,
-                metadata={
-                    "semantic_marker": _infer_semantic_marker(
-                        category,
-                        section_id,
-                        semantic_marker_map,
-                        semantic_marker_fallback,
-                    )
-                },
-            )
-        elif category == "data_group":
-            data_groups[node_id] = DataGroup(
-                id=node_id,
-                name=clean_name,
-                evidence=evidence,
-                metadata={
-                    "semantic_marker": _infer_semantic_marker(
-                        category,
-                        section_id,
-                        semantic_marker_map,
-                        semantic_marker_fallback,
-                    )
-                },
-            )
-        elif category == "relationship":
+        if category == "relationship":
             source_id, target_id = _extract_relationship_endpoints(node_id, graph)
             relationships.append(
                 Relationship(
@@ -181,23 +96,18 @@ def build(
                     evidence=evidence,
                 )
             )
-        elif category == "operation":
-            direction = _infer_operation_direction(node.text)
-            operations[node_id] = Operation(
-                id=node_id,
-                name=clean_name,
-                parent_process_id="",
-                description=node.text,
-                evidence=evidence,
-                metadata={
-                    "direction": direction,
-                    "semantic_marker": _infer_semantic_marker(
-                        category,
-                        section_id,
-                        semantic_marker_map,
-                        semantic_marker_fallback,
-                    ),
-                },
+            continue
+
+        builder = _NODE_ENTITY_BUILDERS.get(category)
+        if builder is not None:
+            node_containers[category][node_id] = builder(
+                node_id,
+                node,
+                clean_name,
+                evidence,
+                section_id,
+                semantic_marker_map,
+                semantic_marker_fallback,
             )
 
     functional_processes = _build_functional_processes(operations, data_groups, actors)
@@ -238,90 +148,15 @@ def build(
     )
 
 
-def _build_functional_processes(
-    operations: dict[str, Operation],
-    data_groups: dict[str, DataGroup],
-    actors: dict[str, Actor],
-) -> dict[str, FunctionalProcess]:
-    if not operations:
-        return {}
-
-    ops_by_doc: dict[str, list[tuple[str, Operation]]] = {}
-    for op_id, op in operations.items():
-        doc_id = op.evidence.document_id if op.evidence else "unknown"
-        if doc_id not in ops_by_doc:
-            ops_by_doc[doc_id] = []
-        ops_by_doc[doc_id].append((op_id, op))
-
-    data_groups_by_doc: dict[str, list[tuple[str, DataGroup]]] = {}
-    for dg_id, dg in data_groups.items():
-        doc_id = dg.evidence.document_id if dg.evidence else "unknown"
-        if doc_id not in data_groups_by_doc:
-            data_groups_by_doc[doc_id] = []
-        data_groups_by_doc[doc_id].append((dg_id, dg))
-
-    actors_by_doc: dict[str, list[tuple[str, Actor]]] = {}
-    for act_id, act in actors.items():
-        doc_id = act.evidence.document_id if act.evidence else "unknown"
-        if doc_id not in actors_by_doc:
-            actors_by_doc[doc_id] = []
-        actors_by_doc[doc_id].append((act_id, act))
-
-    functional_processes: dict[str, FunctionalProcess] = {}
-    for doc_id, ops in ops_by_doc.items():
-        fp_id = f"fp_{doc_id}"
-        fp_ops = [op_id for op_id, _ in ops]
-        fp_evidence = (
-            ops[0][1].evidence
-            if ops[0][1].evidence
-            else EvidenceRef(
-                graph_node_id=fp_id,
-                document_id=doc_id,
-                text="",
-            )
-        )
-
-        fp_dgs = [dg_id for dg_id, _ in data_groups_by_doc.get(doc_id, [])]
-        fp_actors = [act_id for act_id, _ in actors_by_doc.get(doc_id, [])]
-
-        functional_processes[fp_id] = FunctionalProcess(
-            id=fp_id,
-            name=f"Functional Process — {doc_id}",
-            operation_ids=fp_ops,
-            data_group_ids=fp_dgs,
-            actor_ids=fp_actors,
-            evidence=fp_evidence,
-        )
-
-    return functional_processes
-
-
-def _extract_relationship_endpoints(
-    node_id: str, graph: EvidenceGraph
-) -> tuple[str, str]:
-    for edge in graph.edges:
-        if edge.source == node_id and edge.target != node_id:
-            return node_id, edge.target
-        if edge.target == node_id and edge.source != node_id:
-            return edge.source, node_id
-    return "", ""
-
-
-def _to_evidence_ref(node_id: str, node: GraphNode) -> EvidenceRef:
-    return EvidenceRef(
-        graph_node_id=node_id,
-        document_id=node.document_id,
-        section_id=node.section_id,
-        text=node.text,
-    )
-
-
 class CfmBuilderStage:
+    """Pipeline stage that builds a canonical functional model from an evidence graph."""
+
     def __init__(
-        self,
+        self: Self,
         semantic_marker_map: list[tuple[set[str], set[str], str]] | None = None,
         semantic_marker_fallback: dict[str, str] | None = None,
     ) -> None:
+        """Initialize the stage with optional semantic marker configuration."""
         self._handled_event_type = EventType.EVIDENCE_GRAPH_BUILT
         self._handler_id = "cfm_builder_stage"
         self._stage_name = "canonical_model"
@@ -329,18 +164,22 @@ class CfmBuilderStage:
         self._semantic_marker_fallback = semantic_marker_fallback
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this stage handles."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique handler identifier for this stage."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return self._stage_name
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle a pipeline event and build the canonical functional model."""
         context = event.context
 
         graph_data = context.evidence_graph
@@ -354,8 +193,9 @@ class CfmBuilderStage:
         run_id = graph_data.get("run_id", str(int(event.timestamp.timestamp())))
 
         try:
-            from specmetrics.kernel.graph_persistence import GraphStore
             import os
+
+            from specmetrics.kernel.graph_persistence import GraphStore
 
             graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             graph_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
@@ -393,7 +233,7 @@ class CfmBuilderStage:
             publisher=self._handler_id,
             payload=payload,
             context=context,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         context = context.with_stage_output(
             field_name="canonical_model", value=cfm, event=canonical_event

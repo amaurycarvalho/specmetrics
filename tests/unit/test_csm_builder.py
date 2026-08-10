@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-
-from specmetrics.kernel.csm.builder import build
+from specmetrics.kernel.csm.builder import CsmBuilderStage, build
 from specmetrics.kernel.csm.model import CanonicalSpecificationModel
+from specmetrics.kernel.events import EventType
 from specmetrics.kernel.evidence_graph import (
     EvidenceGraph,
     GraphEdge,
     GraphMetadata,
     GraphNode,
 )
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
+from specmetrics.plugins.stage.csm_builder import create_csm_builder_metadata
 
 UUID_BASE = "00000000-0000-4000-8000-{:012d}"
 
@@ -232,3 +234,128 @@ class TestBuild:
         assert elapsed < 3.0, (
             f"Performance benchmark failed: {elapsed:.3f}s (limit: 3.0s)"
         )
+
+
+class TestCsmBuilderMetadata:
+    def test_create_csm_builder_metadata_field_values(self):
+        meta = create_csm_builder_metadata()
+        assert isinstance(meta, PluginMetadata)
+        assert meta.id == "csm_builder_stage"
+        assert meta.api_version == "0.1.0"
+        assert meta.plugin_type == PluginType.MEASUREMENT
+        assert meta.handled_event_types == (
+            EventType.CANONICAL_SPECIFICATION_MODEL_BUILT,
+        )
+        assert meta.name == "Canonical Specification Model Builder"
+        assert (
+            meta.description
+            == "Builds a canonical specification model from the evidence graph"
+        )
+        assert meta.version == "0.1.0"
+        assert meta.handler_factory is not None
+        handler = meta.handler_factory()
+        assert isinstance(handler, CsmBuilderStage)
+
+
+class TestNonEmpty:
+    def test_returns_text_when_trimmed(self) -> None:
+        from specmetrics.kernel.csm.builder import _non_empty
+
+        assert _non_empty("  hello  ", "fallback") == "  hello  "
+
+    def test_returns_fallback_when_text_blank(self) -> None:
+        from specmetrics.kernel.csm.builder import _non_empty
+
+        assert _non_empty("   ", "fallback") == "fallback"
+
+    def test_returns_no_content_when_both_blank(self) -> None:
+        from specmetrics.kernel.csm.builder import _non_empty
+
+        assert _non_empty("", "") == "(no content)"
+
+
+class TestRecordConflict:
+    def _conflicts(self):
+        from specmetrics.kernel.csm.builder import _record_conflict
+        from specmetrics.kernel.csm.metadata import ClassificationConflict
+
+        conflicts: list[ClassificationConflict] = []
+        return _record_conflict, conflicts
+
+    def test_single_category_no_conflict(self) -> None:
+        record, conflicts = self._conflicts()
+        record("n1", ["decision"], conflicts)
+        assert conflicts == []
+
+    def test_two_categories_records_conflict(self) -> None:
+        record, conflicts = self._conflicts()
+        record("n1", ["decision", "risk"], conflicts)
+        assert len(conflicts) == 1
+        conflict = conflicts[0]
+        assert conflict.node_id == "n1"
+        assert conflict.competing_categories == ["decision", "risk"]
+        assert conflict.resolved_category == "decision"
+        assert conflict.reason == "Multiple patterns matched: decision, risk"
+
+
+class TestFindLinked:
+    def _graph(self) -> tuple[EvidenceGraph, str]:
+        neighbor_ids = {
+            "d1": "We decided to use X",
+            "a1": "Assume Y",
+            "c1": "System must Z",
+            "r1": "Risk of Q",
+            "q1": "What is the latency?",
+            "ac1": "Given A when B then C",
+        }
+        nodes: dict[str, GraphNode] = {"sa": _make_element_node("sa", "Explore reqs")}
+        edges: list[GraphEdge] = []
+        for nid, text in neighbor_ids.items():
+            nodes[nid] = _make_element_node(nid, text)
+            edges.append(GraphEdge(source="sa", target=nid, edge_type="references"))
+        graph = _make_graph(nodes, edges)
+        return graph, "sa"
+
+    def test_links_all_categories(self) -> None:
+        from specmetrics.kernel.csm.builder import _find_linked
+
+        graph, sa_id = self._graph()
+        result = _find_linked(
+            sa_id,
+            graph,
+            decisions={"d1": object()},
+            assumptions={"a1": object()},
+            constraints={"c1": object()},
+            risks={"r1": object()},
+            open_questions={"q1": object()},
+            acceptance_criteria={"ac1": object()},
+        )
+        assert result["decisions"] == ["d1"]
+        assert result["assumptions"] == ["a1"]
+        assert result["constraints"] == ["c1"]
+        assert result["risks"] == ["r1"]
+        assert result["open_questions"] == ["q1"]
+        assert result["acceptance_criteria"] == ["ac1"]
+
+    def test_returns_empty_lists_when_unmatched(self) -> None:
+        from specmetrics.kernel.csm.builder import _find_linked
+
+        graph, sa_id = self._graph()
+        result = _find_linked(
+            sa_id,
+            graph,
+            decisions={},
+            assumptions={},
+            constraints={},
+            risks={},
+            open_questions={},
+            acceptance_criteria={},
+        )
+        assert result == {
+            "decisions": [],
+            "assumptions": [],
+            "open_questions": [],
+            "constraints": [],
+            "risks": [],
+            "acceptance_criteria": [],
+        }

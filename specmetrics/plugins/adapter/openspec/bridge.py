@@ -1,33 +1,45 @@
+"""Bridges that acknowledge OpenSpec adapter pipeline events."""
+
 from __future__ import annotations
+
+from typing import Self
 
 import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 logger = structlog.get_logger(__name__)
 
 
 class DocumentsValidatedHandler:
-    def __init__(self) -> None:
+    """Handler that acknowledges and logs document validation results."""
+
+    def __init__(self: Self) -> None:
+        """Initialize the handler."""
         self._handled_event_type = EventType.DOCUMENTS_VALIDATED
         self._handler_id = "documents_validated_bridge"
         self._stage_name = "documents_validated"
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the handled event type."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the handler identifier."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return self._stage_name
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle the event and return the updated pipeline context."""
         context = event.context
         adapter_ctx = getattr(context, "adapter_result", None) or {}
         documents = adapter_ctx.get("documents", [])
@@ -44,24 +56,31 @@ class DocumentsValidatedHandler:
 
 
 class CanonicalModelBuiltHandler:
-    def __init__(self) -> None:
+    """Handler that acknowledges canonical model build events and logs results."""
+
+    def __init__(self: Self) -> None:
+        """Initialize the handler."""
         self._handled_event_type = EventType.CANONICAL_MODEL_BUILT
         self._handler_id = "canonical_model_built_bridge"
         self._stage_name = "canonical_model_built"
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the handled event type."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the handler identifier."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return self._stage_name
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle the event and return the pipeline context."""
         context = event.context
         cfm = getattr(context, "canonical_model", None)
         element_counts = {}
@@ -77,9 +96,8 @@ class CanonicalModelBuiltHandler:
         return context
 
 
-def create_documents_validated_metadata():
-    from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
-
+def create_documents_validated_metadata() -> PluginMetadata:
+    """Create metadata for the documents validated bridge."""
     return PluginMetadata(
         id="documents_validated_bridge",
         api_version="0.1.0",
@@ -92,9 +110,8 @@ def create_documents_validated_metadata():
     )
 
 
-def create_canonical_model_built_metadata():
-    from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
-
+def create_canonical_model_built_metadata() -> PluginMetadata:
+    """Create metadata for the canonical model built bridge."""
     return PluginMetadata(
         id="canonical_model_built_bridge",
         api_version="0.1.0",

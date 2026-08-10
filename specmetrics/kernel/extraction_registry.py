@@ -1,7 +1,9 @@
+"""Router that maps document types to extraction providers."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Self
 
 import structlog
 
@@ -23,7 +25,7 @@ except ImportError:
 def load_routing_config(
     path: str | Path,
     provider_map: dict[str, ExtractionProvider],
-    router: Optional[ProviderRouter] = None,
+    router: ProviderRouter | None = None,
 ) -> ProviderRouter:
     """Load provider routing configuration from a YAML file.
 
@@ -66,23 +68,26 @@ def load_routing_config(
 class ProviderRouter:
     """Configuration-driven router that maps document types to extraction providers."""
 
-    def __init__(self) -> None:
+    def __init__(self: Self) -> None:
+        """Initialize an empty router."""
         self._providers: dict[str, ExtractionProvider] = {}
         self._default_providers: list[ExtractionProvider] = []
 
     def register(
-        self,
+        self: Self,
         provider: ExtractionProvider,
         provider_id: str,
-        types: Optional[list[str]] = None,
+        types: list[str] | None = None,
     ) -> None:
+        """Register a provider for specific document types or as default."""
         if types is None:
             self._default_providers.append(provider)
             return
         for doc_type in types:
             self._providers[doc_type] = provider
 
-    def resolve(self, document_type: str) -> Optional[ExtractionProvider]:
+    def resolve(self: Self, document_type: str) -> ExtractionProvider | None:
+        """Return the provider for a document type, falling back to defaults."""
         provider = self._providers.get(document_type)
         if provider is not None:
             return provider
@@ -96,7 +101,7 @@ class ProviderRouter:
                 )
         return None
 
-    def discover_from_registry(self, registry: PluginRegistry) -> None:
+    def discover_from_registry(self: Self, registry: PluginRegistry) -> None:
         """Discover and register SEMANTIC-type extraction providers from F02 PluginRegistry."""
         from .plugin_metadata import PluginType
 
@@ -126,7 +131,8 @@ class ProviderRouter:
                     error=str(exc),
                 )
 
-    def list_providers(self) -> list[ExtractionProvider]:
+    def list_providers(self: Self) -> list[ExtractionProvider]:
+        """Return the unique providers registered in the router."""
         seen: set[int] = set()
         result: list[ExtractionProvider] = []
         for p in list(self._providers.values()) + self._default_providers:

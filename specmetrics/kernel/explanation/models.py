@@ -1,12 +1,16 @@
+"""Pydantic models representing measurement explanations and comparisons."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
 class EvidenceReference(BaseModel):
+    """Reference to source material justifying an extracted element."""
+
     document_id: str
     section_id: str | None = None
     text: str
@@ -15,6 +19,8 @@ class EvidenceReference(BaseModel):
 
 
 class AppliedRule(BaseModel):
+    """A rule that was applied during measurement."""
+
     rule_pack_id: str
     rule_id: str
     rule_type: str
@@ -23,6 +29,8 @@ class AppliedRule(BaseModel):
 
 
 class ElementContribution(BaseModel):
+    """Contribution of a single element to a metric."""
+
     element_id: str
     element_type: str
     element_label: str
@@ -33,6 +41,8 @@ class ElementContribution(BaseModel):
 
 
 class MetricExplanation(BaseModel):
+    """Explanation of a single metric's value."""
+
     metric_name: str
     metric_value: int | float
     computation_summary: str = ""
@@ -41,14 +51,18 @@ class MetricExplanation(BaseModel):
 
 
 class ExplanationSummary(BaseModel):
+    """Summary counts for a measurement explanation."""
+
     total_metrics: int = 0
     total_elements: int = 0
     total_evidence_refs: int = 0
     total_rules_applied: int = 0
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class MeasurementExplanation(BaseModel):
+    """Full explanation of a measurement run."""
+
     run_id: str
     spec_path: str = ""
     measured_at: datetime | None = None
@@ -58,6 +72,8 @@ class MeasurementExplanation(BaseModel):
 
 
 class ElementChange(BaseModel):
+    """Change to a single element between two runs."""
+
     element_id: str
     change_type: str
     baseline_state: dict[str, Any] = {}
@@ -65,6 +81,8 @@ class ElementChange(BaseModel):
 
 
 class MetricChange(BaseModel):
+    """Change to a single metric between two runs."""
+
     metric_name: str
     baseline_value: int | float
     comparison_value: int | float
@@ -73,6 +91,8 @@ class MetricChange(BaseModel):
 
 
 class ExplanationComparison(BaseModel):
+    """Comparison of two measurement explanations."""
+
     baseline_run_id: str
     comparison_run_id: str
     changed_metrics: list[MetricChange] = []

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -107,7 +107,7 @@ class TestTShirtMeasurementResult:
     def test_measured_at_defaults_to_now(self):
         r = _sample_result()
         assert isinstance(r.measured_at, datetime)
-        assert r.measured_at.tzinfo == timezone.utc
+        assert r.measured_at.tzinfo == UTC
 
 
 class TestFunctionalWorkItem:

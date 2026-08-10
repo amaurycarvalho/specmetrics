@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+from structlog.testing import capture_logs
 
 from specmetrics.kernel.cfm.metadata import BuildMetadata
 from specmetrics.kernel.cfm.model import (
@@ -23,7 +25,7 @@ def _make_cfm(
         }
     metadata = BuildMetadata(
         run_id="test-run",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     return CanonicalFunctionalModel(
         run_id="test-run",
@@ -253,3 +255,67 @@ class TestRuleApplicator:
         result = self.applicator.apply(cfm, [pack])
         assert len(self.applicator.applied_records) == 3
         assert result.metadata.vaf == 0.93  # 0.65 + 0.01 * 28
+
+    def test_apply_logs_summary(self) -> None:
+        cfm = _make_cfm()
+        pack = RulePack(
+            id="pack",
+            glossary_overrides={"cadeira": "chair"},
+            rules=[
+                Rule(
+                    id="ex-eq",
+                    type="exclusion",
+                    config=RuleConfig(function_types=["EQ"]),
+                ),
+                Rule(
+                    id="vaf-rule",
+                    type="vaf",
+                    config=RuleConfig(
+                        gsc={
+                            k: 2
+                            for k in [
+                                "data_communications",
+                                "distributed_data_processing",
+                                "performance",
+                                "heavily_used_configuration",
+                                "transaction_rate",
+                                "online_data_entry",
+                                "end_user_efficiency",
+                                "online_update",
+                                "complex_processing",
+                                "reusability",
+                                "installation_ease",
+                                "operational_ease",
+                                "multiple_sites",
+                                "facilitate_change",
+                            ]
+                        }
+                    ),
+                ),
+            ],
+        )
+        with capture_logs() as captured:
+            result = self.applicator.apply(cfm, [pack])
+        assert result.metadata.glossary_overrides == {"cadeira": "chair"}
+        event = next(e for e in captured if e["event"] == "rule_applicator_applied")
+        assert event["excluded_types"] == ["EQ"]
+        assert event["excluded_elements"] == []
+        assert event["complexity_overrides"] == 0
+        assert event["weight_overrides"] == 0
+        assert event["vaf"] == 0.93
+        assert event["applied_record_count"] == 2
+
+    def test_glossary_overrides_none_when_empty(self) -> None:
+        cfm = _make_cfm()
+        pack = RulePack(
+            id="test-pack",
+            rules=[
+                Rule(
+                    id="ex-eq",
+                    type="exclusion",
+                    config=RuleConfig(function_types=["EQ"]),
+                ),
+            ],
+        )
+        result = self.applicator.apply(cfm, [pack])
+        assert result.metadata.glossary_overrides == {}

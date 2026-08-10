@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from specmetrics.kernel.engine_visitors import (
     CodeBlockVisitor,
     EmphasisVisitor,

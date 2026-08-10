@@ -1,6 +1,8 @@
+"""Provider interface and data models for semantic extraction."""
+
 from __future__ import annotations
 
-from typing import Optional, Protocol
+from typing import Protocol, Self
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +13,7 @@ class EvidenceReference(BaseModel):
     """Pointer back to the source material that justifies an extracted element."""
 
     document_id: str = Field(min_length=1)
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str = Field(min_length=1)
 
 
@@ -49,13 +51,13 @@ class ExtractionResult(BaseModel):
 class ExtractionProvider(Protocol):
     """Structural interface that every extraction provider must implement."""
 
-    def extract(self, document: Document) -> ExtractionResult:
+    def extract(self: Self, document: Document) -> ExtractionResult:
         """Extract semantic elements from a single document.
 
         Must be idempotent and must not modify the input document.
         """
 
-    def supports_type(self, document_type: str) -> bool:
+    def supports_type(self: Self, document_type: str) -> bool:
         """Return True if this provider can handle the given document type.
 
         Must be fast (no full document scan or external calls).

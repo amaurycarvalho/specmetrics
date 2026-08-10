@@ -1,3 +1,5 @@
+"""T-Shirt Sizing measurement plugin package."""
+
 from .models import (
     ExecutionMetadata,
     FunctionalWorkItem,

@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+import uuid
 
 import pytest
 
 from specmetrics.kernel.cfm.model import (
+    BuildMetadata,
     CanonicalFunctionalModel,
     DataGroup,
     EvidenceRef,
     Operation,
-    BuildMetadata,
 )
 from specmetrics.plugins.measurement.sfp.counter import (
-    SFPCounter,
     DEFAULT_FP_CONTRIBUTION,
     DEFAULT_LF_CONTRIBUTION,
+    SFPCounter,
 )
 
 
@@ -343,3 +344,143 @@ class TestPerformance:
         counter.count(cfm)
         elapsed = time.monotonic() - start
         assert elapsed < 5.0
+
+
+class TestProcessedComponentIdentity:
+    def test_components_receive_sequential_ids(self):
+        ops = {}
+        for i in range(3):
+            ev = _make_evidence(text=f"text {i}")
+            ops[f"op-{i:03d}"] = _make_operation(
+                f"op-{i:03d}", f"Process {i}", evidence=ev
+            )
+        cfm = _make_cfm(operations=ops)
+        counter = SFPCounter()
+        result = counter.count(cfm)
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
+        assert [c.id for c in fps] == [
+            "cmp-functional_process-1",
+            "cmp-functional_process-2",
+            "cmp-functional_process-3",
+        ]
+
+    def test_cfm_element_type_names(self):
+        op = _make_operation("op-001", "Create Order")
+        dg = _make_data_group("dg-001", "Customer")
+        cfm = _make_cfm(operations={"op-001": op}, data_groups={"dg-001": dg})
+        counter = SFPCounter()
+        result = counter.count(cfm)
+        by_id = {c.cfm_element_id: c for c in result.measured_components}
+        assert by_id["op-001"].cfm_element_type == "Operation"
+        assert by_id["dg-001"].cfm_element_type == "DataGroup"
+
+
+class TestInclusionCriteriaAndExclusions:
+    def test_excluded_types_drops_functional_processes(self):
+        op = _make_operation("op-001", "Create Order")
+        dg = _make_data_group("dg-001", "Customer")
+        cfm = _make_cfm(operations={"op-001": op}, data_groups={"dg-001": dg})
+        counter = SFPCounter()
+        result = counter.count(cfm, excluded_types=["functional_process"])
+        assert len(result.measured_components) == 1
+        assert result.measured_components[0].component_type == "logical_function"
+
+    def test_inclusion_criteria_node_types_drive_classification(self):
+        op = _make_operation("op-001", "Op", node_type="custom_process")
+        dg = _make_data_group("dg-001", "Cust", node_type="custom_group")
+        cfm = _make_cfm(operations={"op-001": op}, data_groups={"dg-001": dg})
+        counter = SFPCounter()
+        result = counter.count(
+            cfm,
+            inclusion_criteria={
+                "functional_process": {
+                    "node_types": ["custom_process"],
+                    "semantic_types": [],
+                },
+                "logical_function": {
+                    "node_types": ["custom_group"],
+                    "semantic_types": [],
+                },
+            },
+        )
+        types = {c.component_type for c in result.measured_components}
+        assert types == {"functional_process", "logical_function"}
+
+    def test_element_inclusions_override_node_classification(self):
+        op = _make_operation("op-001", "Op", node_type="internal_step")
+        cfm = _make_cfm(operations={"op-001": op})
+        counter = SFPCounter()
+        result = counter.count(
+            cfm, element_inclusions={"by_id": ["op-001"], "by_pattern": []}
+        )
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
+        assert len(fps) == 1
+
+    def test_element_inclusions_by_name_pattern(self):
+        op = _make_operation("op-001", "Hidden Process", node_type="internal_step")
+        cfm = _make_cfm(operations={"op-001": op})
+        counter = SFPCounter()
+        result = counter.count(
+            cfm,
+            element_inclusions={"by_id": [], "by_pattern": ["Hidden*"]},
+        )
+        fps = [
+            c
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        ]
+        assert len(fps) == 1
+
+
+class TestRunMeta:
+    def test_warnings_are_a_list_when_duplicate(self):
+        ev = _make_evidence()
+        op1 = _make_operation("op-001", "Create Order", evidence=ev)
+        op2 = _make_operation("op-002", "Create Order", evidence=ev)
+        cfm = _make_cfm(operations={"op-001": op1, "op-002": op2})
+        counter = SFPCounter()
+        result = counter.count(cfm)
+        assert isinstance(result.warnings, list)
+        assert len(result.warnings) == 1
+
+    def test_merge_previous_keeps_unmodified_absent(self):
+        ev_a = _make_evidence(text="create order")
+        ev_b = _make_evidence(text="delete order")
+        op_a = _make_operation("op-001", "Create Order", evidence=ev_a)
+        op_b = _make_operation("op-002", "Delete Order", evidence=ev_b)
+        dg = _make_data_group("dg-001", "Customer")
+        full_cfm = _make_cfm(
+            operations={"op-001": op_a, "op-002": op_b}, data_groups={"dg-001": dg}
+        )
+        counter = SFPCounter()
+        full = counter.count(full_cfm)
+        current_cfm = _make_cfm(operations={"op-001": op_a, "op-002": op_b})
+        inc = counter.count(
+            current_cfm,
+            previous_result=full,
+            modified_element_ids=["op-001"],
+        )
+        assert inc.summary.total_component_count == 3
+
+    def test_rule_pack_id_is_preserved(self):
+        op = _make_operation("op-001", "Create Order")
+        cfm = _make_cfm(operations={"op-001": op})
+        counter = SFPCounter()
+        result = counter.count(cfm, rule_pack_id="rp-123")
+        assert result.rule_pack_id == "rp-123"
+
+    def test_run_id_is_a_uuid_when_omitted(self):
+        op = _make_operation("op-001", "Create Order")
+        cfm = _make_cfm(operations={"op-001": op})
+        counter = SFPCounter()
+        result = counter.count(cfm)
+        assert result.run_id != "None"
+        uuid.UUID(result.run_id)

@@ -1,6 +1,6 @@
-from __future__ import annotations
+"""Complexity classification and weighting tables for FPA measurement."""
 
-from typing import Optional
+from __future__ import annotations
 
 from .models import ComplexityRating, FunctionType
 
@@ -81,9 +81,10 @@ def _get_det_index(det: int, boundaries: list[int]) -> int:
 def classify_data_function_complexity(
     ret_count: int,
     det_count: int,
-    ret_boundaries: Optional[list[int]] = None,
-    det_boundaries: Optional[list[int]] = None,
+    ret_boundaries: list[int] | None = None,
+    det_boundaries: list[int] | None = None,
 ) -> ComplexityRating:
+    """Classify the complexity of a data function using the RET/DET matrix."""
     rb = ret_boundaries or RET_BOUNDARIES
     db = det_boundaries or DET_BOUNDARIES_DATA
     ret_idx = _get_ret_index(ret_count, rb)
@@ -100,9 +101,10 @@ def classify_transactional_complexity(
     function_type: FunctionType,
     ftr_count: int,
     det_count: int,
-    ftr_boundaries: Optional[list[int]] = None,
-    det_boundaries: Optional[list[int]] = None,
+    ftr_boundaries: list[int] | None = None,
+    det_boundaries: list[int] | None = None,
 ) -> ComplexityRating:
+    """Classify the complexity of a transactional function using FTR/DET."""
     config = TRANSACTIONAL_MATRICES[function_type]
     fb = ftr_boundaries or config["ftr_boundaries"]
     db = det_boundaries or config["det_boundaries"]
@@ -114,7 +116,8 @@ def classify_transactional_complexity(
 def get_ufp_weight(
     function_type: FunctionType,
     complexity: ComplexityRating,
-    weight_overrides: Optional[dict[str, dict[str, int]]] = None,
+    weight_overrides: dict[str, dict[str, int]] | None = None,
 ) -> int:
+    """Return the UFP weight for the given function type and complexity."""
     table = weight_overrides or UFP_WEIGHTS
     return table[function_type][complexity]

@@ -1,9 +1,13 @@
+"""Pydantic models for calibration profiles."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
 
 class SpecificationCostWeights(BaseModel):
+    """Cost weights for specification elements and activities."""
+
     activities: dict[str, float] = Field(
         default_factory=lambda: {
             "exploration": 2.0,
@@ -24,6 +28,8 @@ class SpecificationCostWeights(BaseModel):
 
 
 class CodeGenerationCostWeights(BaseModel):
+    """Cost weights for code generation elements."""
+
     functional_processes: float = 5.0
     business_rules: float = 3.0
     operations: float = 2.0
@@ -33,6 +39,8 @@ class CodeGenerationCostWeights(BaseModel):
 
 
 class CalibrationProfile(BaseModel):
+    """Calibration profile combining specification and code generation weights."""
+
     version: str = "1.0"
     specification_cost: SpecificationCostWeights = Field(
         default_factory=SpecificationCostWeights

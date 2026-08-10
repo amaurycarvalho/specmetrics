@@ -1,3 +1,5 @@
+"""Entry point based discovery of exporter plugins."""
+
 from __future__ import annotations
 
 from importlib.metadata import entry_points
@@ -10,6 +12,7 @@ logger = structlog.get_logger(__name__)
 
 
 def discover_exporters() -> list[ExporterPlugin]:
+    """Return instantiated exporter plugins registered as entry points."""
     plugins: list[ExporterPlugin] = []
     for ep in entry_points(group="specmetrics.exporters"):
         try:

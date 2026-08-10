@@ -1,3 +1,5 @@
+"""Static prompt templates exposed by the MCP server."""
+
 from __future__ import annotations
 
 from mcp.types import Prompt, PromptArgument

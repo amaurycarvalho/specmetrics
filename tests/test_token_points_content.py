@@ -2,23 +2,30 @@ from __future__ import annotations
 
 import uuid
 
-
 from specmetrics.kernel.cfm.model import (
     Actor,
     CanonicalFunctionalModel,
-    EvidenceRef as CfmEvidenceRef,
     FunctionalProcess,
     Operation,
+)
+from specmetrics.kernel.cfm.model import (
     BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CfmEvidenceRef,
 )
 from specmetrics.kernel.csm.model import (
     Assumption,
     CanonicalSpecificationModel,
     Decision,
-    EvidenceRef as CsmEvidenceRef,
     Reference,
     SpecificationActivity,
+)
+from specmetrics.kernel.csm.model import (
     BuildMetadata as CsmBuildMetadata,
+)
+from specmetrics.kernel.csm.model import (
+    EvidenceRef as CsmEvidenceRef,
 )
 from specmetrics.plugins.calibration.models import (
     CalibrationProfile,
@@ -418,6 +425,7 @@ class TestPayloadExtensions:
             ),
         )
         from dataclasses import replace
+
         from specmetrics.kernel.events import EventType, PipelineEvent
         from specmetrics.kernel.pipeline_context import PipelineContext
 
@@ -468,19 +476,20 @@ class TestPayloadExtensions:
         )
 
         breakdown = get_breakdown_by_type(result)
-        for etype, info in breakdown.items():
+        for info in breakdown.values():
             assert "content_tokens" in info
             assert info["content_tokens"] >= 0
 
 
 class TestStageOutputKey:
     def test_token_content_multiplier_in_stage_output(self):
+        from dataclasses import replace
+
+        from specmetrics.kernel.events import EventType, PipelineEvent
+        from specmetrics.kernel.pipeline_context import PipelineContext
         from specmetrics.plugins.measurement.token_points.plugin import (
             TokenPointsHandler,
         )
-        from dataclasses import replace
-        from specmetrics.kernel.events import EventType, PipelineEvent
-        from specmetrics.kernel.pipeline_context import PipelineContext
 
         handler = TokenPointsHandler()
         ev = _make_csm_evidence()
@@ -514,11 +523,12 @@ class TestStageOutputKey:
 
     def test_token_element_counts_extended(self):
         from dataclasses import replace
+
+        from specmetrics.kernel.events import EventType, PipelineEvent
+        from specmetrics.kernel.pipeline_context import PipelineContext
         from specmetrics.plugins.measurement.token_points.plugin import (
             TokenPointsHandler,
         )
-        from specmetrics.kernel.events import EventType, PipelineEvent
-        from specmetrics.kernel.pipeline_context import PipelineContext
 
         handler = TokenPointsHandler()
         csm = _make_csm_with_descriptions(50)
@@ -561,3 +571,214 @@ class TestStageOutputKey:
         assert result.total_score > 0
         for contrib in result.code_generation_cost.contributions:
             assert contrib.content_token_count > 0
+
+
+class TestExplainerBreakdown:
+    def _make_measurement(self):
+        from specmetrics.plugins.measurement.token_points.models import (
+            CodeGenerationCost,
+            MeasurementMetadata,
+            SpecificationCost,
+            TokenContribution,
+            TokenPointsMeasurement,
+        )
+
+        def tc(element_id, element_type, model_source, weight, tokens):
+            return TokenContribution(
+                element_id=element_id,
+                element_type=element_type,
+                element_name=element_id,
+                model_source=model_source,
+                applied_weight=weight,
+                content_token_count=tokens,
+                content_score=0.0,
+                partial_score=weight,
+            )
+
+        c1 = tc("1", "decision", "csm", 1.5, 10)
+        c2 = tc("2", "decision", "csm", 3.5, 20)
+        c3 = tc("3", "operation", "cfm", 2.0, 5)
+        return TokenPointsMeasurement(
+            run_id="breakdown",
+            total_score=7.0,
+            specification_cost=SpecificationCost(total=5.0, contributions=[c1, c2]),
+            code_generation_cost=CodeGenerationCost(total=2.0, contributions=[c3]),
+            measurement_metadata=MeasurementMetadata(),
+        )
+
+    def test_breakdown_by_type_exact(self):
+        from specmetrics.plugins.measurement.token_points.explainer import (
+            get_breakdown_by_type,
+        )
+
+        breakdown = get_breakdown_by_type(self._make_measurement())
+        assert breakdown["decision"] == {
+            "count": 2,
+            "total": 5.0,
+            "content_tokens": 30,
+        }
+        assert breakdown["operation"] == {
+            "count": 1,
+            "total": 2.0,
+            "content_tokens": 5,
+        }
+
+    def test_breakdown_multiple_same_type_elements(self):
+        from specmetrics.plugins.measurement.token_points.explainer import (
+            get_breakdown_by_type,
+        )
+
+        breakdown = get_breakdown_by_type(self._make_measurement())
+        assert breakdown["decision"]["count"] == 2
+        assert breakdown["decision"]["total"] == 5.0
+        assert breakdown["decision"]["content_tokens"] == 30
+
+
+class TestPluginPayload:
+    def test_payload_keys_and_counts(self):
+        from dataclasses import replace
+
+        from specmetrics.kernel.events import EventType, PipelineEvent
+        from specmetrics.kernel.pipeline_context import PipelineContext
+        from specmetrics.plugins.measurement.token_points.plugin import (
+            TokenPointsHandler,
+        )
+
+        handler = TokenPointsHandler()
+        ev = _make_csm_evidence()
+        csm = CanonicalSpecificationModel(
+            run_id="csm-payload-full",
+            decisions={
+                _uid(): Decision(
+                    id=_uid(),
+                    description="Decision content",
+                    evidence_references=[ev],
+                ),
+                _uid(): Decision(
+                    id=_uid(),
+                    description="Other decision",
+                    evidence_references=[ev],
+                ),
+            },
+            metadata=CsmBuildMetadata(
+                run_id="csm-payload-full", version="1.0", source="test"
+            ),
+        )
+        ctx = replace(
+            PipelineContext(),
+            canonical_spec_model=csm,
+            metadata=_make_default_calibration(),
+        )
+        event = PipelineEvent(
+            event_type=EventType.MEASUREMENT_COMPLETED,
+            publisher="test",
+            payload={},
+            context=ctx,
+        )
+        payload = handler.handle(event).measurement_result
+        expected_keys = {
+            "token_total_score",
+            "token_specification_cost",
+            "token_code_generation_cost",
+            "token_content_multiplier",
+            "token_content_tokens",
+            "token_element_counts",
+            "token_calibration_version",
+            "token_top_contributors",
+            "token_duration_ms",
+            "token_warnings",
+            "token_entities",
+        }
+        assert expected_keys <= set(payload)
+        assert payload["token_calibration_version"] == "1.0"
+        assert payload["token_content_multiplier"] == 0.1
+        assert payload["token_element_counts"] == {
+            "csm": 2,
+            "cfm": 0,
+            "total": 2,
+            "unknown_csm": 0,
+            "unknown_cfm": 0,
+        }
+        for entry in payload["token_top_contributors"]:
+            assert set(entry) == {"type", "count", "total", "content_tokens"}
+        assert len(payload["token_entities"]) == 2
+        for entity in payload["token_entities"]:
+            assert set(entity) == {
+                "element_id",
+                "element_type",
+                "element_name",
+                "model_source",
+                "applied_weight",
+                "content_token_count",
+                "content_score",
+                "partial_score",
+                "evidence_ref",
+            }
+
+    def test_handle_emits_token_points_event(self):
+        from dataclasses import replace
+
+        from specmetrics.kernel.events import EventType, PipelineEvent
+        from specmetrics.kernel.pipeline_context import PipelineContext
+        from specmetrics.plugins.measurement.token_points.plugin import (
+            TokenPointsHandler,
+        )
+
+        handler = TokenPointsHandler()
+        ev = _make_csm_evidence()
+        csm = CanonicalSpecificationModel(
+            run_id="csm-event",
+            decisions={
+                _uid(): Decision(
+                    id=_uid(),
+                    description="Some decision",
+                    evidence_references=[ev],
+                ),
+            },
+            metadata=CsmBuildMetadata(run_id="csm-event", version="1.0", source="test"),
+        )
+        ctx = replace(
+            PipelineContext(),
+            canonical_spec_model=csm,
+            metadata=_make_default_calibration(),
+        )
+        event = PipelineEvent(
+            event_type=EventType.MEASUREMENT_COMPLETED,
+            publisher="test",
+            payload={},
+            context=ctx,
+        )
+        result_ctx = handler.handle(event)
+        published = [
+            e
+            for e in result_ctx.published_events
+            if e.publisher == "token_points"
+        ]
+        assert len(published) == 1
+        assert published[0].event_type == EventType.TOKEN_POINTS_MEASURED
+        assert published[0].publisher == "token_points"
+        assert published[0].payload == result_ctx.measurement_result
+
+
+class TestPluginMetadata:
+    def test_metadata_fields(self):
+        from specmetrics.kernel.events import EventType
+        from specmetrics.kernel.plugin_metadata import PluginType
+        from specmetrics.plugins.measurement.token_points.plugin import (
+            TokenPointsHandler,
+            create_token_points_measurement_metadata,
+        )
+
+        metadata = create_token_points_measurement_metadata()
+        assert metadata.id == "token_points"
+        assert metadata.api_version == "0.1.0"
+        assert metadata.version == "0.1.0"
+        assert metadata.plugin_type == PluginType.MEASUREMENT
+        assert metadata.name == "Token Points"
+        assert metadata.description == (
+            "Token Points measurement \u2014 estimates AI computational cost "
+            "from CFM and CSM with per-element explainability"
+        )
+        assert metadata.handled_event_types == (EventType.MEASUREMENT_COMPLETED,)
+        assert callable(metadata.handler_factory)
+        assert isinstance(metadata.handler_factory(), TokenPointsHandler)

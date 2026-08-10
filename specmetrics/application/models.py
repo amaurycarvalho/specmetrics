@@ -1,10 +1,11 @@
+"""Canonical data models for the measurement pipeline."""
+
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
-
-import re
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,7 +15,6 @@ from .enums import (
     StageExecutionStatus,
     StageName,
 )
-
 
 CanonicalEntityType = Literal[
     "data_group",
@@ -40,10 +40,12 @@ _ENTITY_ID_PATTERN = re.compile(r"^(cfm|csm):[a-z_]+:.+$")
 
 
 def is_valid_entity_id(id_str: str) -> bool:
+    """Return whether the given string is a valid canonical entity identifier."""
     return bool(_ENTITY_ID_PATTERN.match(id_str))
 
 
 def make_entity_id(category: str, name: str, model_source: str = "cfm") -> str:
+    """Build a canonical entity identifier from category, name, and model source."""
     if model_source not in ("cfm", "csm"):
         model_source = "cfm"
     safe_name = name.lower()
@@ -55,12 +57,15 @@ def make_entity_id(category: str, name: str, model_source: str = "cfm") -> str:
 
 
 def resolve_entity_id(raw_id: str, category: str, name: str, model_source: str = "cfm") -> str:
+    """Return ``raw_id`` when valid, otherwise build one from category and name."""
     if raw_id and is_valid_entity_id(raw_id):
         return raw_id
     return make_entity_id(category, name, model_source)
 
 
 class EntityScore(BaseModel):
+    """Canonical score for a single measured entity."""
+
     id: str
     name: str
     type: str
@@ -69,7 +74,8 @@ class EntityScore(BaseModel):
 
     @field_validator("id")
     @classmethod
-    def validate_id_format(cls, v: str) -> str:
+    def validate_id_format(cls: type[EntityScore], v: str) -> str:
+        """Validate that the entity id matches the compound URI pattern."""
         if not _ENTITY_ID_PATTERN.match(v):
             raise ValueError(
                 f"Entity id '{v}' must match compound URI pattern "
@@ -79,6 +85,8 @@ class EntityScore(BaseModel):
 
 
 class MetricBreakdownEntry(BaseModel):
+    """Breakdown of entities and totals for a single metric."""
+
     name: str
     metric: str
     total: float
@@ -126,6 +134,8 @@ JSON_NAME_TO_DISPLAY_MAP: dict[str, str] = {
 
 @dataclass
 class PipelineRequest:
+    """Parameters of a pipeline execution request."""
+
     project_path: Path
     stages: list[StageName] | None = None
     from_stage: StageName | None = None
@@ -140,6 +150,8 @@ class PipelineRequest:
 
 @dataclass
 class StageResult:
+    """Outcome of a single executed pipeline stage."""
+
     stage: StageName
     status: StageExecutionStatus
     duration_seconds: float = 0.0
@@ -148,6 +160,8 @@ class StageResult:
 
 @dataclass
 class MeasurementResult:
+    """Aggregated measurement outcome of a pipeline run."""
+
     total_function_points: int = 0
     breakdown: dict[str, int] = field(default_factory=dict)
     complexity_distribution: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -157,6 +171,8 @@ class MeasurementResult:
 
 @dataclass
 class MetricOutputItem:
+    """Summary of a single metric produced by the pipeline."""
+
     name: str
     total: float = 0
     status: str = "completed"
@@ -165,6 +181,8 @@ class MetricOutputItem:
 
 @dataclass
 class StageOutputItem:
+    """Summary of entities produced by a single pipeline stage."""
+
     name: str
     count: int = 0
     count_type: str = "items"
@@ -173,6 +191,8 @@ class StageOutputItem:
 
 @dataclass
 class ErrorOutputItem:
+    """An error raised during pipeline execution."""
+
     stage: str = ""
     message: str = ""
     details: dict[str, Any] | None = None
@@ -180,6 +200,8 @@ class ErrorOutputItem:
 
 @dataclass
 class PipelineResult:
+    """Full result of a pipeline execution."""
+
     status: PipelineStatus
     project_path: Path | None = None
     run_id: str = ""
@@ -203,6 +225,8 @@ class PipelineResult:
 
 @dataclass
 class PluginInfo:
+    """Metadata about a discovered plugin."""
+
     name: str
     version: str
     type: str
@@ -212,6 +236,8 @@ class PluginInfo:
 
 @dataclass
 class VersionInfo:
+    """Version information for the platform and its plugins."""
+
     platform_version: str
     python_version: str
     plugins: list[PluginInfo] = field(default_factory=list)

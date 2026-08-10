@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest import mock
 
+import pytest
 
+from specmetrics.kernel.adapter_interface import Document
 from specmetrics.plugins.adapter.openspec.scanner import (
-    scan_specs,
     scan_changes,
+    scan_specs,
 )
 
 
@@ -180,6 +183,7 @@ class TestPerFileErrorIsolation:
 
 
 class TestBenchmark:
+    @pytest.mark.slow
     def test_benchmark_500_artifacts(self, tmp_path: Path) -> None:
         import time
 
@@ -197,4 +201,313 @@ class TestBenchmark:
         assert len(docs) == 500
         assert elapsed < 5.0, (
             f"SC-001: 500 artifacts scanned in {elapsed:.2f}s (limit: 5s)"
+        )
+
+
+class TestScanFilesHelpers:
+    """Mutation-killing tests for ``openspec/_scan.py`` scan helpers.
+
+    Targets survivors: scan_files__mutmut_7..36, scan_change_files__mutmut_7..42,
+    bump_specification_count__mutmut_1..6, bump_change_type_count__mutmut_1..28.
+    """
+
+    def test_on_success_receives_doc_and_stats(self, tmp_path: Path) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            scan_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            return Document(
+                id=str(file_path),
+                path=str(file_path.relative_to(repo_root)),
+                document_type="specification",
+                content=file_path.read_text(encoding="utf-8"),
+            )
+
+        repo = tmp_path / "repo"
+        spec = repo / "specs" / "auth" / "spec.md"
+        spec.parent.mkdir(parents=True)
+        spec.write_text("# Auth")
+        documents = []
+        errors = []
+        stats = ScanStats()
+        calls = []
+        scan_files(
+            _normalize,
+            [spec],
+            repo,
+            documents,
+            errors,
+            stats,
+            on_success=lambda doc, st: calls.append((doc, st)),
+        )
+        assert len(calls) == 1
+        assert calls[0][0] is documents[0]
+        assert calls[0][1] is stats
+        assert errors == []
+
+    def test_bump_specification_count_callback_counts_only_specs(
+        self, tmp_path: Path
+    ) -> None:
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            bump_specification_count,
+            scan_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            return Document(
+                id=str(file_path),
+                path=str(file_path.relative_to(repo_root)),
+                document_type="proposal",
+                content="",
+            )
+
+        repo = tmp_path / "repo"
+        prop = repo / "changes" / "add" / "proposal.md"
+        prop.parent.mkdir(parents=True)
+        prop.write_text("# P")
+        documents = []
+        errors = []
+        stats = ScanStats()
+        scan_files(
+            _normalize,
+            [prop],
+            repo,
+            documents,
+            errors,
+            stats,
+            on_success=bump_specification_count,
+        )
+        assert stats.specification_count == 0
+        assert errors == []
+
+    def test_encoding_error_recorded_with_context(self, tmp_path: Path) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            scan_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            return Document(
+                id=str(file_path),
+                path=str(file_path.relative_to(repo_root)),
+                document_type="specification",
+                content=file_path.read_text(encoding="utf-8"),
+            )
+
+        repo = tmp_path / "repo"
+        bad = repo / "specs" / "auth" / "spec.md"
+        bad.parent.mkdir(parents=True)
+        bad.write_bytes(b"\xff\xfe\x00\x01")
+        documents = []
+        errors = []
+        stats = ScanStats()
+        scan_files(
+            _normalize,
+            [bad],
+            repo,
+            documents,
+            errors,
+            stats,
+            on_success=lambda doc, st: None,
+        )
+        assert len(errors) == 1
+        err = errors[0]
+        assert err.file_path == "specs/auth/spec.md"
+        assert err.error_code == "ENCODING_ERROR"
+        assert "bytes" in err.message or err.message
+        assert stats.total_errors == 1
+        assert documents == []
+
+    def test_generic_exception_recorded_as_unreadable(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            scan_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            raise ValueError("boom")
+
+        repo = tmp_path / "repo"
+        target = repo / "specs" / "auth" / "spec.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("# Auth")
+        documents = []
+        errors = []
+        stats = ScanStats()
+        scan_files(
+            _normalize,
+            [target],
+            repo,
+            documents,
+            errors,
+            stats,
+            on_success=lambda doc, st: None,
+        )
+        assert len(errors) == 1
+        assert errors[0].error_code == "UNREADABLE"
+        assert errors[0].message == "boom"
+        assert stats.total_errors == 1
+
+    def test_scan_change_files_counts_archived_and_active(self, tmp_path: Path) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            scan_change_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            return Document(
+                id=str(file_path),
+                path=str(file_path.relative_to(repo_root)),
+                document_type="proposal",
+                content=file_path.read_text(encoding="utf-8"),
+            )
+
+        repo = tmp_path / "repo"
+        change_files = []
+        for i in range(2):
+            active = repo / "changes" / f"active-{i}" / "proposal.md"
+            active.parent.mkdir(parents=True)
+            active.write_text("# Active")
+            change_files.append((active, f"active-{i}", False))
+        for i in range(2):
+            archived = repo / "changes" / "archive" / f"old-{i}" / "proposal.md"
+            archived.parent.mkdir(parents=True)
+            archived.write_text("# Old")
+            change_files.append((archived, f"old-{i}", True))
+        documents = []
+        errors = []
+        stats = ScanStats()
+        scan_change_files(
+            _normalize, change_files, repo, documents, errors, stats
+        )
+        assert stats.active_changes == 2
+        assert stats.archived_changes == 2
+        assert stats.proposal_count == 4
+        assert errors == []
+
+    def test_scan_change_files_bumps_type_without_errors(self, tmp_path: Path) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            scan_change_files,
+        )
+
+        def _normalize(file_path: Path, repo_root: Path) -> Document:
+            return Document(
+                id=str(file_path),
+                path=str(file_path.relative_to(repo_root)),
+                document_type="design",
+                content=file_path.read_text(encoding="utf-8"),
+            )
+
+        repo = tmp_path / "repo"
+        design = repo / "changes" / "add" / "design.md"
+        design.parent.mkdir(parents=True)
+        design.write_text("# Design")
+        documents = []
+        errors = []
+        stats = ScanStats()
+        scan_change_files(
+            _normalize, [(design, "add", True)], repo, documents, errors, stats
+        )
+        assert stats.design_count == 1
+        assert stats.unknown_count == 0
+        assert errors == []
+
+
+class TestBumpCountHelpers:
+    """Mutation-killing tests for openspec ``_scan.bump_*`` helpers."""
+
+    def test_bump_specification_count_increments_per_spec(self) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            bump_specification_count,
+        )
+
+        stats = ScanStats()
+        for _ in range(2):
+            bump_specification_count(
+                Document(id="1", path="x", document_type="specification", content=""),
+                stats,
+            )
+        assert stats.specification_count == 2
+
+    def test_bump_specification_count_ignores_other_types(self) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            bump_specification_count,
+        )
+
+        stats = ScanStats()
+        bump_specification_count(
+            Document(id="1", path="x", document_type="proposal", content=""), stats
+        )
+        assert stats.specification_count == 0
+
+    def test_bump_change_type_count_routes_known_types(self) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            bump_change_type_count,
+        )
+
+        counters = (
+            "proposal_count",
+            "design_count",
+            "tasks_count",
+            "specification_count",
+        )
+        for dt, attr in zip(
+            ("proposal", "design", "tasks", "specification"), counters, strict=True
+        ):
+            stats = ScanStats()
+            for _ in range(2):
+                bump_change_type_count(
+                    Document(id="1", path="x", document_type=dt, content=""), stats
+                )
+            assert getattr(stats, attr) == 2
+            others = sum(getattr(stats, c) for c in counters if c != attr)
+            assert others == 0
+            assert stats.unknown_count == 0
+
+    def test_bump_change_type_count_unknown_falls_through(self) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+        from specmetrics.plugins.adapter.openspec._scan import (
+            ScanStats,
+            bump_change_type_count,
+        )
+
+        stats = ScanStats()
+        bump_change_type_count(
+            Document(id="1", path="x", document_type="mystery", content=""), stats
+        )
+        assert stats.unknown_count == 1
+        assert stats.proposal_count == 0
+
+
+class TestListChangeDirsBrokenSymlink:
+    """Mutation-killing tests for ``openspec/scanner._list_change_dirs``."""
+
+    def test_broken_symlink_warns_with_event(self, tmp_path: Path, monkeypatch) -> None:
+        import specmetrics.plugins.adapter.openspec.scanner as scanner_mod
+        from specmetrics.plugins.adapter.openspec.scanner import _list_change_dirs
+
+        changes_root = tmp_path / "openspec" / "changes"
+        changes_root.mkdir(parents=True)
+        link = changes_root / "broken"
+        link.symlink_to(tmp_path / "gone", target_is_directory=True)
+        mock_logger = mock.MagicMock()
+        monkeypatch.setattr(scanner_mod, "logger", mock_logger)
+        result = _list_change_dirs(changes_root)
+        assert result == []
+        mock_logger.warning.assert_called_once_with(
+            "openspec_broken_symlink", path=str(link)
         )

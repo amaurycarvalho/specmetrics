@@ -1,3 +1,5 @@
+"""Metadata inference for SpecKit specification artifacts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -70,6 +72,7 @@ def _infer_workspace(file_path: Path, repo_root: Path) -> str:
 
 
 def build_metadata(file_path: Path, repo_root: Path) -> dict[str, Any]:
+    """Build metadata describing the given SpecKit artifact file."""
     artifact_type = _infer_artifact_type(file_path)
     kind = _infer_kind(artifact_type)
     feature = _infer_feature(file_path, repo_root)

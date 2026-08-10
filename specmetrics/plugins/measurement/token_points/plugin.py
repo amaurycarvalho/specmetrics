@@ -1,6 +1,8 @@
+"""Token Points measurement plugin."""
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Self
 
 import structlog
 
@@ -19,22 +21,28 @@ logger = structlog.get_logger(__name__)
 
 
 class TokenPointsHandler:
+    """Pipeline handler that computes Token Points on measurement completion."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler processes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "token_points_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the display name of this handler stage."""
         return "Token Points Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Compute Token Points for the given pipeline event."""
         ctx = event.context
-        cfm: Optional[CanonicalFunctionalModel] = ctx.canonical_model
-        csm: Optional[CanonicalSpecificationModel] = ctx.canonical_spec_model
+        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+        csm: CanonicalSpecificationModel | None = ctx.canonical_spec_model
         calibration: CalibrationProfile = self._resolve_calibration(ctx)
 
         if not isinstance(cfm, CanonicalFunctionalModel):
@@ -117,7 +125,7 @@ class TokenPointsHandler:
 
         return ctx.merge_stage_output("measurement_result", payload, event=token_event)
 
-    def _resolve_calibration(self, ctx: PipelineContext) -> CalibrationProfile:
+    def _resolve_calibration(self: Self, ctx: PipelineContext) -> CalibrationProfile:
         metadata = ctx.metadata
         if isinstance(metadata, CalibrationProfile):
             return metadata
@@ -127,18 +135,23 @@ class TokenPointsHandler:
 
 
 class TokenPointsPlugin:
-    def plugin_id(self) -> str:
+    """Plugin facade exposing the Token Points measurement methodology."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the unique plugin identifier."""
         return "token_points"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name supported by this plugin."""
         return "Token Points"
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel | None,
         csm: CanonicalSpecificationModel | None = None,
         calibration: CalibrationProfile | None = None,
     ) -> TokenPointsMeasurement:
+        """Measure Token Points from the given CFM and CSM models."""
         if calibration is None:
             from .calibration import get_default_calibration
 
@@ -147,6 +160,7 @@ class TokenPointsPlugin:
 
 
 def create_token_points_measurement_metadata() -> PluginMetadata:
+    """Create the plugin metadata for the Token Points plugin."""
     return PluginMetadata(
         id="token_points",
         api_version="0.1.0",

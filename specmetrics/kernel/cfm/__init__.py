@@ -1,3 +1,8 @@
+"""Canonical Functional Model (CFM) package."""
+
+from .builder import CfmBuilderStage, build
+from .classifier import classify_node, strip_framework_labels
+from .metadata import BuildMetadata, ClassificationConflict
 from .model import (
     Actor,
     ActorType,
@@ -13,9 +18,6 @@ from .model import (
     RuleType,
     UnclassifiedElement,
 )
-from .metadata import BuildMetadata, ClassificationConflict
-from .builder import CfmBuilderStage, build
-from .classifier import classify_node, strip_framework_labels
 from .models import (
     AppliedRuleRecord,
     ComplexityRating,

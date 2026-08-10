@@ -1,16 +1,19 @@
+"""Orchestration of export plugins across directories and streams."""
+
 from __future__ import annotations
 
 import csv
 import io
 import xml.etree.ElementTree as ET
+from collections.abc import Iterator
 from pathlib import Path
-from typing import IO, Optional
+from typing import IO, Self
 
 import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel, EvidenceRef
 
-from .base import ExportError, ExporterPlugin
+from .base import ExporterPlugin, ExportError
 from .models import ExportMetadata, Measurement
 
 logger = structlog.get_logger(__name__)
@@ -61,6 +64,7 @@ def _flatten_items(items: list[dict], keys: list[str]) -> list[list]:
 
 
 def normalize_discover_stage(stage_data: list | dict) -> str:
+    """Return a CSV representation of a discover stage's output data."""
     entries = _ensure_list(stage_data)
     rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
     entities_rows = _flatten_items(
@@ -78,6 +82,7 @@ def normalize_discover_stage(stage_data: list | dict) -> str:
 
 
 def normalize_measure_stage(stage_data: list | dict) -> str:
+    """Return a CSV representation of a measure stage's output data."""
     entries = _ensure_list(stage_data)
     rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
     entities: list[dict] = [e for entry in entries for e in entry.get("entities", [])]
@@ -93,6 +98,7 @@ def normalize_measure_stage(stage_data: list | dict) -> str:
 
 
 def normalize_items_stage(stage_data: list | dict) -> str:
+    """Return a CSV representation of a generic items stage's output data."""
     entries = _ensure_list(stage_data)
     rows = _flatten_items(entries, ["name", "count", "count_type", "duration_ms"])
     output = io.StringIO()
@@ -103,6 +109,7 @@ def normalize_items_stage(stage_data: list | dict) -> str:
 
 
 def stage_to_csv(stage_name: str, stage_data: list | dict) -> str:
+    """Return the CSV representation of a pipeline stage's output data."""
     if stage_name == "discover":
         return normalize_discover_stage(stage_data)
     if stage_name == "measure":
@@ -120,6 +127,7 @@ def _dict_to_xml(parent: ET.Element, data: dict) -> None:
 
 
 def stage_to_xml(stage_name: str, stage_data: list | dict) -> str:
+    """Return an XML representation of a pipeline stage's output data."""
     root = ET.Element("stage", name=stage_name)
     entries = _ensure_list(stage_data)
     for entry in entries:
@@ -131,21 +139,25 @@ def stage_to_xml(stage_name: str, stage_data: list | dict) -> str:
 BATCH_SIZE = 5000
 
 
-def _batched(items: list, size: int = BATCH_SIZE):
+def _batched(items: list, size: int = BATCH_SIZE) -> Iterator[list]:
     for i in range(0, len(items), size):
         yield items[i : i + size]
 
 
 class ExportOrchestrator:
-    def __init__(self, exporters: list[ExporterPlugin]) -> None:
+    """Coordinates exporting measurements using registered exporter plugins."""
+
+    def __init__(self: Self, exporters: list[ExporterPlugin]) -> None:
+        """Initialize the orchestrator with the exporter plugin instances."""
         self.exporters = exporters
 
     def export_to_dir(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
         output_dir: Path,
-        formats: Optional[list[str]] = None,
+        formats: list[str] | None = None,
     ) -> list[dict]:
+        """Export measurements to files in ``output_dir`` for each format."""
         measurements = _extract_measurements(cfm)
         evidence_refs = _extract_evidence(cfm)
         metadata = ExportMetadata(
@@ -208,11 +220,12 @@ class ExportOrchestrator:
         return results
 
     def export_to_stream(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
         output: IO,
         fmt: str = "json",
     ) -> None:
+        """Export measurements to an in-memory stream in the given format."""
         measurements = _extract_measurements(cfm)
         evidence_refs = _extract_evidence(cfm)
         metadata = ExportMetadata(
@@ -228,7 +241,8 @@ class ExportOrchestrator:
             raise ExportError(f"Unknown export format: {fmt}", format_id=fmt)
         exporter.export(measurements, evidence_refs, metadata, output)
 
-    def _get_version(self) -> str:
+    def _get_version(self: Self) -> str:
+        """Return the installed specmetrics package version."""
         try:
             from importlib.metadata import version as _v
 

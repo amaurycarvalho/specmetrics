@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from specmetrics.kernel.csm.metadata import BuildMetadata, ClassificationConflict
 
@@ -46,7 +46,7 @@ class TestBuildMetadata:
 
     def test_created_at_utc(self):
         bm = BuildMetadata(run_id="run-1")
-        assert bm.created_at.tzinfo == timezone.utc
+        assert bm.created_at.tzinfo == UTC
 
 
 class TestClassificationConflict:

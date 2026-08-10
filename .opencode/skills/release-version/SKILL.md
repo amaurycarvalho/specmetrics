@@ -52,8 +52,8 @@ Update the application release version across the codebase and regenerate all ch
 Release version updated to <version>
 
 Files updated:
-- src/flowscope/__init__.py (__version__)
-- flowscope.spec
+- specmetrics/__init__.py (__version__)
+- pyproject.toml
 
 Commentary: changelog skill can now be used manually to update the changelog files.
 ```

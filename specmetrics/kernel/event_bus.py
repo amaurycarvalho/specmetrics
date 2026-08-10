@@ -1,4 +1,8 @@
+"""Event bus that dispatches pipeline events to registered handlers."""
+
 from __future__ import annotations
+
+from typing import Self
 
 import structlog
 
@@ -11,10 +15,14 @@ logger = structlog.get_logger(__name__)
 
 
 class EventBus:
-    def __init__(self, registry: HandlerRegistry) -> None:
+    """Dispatches pipeline events to registered handlers in order."""
+
+    def __init__(self: Self, registry: HandlerRegistry) -> None:
+        """Initialize the event bus with the given handler registry."""
         self._registry = registry
 
-    def publish(self, event: PipelineEvent) -> PipelineContext:
+    def publish(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Publish an event to all handlers and return the resulting context."""
         handlers = self._registry.resolve_all(event.event_type)
         if not handlers:
             handler = self._registry.resolve(event.event_type)

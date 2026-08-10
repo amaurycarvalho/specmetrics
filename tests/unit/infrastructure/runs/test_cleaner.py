@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from specmetrics.infrastructure.runs.cleaner import (
-    RunFolder,
     RetentionPolicy,
+    RunFolder,
     _parse_run_folder,
     clean_runs,
     compute_retention,
@@ -16,7 +16,7 @@ from specmetrics.infrastructure.runs.cleaner import (
 
 
 def _make_run_folder(tmp_path: Path, days_ago: int, suffix: str) -> Path:
-    ts = datetime.now(timezone.utc) - timedelta(days=days_ago)
+    ts = datetime.now(UTC) - timedelta(days=days_ago)
     name = ts.strftime("%Y%m%d-%H%M%S") + f"-{suffix}"
     folder = tmp_path / name
     folder.mkdir(parents=True)
@@ -80,7 +80,7 @@ class TestComputeRetention:
         return paths
 
     def test_default_keeps_90_of_100_with_10_old(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [40] * 10 + [5] * 90
         runs = self._make_runs(tmp_path, days)
         policy = RetentionPolicy(keep_runs=90, keep_days=30)
@@ -89,7 +89,7 @@ class TestComputeRetention:
         assert len(to_keep) == 90
 
     def test_all_old_keeps_only_90(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [60] * 200
         runs = self._make_runs(tmp_path, days)
         policy = RetentionPolicy(keep_runs=90, keep_days=30)
@@ -98,7 +98,7 @@ class TestComputeRetention:
         assert len(to_delete) == 110
 
     def test_all_recent_keeps_all(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [5] * 5
         runs = self._make_runs(tmp_path, days)
         policy = RetentionPolicy(keep_runs=90, keep_days=30)
@@ -111,7 +111,7 @@ class TestCleanRuns:
     def test_default_behavior(self, tmp_path):
         runs_dir = tmp_path / ".specmetrics" / "runs"
         runs_dir.mkdir(parents=True)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for i in range(100):
             days = 40 if i < 10 else 5
             ts = now - timedelta(days=days, hours=i)
@@ -119,7 +119,7 @@ class TestCleanRuns:
             (runs_dir / name).mkdir()
 
         policy = RetentionPolicy(keep_runs=90, keep_days=30)
-        deleted, failed, msg = clean_runs(runs_dir, policy, now=now)
+        deleted, failed, _msg = clean_runs(runs_dir, policy, now=now)
         assert deleted == 10
         assert failed == 0
         remaining = list(runs_dir.iterdir())
@@ -147,7 +147,7 @@ class TestDryRun:
     def test_dry_run_lists_correct_folders(self, tmp_path):
         runs_dir = tmp_path / ".specmetrics" / "runs"
         runs_dir.mkdir(parents=True)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for i in range(100):
             days = 40 if i < 10 else 5
             ts = now - timedelta(days=days, hours=i)
@@ -164,7 +164,7 @@ class TestDryRun:
     def test_dry_run_no_deletion_side_effects(self, tmp_path):
         runs_dir = tmp_path / ".specmetrics" / "runs"
         runs_dir.mkdir(parents=True)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for i in range(5):
             ts = now - timedelta(days=5)
             name = ts.strftime("%Y%m%d-%H%M%S") + f"-{i:04x}"
@@ -179,7 +179,7 @@ class TestDryRun:
     def test_dry_run_nothing_to_clean(self, tmp_path):
         runs_dir = tmp_path / ".specmetrics" / "runs"
         runs_dir.mkdir(parents=True)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for i in range(5):
             ts = now - timedelta(days=1)
             name = ts.strftime("%Y%m%d-%H%M%S") + f"-{i:04x}"
@@ -216,7 +216,7 @@ class TestDeleteRunFolders:
 
 class TestCustomRetention:
     def test_keep_runs_zero_disables_count(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [40, 30, 20, 10, 5]
         runs = []
         for i, d in enumerate(days):
@@ -235,7 +235,7 @@ class TestCustomRetention:
         assert len(to_delete) == 1  # day 40 is older than 30
 
     def test_keep_days_zero_disables_age(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [40, 30, 20, 10, 5]
         runs = []
         for i, d in enumerate(days):
@@ -254,7 +254,7 @@ class TestCustomRetention:
         assert len(to_delete) == 2
 
     def test_both_zero_deletes_all(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [10, 5, 2]
         runs = []
         for i, d in enumerate(days):
@@ -273,7 +273,7 @@ class TestCustomRetention:
         assert len(to_keep) == 0
 
     def test_custom_retention_7_1(self, tmp_path):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days = [7, 6, 5, 4, 3, 2, 1, 0, 0, 0]  # 10 runs
         runs = []
         for i, d in enumerate(days):
@@ -290,3 +290,90 @@ class TestCustomRetention:
         to_delete, to_keep = compute_retention(runs, policy, now=now)
         assert len(to_keep) == 7
         assert len(to_delete) == 3
+
+
+class TestKeptHelpers:
+    """Kills survivors in ``_runs_kept_by_count``/``_runs_kept_by_age``."""
+
+    def _run(self, tmp_path: Path, name: str, days_ago: int) -> RunFolder:
+        now = datetime.now(UTC)
+        return RunFolder(
+            name=name,
+            path=tmp_path / name,
+            timestamp=now - timedelta(days=days_ago),
+            run_id=name,
+        )
+
+    def test_kept_by_count_keep_runs_one(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _runs_kept_by_count
+
+        runs = [self._run(tmp_path, "r0", 0), self._run(tmp_path, "r1", 1)]
+        policy = RetentionPolicy(keep_runs=1, keep_days=0)
+        assert _runs_kept_by_count(runs, policy) == {runs[0]}
+
+    def test_kept_by_age_zero_days_excludes_now(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _runs_kept_by_age
+
+        now = datetime.now(UTC)
+        run = RunFolder(
+            name="r", path=tmp_path / "r", timestamp=now, run_id="id"
+        )
+        policy = RetentionPolicy(keep_runs=0, keep_days=0)
+        assert _runs_kept_by_age([run], policy, now) == set()
+
+    def test_kept_by_age_keep_days_one_includes_now(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _runs_kept_by_age
+
+        now = datetime.now(UTC)
+        run = RunFolder(
+            name="r", path=tmp_path / "r", timestamp=now, run_id="id"
+        )
+        policy = RetentionPolicy(keep_runs=0, keep_days=1)
+        assert _runs_kept_by_age([run], policy, now) == {run}
+
+
+class TestCombineKeep:
+    """Kills survivors in ``_combine_keep`` (mutmut_1..10)."""
+
+    def _run(self, tmp_path: Path, name: str) -> RunFolder:
+        return RunFolder(
+            name=name,
+            path=tmp_path / name,
+            timestamp=datetime.now(UTC),
+            run_id=name,
+        )
+
+    def test_union_only_when_both_positive(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _combine_keep
+
+        r1 = self._run(tmp_path, "r1")
+        r2 = self._run(tmp_path, "r2")
+        policy = RetentionPolicy(keep_runs=1, keep_days=30)
+        result = _combine_keep(policy, keep_by_count={r1}, keep_by_age={r2})
+        assert result == {r1, r2}
+
+    def test_zero_days_returns_count_only(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _combine_keep
+
+        r1 = self._run(tmp_path, "r1")
+        r2 = self._run(tmp_path, "r2")
+        policy = RetentionPolicy(keep_runs=30, keep_days=0)
+        result = _combine_keep(policy, keep_by_count={r1}, keep_by_age={r2})
+        assert result == {r1}
+
+    def test_zero_runs_returns_age_only(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _combine_keep
+
+        r1 = self._run(tmp_path, "r1")
+        r2 = self._run(tmp_path, "r2")
+        policy = RetentionPolicy(keep_runs=0, keep_days=30)
+        result = _combine_keep(policy, keep_by_count={r1}, keep_by_age={r2})
+        assert result == {r2}
+
+    def test_both_zero_returns_empty(self, tmp_path: Path) -> None:
+        from specmetrics.infrastructure.runs.cleaner import _combine_keep
+
+        r1 = self._run(tmp_path, "r1")
+        policy = RetentionPolicy(keep_runs=0, keep_days=0)
+        result = _combine_keep(policy, keep_by_count={r1}, keep_by_age=set())
+        assert result == set()

@@ -1,3 +1,5 @@
+"""Story Points measurement plugin package."""
+
 from .calibrator import (
     StoryPointsCalibrationProfile,
     get_default_calibration,

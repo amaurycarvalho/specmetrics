@@ -1,3 +1,5 @@
+"""MCP resource handlers for specification documents."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,6 +12,7 @@ _project_root: Path | None = None
 
 
 def set_project_root(path: Path) -> None:
+    """Set the project root used to confine spec resource access."""
     global _project_root
     _project_root = path.resolve()
 
@@ -23,6 +26,7 @@ SPEC_RESOURCE_TEMPLATE = ResourceTemplate(
 
 
 def handle_spec_resource(uri: str) -> str:
+    """Return the content of a specification document by URI."""
     path_part = uri.replace("specmetrics://spec/", "", 1)
     resolved = Path(path_part).resolve()
 

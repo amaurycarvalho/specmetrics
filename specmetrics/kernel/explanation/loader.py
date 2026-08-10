@@ -1,10 +1,18 @@
+"""Load canonical model and evidence graph data from a run directory."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
+    from specmetrics.kernel.evidence_graph import EvidenceGraph
 
 
-def load_cfm(run_dir: Path):
+def load_cfm(run_dir: Path) -> CanonicalFunctionalModel | None:
+    """Load the canonical functional model for a run, if present."""
     cfm_path = run_dir / "canonical_model.json"
     if not cfm_path.exists():
         return None
@@ -15,7 +23,8 @@ def load_cfm(run_dir: Path):
     return CanonicalFunctionalModel.model_validate(data)
 
 
-def load_evidence_graph(run_dir: Path):
+def load_evidence_graph(run_dir: Path) -> EvidenceGraph | None:
+    """Load the evidence graph for a run, if present."""
     graph_path = run_dir / "evidence_graph.json"
     if not graph_path.exists():
         return None

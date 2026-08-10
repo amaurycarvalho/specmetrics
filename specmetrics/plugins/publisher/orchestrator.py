@@ -1,3 +1,5 @@
+"""Coordination of publisher plugins for a pipeline run."""
+
 from __future__ import annotations
 
 import structlog
@@ -16,6 +18,7 @@ def publish_all(
     configs: dict[str, PublisherConfig] | None = None,
     publisher_configs: list[PublisherConfiguration] | None = None,
 ) -> list[dict]:
+    """Publish measurements through every discovered publisher plugin."""
     configs = configs or {}
     publishers = discover_publishers()
     results: list[dict] = []

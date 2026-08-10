@@ -1,12 +1,16 @@
+"""Data models for Token Points measurement."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Literal
+from datetime import UTC, datetime
+from typing import Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 
 class EvidenceRef(BaseModel):
+    """Reference to an evidence source for a Token Points contribution."""
+
     graph_node_id: str
     document_id: str
     section_id: str | None = None
@@ -14,12 +18,16 @@ class EvidenceRef(BaseModel):
 
 
 class MeasurementWarning(BaseModel):
+    """Warning raised during Token Points measurement."""
+
     code: str
     message: str
     details: dict[str, str] | None = None
 
 
 class MeasurementMetadata(BaseModel):
+    """Metadata about a Token Points measurement run."""
+
     total_elements_processed: int = 0
     csm_element_count: int = 0
     cfm_element_count: int = 0
@@ -31,6 +39,8 @@ class MeasurementMetadata(BaseModel):
 
 
 class TokenContribution(BaseModel):
+    """A single element's contribution to the Token Points total."""
+
     element_id: str
     element_type: str
     element_name: str
@@ -42,7 +52,8 @@ class TokenContribution(BaseModel):
     evidence_ref: EvidenceRef | None = None
 
     @model_validator(mode="after")
-    def validate_partial_score(self) -> TokenContribution:
+    def validate_partial_score(self: Self) -> TokenContribution:
+        """Validate that partial score equals applied weight plus content score."""
         expected = self.applied_weight + self.content_score
         if abs(self.partial_score - expected) > 1e-9:
             raise ValueError(
@@ -53,26 +64,33 @@ class TokenContribution(BaseModel):
 
 
 class SpecificationCost(BaseModel):
+    """Aggregated specification cost from CSM contributions."""
+
     total: float = 0.0
     contributions: list[TokenContribution] = []
 
 
 class CodeGenerationCost(BaseModel):
+    """Aggregated code generation cost from CFM contributions."""
+
     total: float = 0.0
     contributions: list[TokenContribution] = []
 
 
 class TokenPointsMeasurement(BaseModel):
+    """Complete Token Points measurement result."""
+
     run_id: str
     total_score: float
     specification_cost: SpecificationCost
     code_generation_cost: CodeGenerationCost
     calibration_version: str = "1.0"
     measurement_metadata: MeasurementMetadata
-    measured_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    measured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @model_validator(mode="after")
-    def validate_total(self) -> TokenPointsMeasurement:
+    def validate_total(self: Self) -> TokenPointsMeasurement:
+        """Validate that total score equals the sum of cost totals."""
         if (
             self.total_score
             != self.specification_cost.total + self.code_generation_cost.total
@@ -85,13 +103,15 @@ class TokenPointsMeasurement(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_run_id(self) -> TokenPointsMeasurement:
+    def validate_run_id(self: Self) -> TokenPointsMeasurement:
+        """Validate that the run id is not empty."""
         if not self.run_id:
             raise ValueError("run_id must be non-empty")
         return self
 
 
 def aggregate(measurements: list[TokenPointsMeasurement]) -> TokenPointsMeasurement:
+    """Aggregate multiple measurements into a single Token Points result."""
     if not measurements:
         raise ValueError("Cannot aggregate empty list of measurements")
 

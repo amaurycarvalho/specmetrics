@@ -1,3 +1,5 @@
+"""Pydantic models used by exporter plugins."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -9,6 +11,8 @@ from specmetrics.kernel.cfm.model import EvidenceRef
 
 
 class Measurement(BaseModel):
+    """A single measured function produced by the pipeline."""
+
     function_id: str
     function_name: str
     category: str = ""
@@ -19,6 +23,8 @@ class Measurement(BaseModel):
 
 
 class ExportMetadata(BaseModel):
+    """Metadata describing a single export run."""
+
     specmetrics_version: str = ""
     run_id: str = ""
     export_timestamp: datetime | None = None
@@ -27,6 +33,8 @@ class ExportMetadata(BaseModel):
 
 
 class ExportFormat(BaseModel):
+    """Description of an export format supported by the pipeline."""
+
     id: str
     name: str
     description: str = ""

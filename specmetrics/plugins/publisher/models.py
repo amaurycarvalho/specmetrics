@@ -1,3 +1,5 @@
+"""Pydantic models describing publisher targets and telemetry metrics."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,6 +9,8 @@ from pydantic import BaseModel, Field
 
 
 class PublisherTarget(BaseModel):
+    """Target endpoint configuration for a publisher."""
+
     id: str
     name: str = ""
     endpoint_url: str = ""
@@ -15,6 +19,8 @@ class PublisherTarget(BaseModel):
 
 
 class EvidenceRef(BaseModel):
+    """Reference to specification evidence backing a metric."""
+
     spec_document: str = ""
     spec_section: str = ""
     spec_element_id: str | None = None
@@ -22,6 +28,8 @@ class EvidenceRef(BaseModel):
 
 
 class ResourceAttributes(BaseModel):
+    """Static attributes attached to every published metric."""
+
     project_name: str
     run_id: str
     specification_version: str = ""
@@ -30,6 +38,8 @@ class ResourceAttributes(BaseModel):
 
 
 class TelemetryMetric(BaseModel):
+    """A single telemetry metric ready to be published."""
+
     name: str
     value: float
     unit: str = "1"

@@ -1,71 +1,52 @@
+"""BCP measurement plugin: handler, plugin, and metadata factory."""
+
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any, Self
 
 import structlog
-
-try:
-    from opentelemetry import metrics as otel_metrics
-
-    _meter = otel_metrics.get_meter("specmetrics.bcp")
-    _sdk_duration = _meter.create_histogram(
-        name="bcp.sdk.execution.duration",
-        description="Duration of BCP SDK execution per item",
-        unit="ms",
-    )
-    _story_gauge = _meter.create_gauge(
-        name="bcp.processed_stories",
-        description="Number of stories processed",
-    )
-    _sdk_requests = _meter.create_counter(
-        name="bcp.sdk.requests",
-        description="Total SDK requests made",
-    )
-    _sdk_errors = _meter.create_counter(
-        name="bcp.sdk.errors",
-        description="Total SDK errors encountered",
-    )
-except Exception:
-    _sdk_duration = None
-    _story_gauge = None
-    _sdk_requests = None
-    _sdk_errors = None
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
 from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
+from ._measure import measure_all
+from ._telemetry import _sdk_duration, _sdk_errors, _sdk_requests, _story_gauge
 from .models import (
     BCPMeasurementResult,
     BCPWorkItem,
     ExecutionMetadata,
-    MeasurementEvidence,
     MeasurementWarning,
 )
 from .sdk_adapter import BcpSdkAdapter, check_credentials
-from .story_generator import generate_story
 
 logger = structlog.get_logger(__name__)
 
 
 class BCPHandler:
+    """Pipeline event handler for BCP measurement."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler consumes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "bcp_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the human-readable name of this handler stage."""
         return "BCP Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Measure BCP for the event context and merge stage output."""
         ctx = event.context
-        cfm: Optional[CanonicalFunctionalModel] = ctx.canonical_model
+        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
 
         if not isinstance(cfm, CanonicalFunctionalModel):
             cfm = None
@@ -121,7 +102,7 @@ class BCPHandler:
         return ctx.merge_stage_output("measurement_result", payload, event=bcp_event)
 
     def _measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel | None,
         run_id: str,
     ) -> BCPMeasurementResult:
@@ -189,67 +170,9 @@ class BCPHandler:
                 ],
             )
 
-        items: list[BCPWorkItem] = []
-        succeeded = 0
-        failed = 0
-        sdk_call_count = 0
-        sdk_errors = 0
-
-        for fp_id, fp in cfm.functional_processes.items():
-            story = generate_story(fp, cfm)
-
-            if _sdk_requests is not None:
-                _sdk_requests.add(1)
-
-            sdk_result = adapter.calculate(story)
-            sdk_call_count += 1
-
-            if sdk_result.errors:
-                failed += 1
-                sdk_errors += len(sdk_result.errors)
-                if _sdk_errors is not None:
-                    _sdk_errors.add(len(sdk_result.errors))
-
-                items.append(
-                    BCPWorkItem(
-                        element_id=fp_id,
-                        element_name=fp.name,
-                        generated_story=story,
-                        sdk_response=sdk_result.raw_response,
-                        bcp_score=0.0,
-                        status="failed",
-                        evidence_refs=[
-                            MeasurementEvidence(
-                                element_id=fp_id,
-                                document_id=getattr(fp.evidence, "document_id", ""),
-                                text=getattr(fp.evidence, "text", ""),
-                            )
-                        ],
-                    )
-                )
-            else:
-                succeeded += 1
-                if _sdk_duration is not None:
-                    _sdk_duration.record(sdk_result.duration_ms)
-
-                items.append(
-                    BCPWorkItem(
-                        element_id=fp_id,
-                        element_name=fp.name,
-                        generated_story=story,
-                        sdk_response=sdk_result.raw_response,
-                        bcp_score=sdk_result.total_bcp,
-                        component_breakdown=sdk_result.breakdown,
-                        status="success",
-                        evidence_refs=[
-                            MeasurementEvidence(
-                                element_id=fp_id,
-                                document_id=getattr(fp.evidence, "document_id", ""),
-                                text=getattr(fp.evidence, "text", ""),
-                            )
-                        ],
-                    )
-                )
+        items, succeeded, failed, sdk_call_count, sdk_errors = self._measure_fps(
+            cfm, adapter
+        )
 
         total_bcp = sum(item.bcp_score for item in items if item.status == "success")
         duration_ms = (time.monotonic() - start) * 1000
@@ -275,27 +198,53 @@ class BCPHandler:
             warnings=warnings,
         )
 
-    def _resolve_provider(self) -> str:
+    def _resolve_provider(self: Self) -> str:
         import os
 
         return os.environ.get("BCP_PROVIDER", "openai")
 
+    def _measure_fps(
+        self: Self,
+        cfm: CanonicalFunctionalModel,
+        adapter: BcpSdkAdapter,
+    ) -> tuple[list[BCPWorkItem], int, int, int, int]:
+        return measure_all(
+            cfm,
+            adapter,
+            record_request=lambda: _sdk_requests.add(1)
+            if _sdk_requests is not None
+            else None,
+            record_success=lambda d: _sdk_duration.record(d)
+            if _sdk_duration is not None
+            else None,
+            record_error=lambda n: _sdk_errors.add(n)
+            if _sdk_errors is not None
+            else None,
+            include_evidence=True,
+        )
+
 
 class BCPPlugin:
-    def plugin_id(self) -> str:
+    """Measurement engine plugin for Business Complexity Points."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
         return "bcp"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
         return "BCP"
 
-    def supported_component_types(self) -> list[str]:
+    def supported_component_types(self: Self) -> list[str]:
+        """Return the CFM component types measured by this plugin."""
         return ["functional_process"]
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel | None,
         provider: str | None = None,
     ) -> BCPMeasurementResult:
+        """Measure BCP for the given canonical functional model."""
         return self._handler_measure(cfm, provider)
 
     @staticmethod
@@ -345,43 +294,11 @@ class BCPPlugin:
                 ],
             )
 
-        items: list[BCPWorkItem] = []
-        succeeded = 0
-        failed = 0
-        sdk_call_count = 0
-        sdk_errors = 0
-
-        for fp_id, fp in cfm.functional_processes.items():
-            story = generate_story(fp, cfm)
-            sdk_result = adapter.calculate(story)
-            sdk_call_count += 1
-
-            if sdk_result.errors:
-                failed += 1
-                sdk_errors += len(sdk_result.errors)
-                items.append(
-                    BCPWorkItem(
-                        element_id=fp_id,
-                        element_name=fp.name,
-                        generated_story=story,
-                        sdk_response=sdk_result.raw_response,
-                        bcp_score=0.0,
-                        status="failed",
-                    )
-                )
-            else:
-                succeeded += 1
-                items.append(
-                    BCPWorkItem(
-                        element_id=fp_id,
-                        element_name=fp.name,
-                        generated_story=story,
-                        sdk_response=sdk_result.raw_response,
-                        bcp_score=sdk_result.total_bcp,
-                        component_breakdown=sdk_result.breakdown,
-                        status="success",
-                    )
-                )
+        items, succeeded, failed, sdk_call_count, sdk_errors = measure_all(
+            cfm,
+            adapter,
+            include_evidence=False,
+        )
 
         total_bcp = sum(item.bcp_score for item in items if item.status == "success")
         duration_ms = (time.monotonic() - start) * 1000
@@ -404,6 +321,7 @@ class BCPPlugin:
 
 
 def create_bcp_measurement_metadata() -> PluginMetadata:
+    """Build the plugin metadata entry for the BCP measurement plugin."""
     return PluginMetadata(
         id="bcp",
         api_version="0.1.0",

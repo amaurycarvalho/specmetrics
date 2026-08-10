@@ -1,4 +1,8 @@
+"""CLI commands for managing and inspecting plugins."""
+
 from __future__ import annotations
+
+from typing import Annotated
 
 import typer
 
@@ -13,18 +17,23 @@ plugins_app = typer.Typer(
 
 @plugins_app.command(name="list")
 def list_plugins(
-    verbose: bool = typer.Option(
-        False,
-        "--verbose",
-        "-v",
-        help="Show detailed plugin info",
-    ),
-    plugin_type: str = typer.Option(
-        None,
-        "--type",
-        help="Filter by plugin type (adapter, measurement, export, publisher)",
-    ),
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Show detailed plugin info",
+        ),
+    ] = False,
+    plugin_type: Annotated[
+        str | None,
+        typer.Option(
+            "--type",
+            help="Filter by plugin type (adapter, measurement, export, publisher)",
+        ),
+    ] = None,
 ) -> None:
+    """List discovered plugins with optional filtering."""
     orch = PipelineOrchestrator()
     orch.discover_plugins()
     all_plugins = orch.list_plugins()
@@ -46,6 +55,7 @@ def list_plugins(
 
 @plugins_app.command()
 def verify() -> None:
+    """Verify that all discovered plugins are compatible."""
     orch = PipelineOrchestrator()
     orch.discover_plugins()
     all_plugins = orch.list_plugins()
@@ -70,6 +80,7 @@ def verify() -> None:
 
 @plugins_app.command(name="list-formats")
 def list_formats() -> None:
+    """List discovered export formats and publishers."""
     from specmetrics.plugins.exporter.discovery import discover_exporters
     from specmetrics.plugins.publisher.discovery import discover_publishers
 

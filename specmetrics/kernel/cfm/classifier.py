@@ -1,10 +1,10 @@
+"""Heuristic classifiers for canonical functional model elements."""
+
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from specmetrics.kernel.evidence_graph import GraphNode
-
 
 FRAMEWORK_PATTERNS = [
     re.compile(
@@ -23,7 +23,8 @@ ACTOR_PATTERNS = re.compile(
 )
 
 
-def classify_node(node: GraphNode) -> Optional[str]:
+def classify_node(node: GraphNode) -> str | None:
+    """Classify a graph node into a CFM category, or None if unclassified."""
     if node.node_type != "extracted_element":
         return None
     semantic_type = node.semantic_type
@@ -77,6 +78,7 @@ def _is_role_suffix(name: str) -> bool:
 
 
 def strip_framework_labels(text: str) -> str:
+    """Remove framework-specific prefixes from a node text."""
     for pattern in FRAMEWORK_PATTERNS:
         text = pattern.sub("", text)
     return text.strip()

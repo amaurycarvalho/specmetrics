@@ -1,3 +1,5 @@
+"""MCP resource handlers for measurement and evidence data."""
+
 from __future__ import annotations
 
 import json
@@ -11,10 +13,12 @@ _evidence_store: dict[str, dict] = {}
 
 
 def store_measurement(run_id: str, data: dict) -> None:
+    """Store measurement results for a run id in the in-memory store."""
     _measurement_store[run_id] = data
 
 
 def store_evidence(run_id: str, data: dict) -> None:
+    """Store evidence graph data for a run id in the in-memory store."""
     _evidence_store[run_id] = data
 
 
@@ -43,6 +47,7 @@ EXPORT_RESOURCE_TEMPLATE = ResourceTemplate(
 
 
 def handle_measurement_resource(uri: str) -> str:
+    """Return measurement results JSON for a run id, or raise a ToolError."""
     run_id = uri.replace("specmetrics://measurement/", "", 1)
     data = _measurement_store.get(run_id)
     if data is None:
@@ -51,6 +56,7 @@ def handle_measurement_resource(uri: str) -> str:
 
 
 def handle_evidence_resource(uri: str) -> str:
+    """Return evidence graph JSON for a run id, or raise a ToolError."""
     run_id = uri.replace("specmetrics://evidence/", "", 1)
     data = _evidence_store.get(run_id)
     if data is None:
@@ -59,6 +65,7 @@ def handle_evidence_resource(uri: str) -> str:
 
 
 def handle_export_resource(uri: str) -> str:
+    """Return exported measurement data in the requested format."""
     remainder = uri.replace("specmetrics://export/", "", 1)
     parts = remainder.split("/", 1)
     if len(parts) != 2:

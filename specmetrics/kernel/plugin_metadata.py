@@ -1,14 +1,18 @@
+"""Metadata models describing installed specmetrics plugins."""
+
 from __future__ import annotations
 
 import enum
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 from .events import EventType
 from .handler_registry import EventHandler
 
 
 class PluginType(enum.Enum):
+    """Categorizes the kind of functionality a plugin provides."""
+
     ADAPTER = "adapter"
     SEMANTIC = "semantic"
     MEASUREMENT = "measurement"
@@ -18,6 +22,8 @@ class PluginType(enum.Enum):
 
 
 class PluginStatus(enum.Enum):
+    """Lifecycle status of a discovered plugin."""
+
     PENDING = "pending"
     REGISTERED = "registered"
     REJECTED = "rejected"
@@ -26,13 +32,15 @@ class PluginStatus(enum.Enum):
 
 @dataclass(frozen=True)
 class PluginMetadata:
+    """Describes a plugin's identity, capabilities, and entry point factory."""
+
     id: str
     api_version: str
     plugin_type: PluginType
     handled_event_types: tuple[EventType, ...] = ()
-    handler_factory: Optional[Callable[[], EventHandler]] = None
-    name: Optional[str] = None
-    description: Optional[str] = None
-    author: Optional[str] = None
-    version: Optional[str] = None
+    handler_factory: Callable[[], EventHandler] | None = None
+    name: str | None = None
+    description: str | None = None
+    author: str | None = None
+    version: str | None = None
     dependencies: tuple[str, ...] = ()

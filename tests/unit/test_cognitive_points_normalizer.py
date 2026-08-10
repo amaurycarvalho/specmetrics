@@ -68,3 +68,12 @@ class TestFibonacciNormalizerCustom:
         normalizer = FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3])
         assert normalizer.thresholds == [1, 2]
         assert normalizer.output_values == [1, 2, 3]
+
+    def test_above_all_thresholds_reports_last_threshold(self):
+        result = normalize(200.0)
+        assert result.output_value == 100
+        assert result.threshold_applied == 130.0
+
+    def test_invalid_validation_exact_message(self):
+        with pytest.raises(ValueError, match=r"len\(thresholds\) \+ 1 \(3\)"):
+            FibonacciNormalizer(thresholds=[1, 2], output_values=[1, 2, 3, 4])

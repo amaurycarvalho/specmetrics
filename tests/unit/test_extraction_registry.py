@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
-
 from specmetrics.kernel.extraction_provider import (
     ExtractionResult,
     ProcessingStats,
@@ -12,7 +9,7 @@ from specmetrics.kernel.extraction_registry import ProviderRouter
 
 class _MockProvider:
     def __init__(
-        self, provider_id: str, supported_types: Optional[list[str]] = None
+        self, provider_id: str, supported_types: list[str] | None = None
     ) -> None:
         self._provider_id = provider_id
         self._supported_types = supported_types or []

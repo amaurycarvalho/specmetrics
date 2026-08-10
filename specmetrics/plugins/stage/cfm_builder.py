@@ -1,3 +1,5 @@
+"""Stage metadata for the canonical functional model builder."""
+
 from __future__ import annotations
 
 from specmetrics.kernel.cfm.builder import CfmBuilderStage
@@ -6,6 +8,7 @@ from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 
 def create_cfm_builder_metadata() -> PluginMetadata:
+    """Create metadata for the CFM builder stage."""
     return PluginMetadata(
         id="cfm_builder_stage",
         api_version="0.1.0",

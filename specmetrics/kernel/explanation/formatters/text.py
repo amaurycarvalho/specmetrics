@@ -1,6 +1,12 @@
+"""Plain-text output formatter for measurement explanations and comparisons."""
+
 from __future__ import annotations
 
+from typing import Self
+
 from ..models import (
+    ElementContribution,
+    EvidenceReference,
     ExplanationComparison,
     MeasurementExplanation,
     MetricChange,
@@ -9,12 +15,16 @@ from ..models import (
 
 
 class TextFormatter:
+    """Format explanations and comparisons as human-readable text."""
+
     name = "text"
 
-    def format(self, explanation: MeasurementExplanation) -> str:
+    def format(self: Self, explanation: MeasurementExplanation) -> str:
+        """Format a single measurement explanation as text."""
         return format_explanation(explanation)
 
-    def format_comparison(self, comparison: ExplanationComparison) -> str:
+    def format_comparison(self: Self, comparison: ExplanationComparison) -> str:
+        """Format a comparison of two explanations as text."""
         return format_comparison(comparison)
 
 
@@ -24,36 +34,45 @@ def _format_metric(metric: MetricExplanation, indent: str = "  ") -> str:
     if metric.computation_summary:
         lines.append(f"{indent}  Summary: {metric.computation_summary}")
     for el in metric.elements:
-        label = f"{el.element_label} ({el.element_type})"
-        if el.complexity:
-            label += f" [{el.complexity}]"
-        if el.weight is not None:
-            label += f" = {el.weight}"
-        lines.append(f"{indent}  Element: {label}")
-        if not el.evidence:
-            lines.append(f"{indent}    ⚠ No evidence reference — orphan element")
-        else:
-            for ev in el.evidence[:5]:
-                section = f" in {ev.section_id}" if ev.section_id else ""
-                snippet = ev.text[:80] + "..." if len(ev.text) > 80 else ev.text
-                conf = (
-                    f" (confidence: {ev.confidence:.2f})"
-                    if ev.confidence is not None
-                    else ""
-                )
-                lines.append(f'{indent}    Evidence{section}{conf}: "{snippet}"')
-            if len(el.evidence) > 5:
-                lines.append(
-                    f"{indent}    ... and {len(el.evidence) - 5} more evidence references"
-                )
-        for rule in el.applied_rules:
-            lines.append(f"{indent}    Rule: {rule.rule_id} ({rule.effect})")
+        lines.extend(_format_element(el, indent))
     for rule in metric.applied_rules:
         lines.append(f"{indent}  Rule: {rule.rule_id} ({rule.effect})")
     return "\n".join(lines)
 
 
+def _format_element(element: ElementContribution, indent: str) -> list[str]:
+    """Format a single contributing element and its evidence into text lines."""
+    lines: list[str] = []
+    label = f"{element.element_label} ({element.element_type})"
+    if element.complexity:
+        label += f" [{element.complexity}]"
+    if element.weight is not None:
+        label += f" = {element.weight}"
+    lines.append(f"{indent}  Element: {label}")
+    if not element.evidence:
+        lines.append(f"{indent}    ⚠ No evidence reference — orphan element")
+    else:
+        for ev in element.evidence[:5]:
+            lines.append(f"{indent}    {_format_evidence(ev)}")
+        if len(element.evidence) > 5:
+            lines.append(
+                f"{indent}    ... and {len(element.evidence) - 5} more evidence references"
+            )
+    for rule in element.applied_rules:
+        lines.append(f"{indent}    Rule: {rule.rule_id} ({rule.effect})")
+    return lines
+
+
+def _format_evidence(ev: EvidenceReference) -> str:
+    """Format a single evidence reference into a one-line string."""
+    section = f" in {ev.section_id}" if ev.section_id else ""
+    snippet = ev.text[:80] + "..." if len(ev.text) > 80 else ev.text
+    conf = f" (confidence: {ev.confidence:.2f})" if ev.confidence is not None else ""
+    return f'Evidence{section}{conf}: "{snippet}"'
+
+
 def format_explanation(explanation: MeasurementExplanation) -> str:
+    """Format a measurement explanation as human-readable text."""
     lines: list[str] = [
         f"Measurement Run: {explanation.run_id}",
         f"Spec: {explanation.spec_path}",
@@ -86,6 +105,7 @@ def _format_metric_change(change: MetricChange, indent: str = "  ") -> str:
 
 
 def format_comparison(comparison: ExplanationComparison) -> str:
+    """Format an explanation comparison as human-readable text."""
     lines: list[str] = [
         f"Comparison: {comparison.baseline_run_id} \u2192 {comparison.comparison_run_id}",
         "",

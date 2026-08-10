@@ -9,6 +9,7 @@ from specmetrics.application.metrics_json import (
     MetricBreakdownBuilder,
     save_metrics_json,
 )
+from specmetrics.application.models import EntityScore
 
 
 class TestEntityScoreBuilder:
@@ -425,3 +426,141 @@ class TestSaveMetricsJson:
         assert result_path is not None
         data = json.loads(result_path.read_text(encoding="utf-8"))
         assert data[0]["status"] == "failed"
+
+
+class TestComputeTotal:
+    def _entity(self, score: float) -> EntityScore:
+        return EntityScore(
+            id="cfm:data_group:x", name="x", type="data_group", score=score
+        )
+
+    def test_tshirt_total_is_entity_count(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("tshirt", [self._entity(1.0), self._entity(9.0)]) == 2.0
+
+    def test_tshirt_total_zero_for_empty(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("tshirt", []) == 0.0
+
+    def test_fpa_total_sums_scores(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("fpa", [self._entity(1.5), self._entity(2.5)]) == 4.0
+
+    def test_fpa_total_not_rounded(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("fpa", [self._entity(3.26)]) == 3.26
+
+    def test_tp_total_rounded_to_one_decimal(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("tp", [self._entity(3.26)]) == 3.3
+
+    def test_cp_total_rounded_to_one_decimal(self) -> None:
+        from specmetrics.application.metrics_json import _compute_total
+
+        assert _compute_total("cp", [self._entity(2.24)]) == 2.2
+
+
+class TestBuildEntryFailureAndWarnings:
+    def test_invalid_entity_produces_failed_entry_with_errors(self) -> None:
+        raw = {
+            "fpa_entities": [
+                {
+                    "id": "cfm:data_group:x",
+                    "name": "x",
+                    "function_type": "ILF",
+                    "ufp_weight": "not-a-number",
+                }
+            ]
+        }
+        builder = MetricBreakdownBuilder(raw)
+        entry = builder._build_entry("fpa")
+        assert entry is not None
+        assert entry.status == "failed"
+        assert entry.name == "fpa"
+        assert entry.metric == "function_points"
+        assert entry.unit == "ufp"
+        assert len(entry.errors) == 1
+        assert entry.errors[0].startswith("Failed to build entity:")
+
+    def test_warnings_collected_from_raw(self) -> None:
+        raw = {
+            "storypoints_entities": [],
+            "storypoints_warnings": [
+                {"message": "warn one"},
+                {"message": "warn two"},
+            ],
+        }
+        builder = MetricBreakdownBuilder(raw)
+        entry = builder._build_entry("sp")
+        assert entry is not None
+        assert entry.warnings == ["warn one", "warn two"]
+
+    def test_no_warnings_when_raw_missing(self) -> None:
+        raw = {"storypoints_entities": []}
+        builder = MetricBreakdownBuilder(raw)
+        entry = builder._build_entry("sp")
+        assert entry is not None
+        assert entry.warnings is None
+
+    def test_success_entry_status(self) -> None:
+        raw = {
+            "fpa_entities": [
+                {
+                    "id": "cfm:data_group:x",
+                    "name": "x",
+                    "function_type": "ILF",
+                    "complexity": "Low",
+                    "det_count": 1,
+                    "ufp_weight": 10,
+                }
+            ]
+        }
+        builder = MetricBreakdownBuilder(raw)
+        entry = builder._build_entry("fpa")
+        assert entry is not None
+        assert entry.status == "success"
+        assert entry.total == 10.0
+
+
+class TestCollectWarnings:
+    def _builder(self, raw: dict) -> MetricBreakdownBuilder:
+        return MetricBreakdownBuilder(raw)
+
+    def test_none_key_returns_empty(self) -> None:
+        assert self._builder({})._collect_warnings(None) == []
+
+    def test_missing_key_returns_empty(self) -> None:
+        assert self._builder({})._collect_warnings("storypoints_warnings") == []
+
+    def test_non_list_value_returns_empty(self) -> None:
+        builder = self._builder({"storypoints_warnings": "hello"})
+        assert builder._collect_warnings("storypoints_warnings") == []
+
+    def test_dict_warning_message_extracted(self) -> None:
+        builder = self._builder(
+            {"storypoints_warnings": [{"message": "warn one"}]}
+        )
+        assert builder._collect_warnings("storypoints_warnings") == ["warn one"]
+
+    def test_dict_warning_without_message_uses_str(self) -> None:
+        builder = self._builder(
+            {"storypoints_warnings": [{"code": "X"}]}
+        )
+        assert builder._collect_warnings("storypoints_warnings") == ["{'code': 'X'}"]
+
+    def test_string_warning_passthrough(self) -> None:
+        builder = self._builder(
+            {"storypoints_warnings": ["plain warning"]}
+        )
+        assert builder._collect_warnings("storypoints_warnings") == ["plain warning"]
+
+    def test_mixed_warnings(self) -> None:
+        builder = self._builder(
+            {"storypoints_warnings": ["a", {"message": "b"}]}
+        )
+        assert builder._collect_warnings("storypoints_warnings") == ["a", "b"]

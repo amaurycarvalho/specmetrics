@@ -7,9 +7,9 @@ from specmetrics.kernel.explanation.service import ExplainService
 class TestExplainServiceIntegration:
     def test_explain_with_cfm_and_graph_and_measurement(self):
         from specmetrics.kernel.cfm.model import (
-            CanonicalFunctionalModel,
             Actor,
             BuildMetadata,
+            CanonicalFunctionalModel,
             EvidenceRef,
         )
         from specmetrics.kernel.evidence_graph import (

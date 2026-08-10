@@ -3,10 +3,10 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from specmetrics.kernel.cfm.model import (
+    BuildMetadata,
     CanonicalFunctionalModel,
     EvidenceRef,
     FunctionalProcess,
-    BuildMetadata,
 )
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
@@ -46,10 +46,9 @@ class TestBCPPipeline:
         with patch(
             "specmetrics.plugins.measurement.bcp.plugin.BcpSdkAdapter",
             return_value=mock_adapter,
-        ):
-            with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}):
-                handler = BCPHandler()
-                result_ctx = handler.handle(event)
+        ), patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}):
+            handler = BCPHandler()
+            result_ctx = handler.handle(event)
 
         assert result_ctx is not None
         assert result_ctx.measurement_result is not None

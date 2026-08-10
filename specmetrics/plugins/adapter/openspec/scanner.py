@@ -1,3 +1,5 @@
+"""Discover OpenSpec specification and change artifacts in a repository."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,6 +24,7 @@ def _is_temp_dir(name: str) -> bool:
 
 
 def scan_specs(repository_path: Path) -> list[Path]:
+    """Return the spec.md files under the openspec/specs directory."""
     openspec_specs = repository_path / "openspec" / "specs"
     if not openspec_specs.is_dir():
         return []
@@ -57,6 +60,7 @@ def _list_change_dirs(changes_root: Path) -> list[Path]:
 def scan_changes(
     repository_path: Path,
 ) -> list[tuple[Path, str, bool]]:
+    """Return change artifacts paired with change id and archive flag."""
     changes_root = repository_path / "openspec" / "changes"
     results: list[tuple[Path, str, bool]] = []
 

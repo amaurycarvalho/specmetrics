@@ -1,4 +1,8 @@
+"""Explanation builder for FPA measurement results."""
+
 from __future__ import annotations
+
+from typing import Self
 
 from .models import (
     FPAMeasurementResult,
@@ -8,9 +12,12 @@ from .models import (
 
 
 class MeasurementExplainer:
+    """Builds human-readable explanations for measured functions."""
+
     def build_explanations(
-        self, result: FPAMeasurementResult
+        self: Self, result: FPAMeasurementResult
     ) -> list[MeasurementExplanation]:
+        """Build explanations for every measured function in the result."""
         explanations: list[MeasurementExplanation] = []
 
         for fn in result.measured_functions:
@@ -20,7 +27,7 @@ class MeasurementExplainer:
         return explanations
 
     def _explain_function(
-        self,
+        self: Self,
         fn: MeasuredFunction,
         result: FPAMeasurementResult,
     ) -> MeasurementExplanation:
@@ -45,7 +52,7 @@ class MeasurementExplainer:
             evidence_chain=evidence_chain,
         )
 
-    def _build_classification_reason(self, fn: MeasuredFunction) -> str:
+    def _build_classification_reason(self: Self, fn: MeasuredFunction) -> str:
         if fn.function_type in ("ILF", "EIF"):
             source = "DataGroup"
             subtype_map = {"ILF": "internal/shared", "EIF": "external"}
@@ -63,7 +70,7 @@ class MeasurementExplainer:
                 f"→ classified as {fn.function_type}"
             )
 
-    def _build_complexity_reason(self, fn: MeasuredFunction) -> str:
+    def _build_complexity_reason(self: Self, fn: MeasuredFunction) -> str:
         if fn.function_type in ("ILF", "EIF"):
             ret = fn.ret_count or 0
             return (
@@ -77,7 +84,7 @@ class MeasurementExplainer:
                 f"per IFPUG {fn.function_type} matrix, weight={fn.ufp_weight} UFP"
             )
 
-    def _build_evidence_chain(self, fn: MeasuredFunction) -> list[str]:
+    def _build_evidence_chain(self: Self, fn: MeasuredFunction) -> list[str]:
         chain: list[str] = []
         for ref in fn.evidence_refs:
             section = f" (section {ref.section_id})" if ref.section_id else ""

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from specmetrics.plugins.exporter.models import ExportMetadata, Measurement
 from specmetrics.plugins.publisher.otel_publisher import convert_measurements
 

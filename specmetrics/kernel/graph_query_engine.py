@@ -1,5 +1,8 @@
+"""Read-only query interface for the evidence graph."""
+
 from __future__ import annotations
 
+from typing import Self
 
 from .evidence_graph import GraphBackend
 
@@ -11,30 +14,37 @@ class GraphQueryEngine:
     semantic type, evidence text, provenance chains, and references.
     """
 
-    def __init__(self, backend: GraphBackend) -> None:
+    def __init__(self: Self, backend: GraphBackend) -> None:
+        """Initialize the query engine wrapping the given graph backend."""
         self._backend = backend
 
-    def get_node(self, node_id: str) -> dict | None:
+    def get_node(self: Self, node_id: str) -> dict | None:
+        """Return the node with the given ID, or None if not found."""
         return self._backend.get_node(node_id)
 
-    def query_by_document(self, document_id: str) -> list[dict]:
+    def query_by_document(self: Self, document_id: str) -> list[dict]:
+        """Return all nodes belonging to the given document."""
         return self._backend.query_nodes({"document_id": document_id})
 
-    def query_by_type(self, semantic_type: str) -> list[dict]:
+    def query_by_type(self: Self, semantic_type: str) -> list[dict]:
+        """Return all nodes with the given semantic type."""
         return self._backend.query_nodes({"semantic_type": semantic_type})
 
-    def query_by_evidence(self, text_pattern: str) -> list[dict]:
+    def query_by_evidence(self: Self, text_pattern: str) -> list[dict]:
+        """Return all nodes whose evidence text contains the given pattern."""
         all_nodes = self._backend.query_nodes({})
         return [
             n for n in all_nodes if text_pattern.lower() in n.get("text", "").lower()
         ]
 
     def traverse_provenance(
-        self, node_id: str, max_depth: int = 10
+        self: Self, node_id: str, max_depth: int = 10
     ) -> list[list[dict]]:
+        """Return provenance chains forward from the given node."""
         return self._backend.traverse(node_id, direction="forward", max_depth=max_depth)
 
-    def find_references(self, node_id: str) -> dict[str, list[dict]]:
+    def find_references(self: Self, node_id: str) -> dict[str, list[dict]]:
+        """Return incoming and outgoing reference nodes for the given node."""
         node = self._backend.get_node(node_id)
         if node is None:
             return {"incoming": [], "outgoing": []}

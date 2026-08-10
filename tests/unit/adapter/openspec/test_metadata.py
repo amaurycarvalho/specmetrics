@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 from specmetrics.plugins.adapter.openspec.metadata import (
     build_metadata,
 )
@@ -131,3 +130,62 @@ class TestBuildMetadata:
         delta.write_text("# Delta")
         meta = build_metadata(delta, tmp_path)
         assert meta["domain"] == "api"
+
+
+class TestInferDomain:
+    """Kills survivors in ``metadata._infer_domain`` (mutmut_7..9)."""
+
+    def test_domain_when_specs_is_not_last(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_domain
+
+        assert _infer_domain(Path("specs/auth")) == "auth"
+        assert _infer_domain(Path("specs/auth/spec.md")) == "auth"
+
+    def test_domain_none_when_specs_is_last(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_domain
+
+        assert _infer_domain(Path("specs")) is None
+
+    def test_domain_none_without_specs(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_domain
+
+        assert _infer_domain(Path("changes/add/proposal.md")) is None
+
+
+class TestInferChange:
+    """Kills survivors in ``metadata._infer_change`` (mutmut_7..28)."""
+
+    def test_change_id_from_active_dir(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("changes/add-user/proposal.md")) == "add-user"
+
+    def test_change_id_from_archived_dir(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("changes/archive/old-change/proposal.md")) == (
+            "old-change"
+        )
+        assert _infer_change(Path("a/changes/archive/old-change/proposal.md")) == (
+            "old-change"
+        )
+
+    def test_change_none_when_changes_is_last(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("changes")) is None
+
+    def test_change_none_when_archive_is_last(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("a/changes/archive")) is None
+
+    def test_change_when_archive_segment_is_non_first(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("archive/changes/foo")) == "foo"
+
+    def test_change_none_when_no_changes_segment(self) -> None:
+        from specmetrics.plugins.adapter.openspec.metadata import _infer_change
+
+        assert _infer_change(Path("specs/auth/spec.md")) is None

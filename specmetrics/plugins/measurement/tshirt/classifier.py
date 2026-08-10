@@ -1,4 +1,8 @@
+"""T-Shirt size classifier."""
+
 from __future__ import annotations
+
+from typing import Self
 
 from .models import TShirtSize
 
@@ -35,15 +39,20 @@ def _validate_mapping(sizes: list[TShirtSize]) -> None:
 
 
 class TShirtClassifier:
-    def __init__(self, mapping: list[TShirtSize] | None = None) -> None:
+    """Classify story point values into t-shirt sizes using a mapping."""
+
+    def __init__(self: Self, mapping: list[TShirtSize] | None = None) -> None:
+        """Initialize the classifier with an optional size mapping."""
         self._mapping = list(mapping) if mapping is not None else list(DEFAULT_MAPPING)
         _validate_mapping(self._mapping)
 
     @property
-    def mapping(self) -> list[TShirtSize]:
+    def mapping(self: Self) -> list[TShirtSize]:
+        """Return a copy of the configured size mapping."""
         return list(self._mapping)
 
-    def classify(self, story_point_value: int) -> tuple[str, str]:
+    def classify(self: Self, story_point_value: int) -> tuple[str, str]:
+        """Return the t-shirt size label and matching rule for the given value."""
         for size in self._mapping:
             mn, mx = size.story_point_range
             if mn <= story_point_value <= mx:
@@ -60,8 +69,11 @@ def classify_all(
     sp_items: list,
     mapping: list[TShirtSize] | None = None,
 ) -> tuple[list, list]:
+    """Classify all story point items and return classified items and warnings."""
     from .models import (
         FunctionalWorkItem as TWItem,
+    )
+    from .models import (
         MeasurementEvidence,
         MeasurementWarning,
     )

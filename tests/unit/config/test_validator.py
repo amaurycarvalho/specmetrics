@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from specmetrics.infrastructure.config.schema import CoreConfig
 from specmetrics.infrastructure.config.validator import (
-    ConfigValidationError,
     ConfigParseError,
+    ConfigValidationError,
     Validator,
 )
 
@@ -58,3 +58,35 @@ class TestConfigParseError:
         )
         assert err.file_path == "/path/to/config.yml"
         assert err.line_number == 10
+
+
+class TestValidationErrorExactStr:
+    """Kills survivors in ``ConfigValidationError.__init__`` (mutmut_1,6..12)."""
+
+    def test_message_and_exact_args(self) -> None:
+        err = ConfigValidationError(
+            message="test error",
+            field="pipeline.timeout",
+            value="abc",
+            expected_type="integer",
+        )
+        assert err.message == "test error"
+        assert err.field == "pipeline.timeout"
+        assert err.value == "abc"
+        assert err.expected_type == "integer"
+        assert str(err) == "('test error', 'pipeline.timeout', 'abc', 'integer')"
+
+
+class TestParseErrorExactStr:
+    """Kills survivors in ``ConfigParseError.__init__`` (mutmut_1,4..9)."""
+
+    def test_message_and_exact_args(self) -> None:
+        err = ConfigParseError(
+            message="parse error",
+            file_path="/path/to/config.yml",
+            line_number=10,
+        )
+        assert err.message == "parse error"
+        assert err.file_path == "/path/to/config.yml"
+        assert err.line_number == 10
+        assert str(err) == "('parse error', '/path/to/config.yml', 10)"

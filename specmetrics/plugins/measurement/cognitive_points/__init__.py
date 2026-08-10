@@ -1,3 +1,5 @@
+"""Cognitive Points measurement plugin package."""
+
 from .models import (
     CognitiveContribution,
     CognitivePointsMeasurement,

@@ -1,3 +1,5 @@
+"""Discover SpecKit specification artifacts in a repository."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,6 +10,7 @@ logger = structlog.get_logger(__name__)
 
 
 def scan_memory(repository_path: Path) -> list[Path]:
+    """Return the markdown files under the .specify/memory directory."""
     memory_dir = repository_path / ".specify" / "memory"
     if not memory_dir.is_dir():
         return []
@@ -15,6 +18,7 @@ def scan_memory(repository_path: Path) -> list[Path]:
 
 
 def scan_features(repository_path: Path) -> list[Path]:
+    """Return the markdown files under the specs directory."""
     specs_dir = repository_path / "specs"
     if not specs_dir.is_dir():
         return []

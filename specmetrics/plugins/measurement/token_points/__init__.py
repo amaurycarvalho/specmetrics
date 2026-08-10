@@ -1,3 +1,5 @@
+"""Token Points measurement plugin package."""
+
 from .models import (
     CodeGenerationCost,
     MeasurementMetadata,

@@ -1,6 +1,8 @@
+"""Rule pack resolution helpers for the SFP measurement plugin."""
+
 from __future__ import annotations
 
-from typing import Optional
+from typing import Self
 
 from .models import ComponentType, RulePack
 
@@ -9,10 +11,13 @@ DEFAULT_LF_CONTRIBUTION = 7.1
 
 
 class RulePackApplicator:
+    """Applies rule pack overrides to SFP measurement configuration."""
+
     def resolve_contribution_overrides(
-        self,
-        rule_pack: Optional[RulePack],
-    ) -> Optional[dict[ComponentType, float]]:
+        self: Self,
+        rule_pack: RulePack | None,
+    ) -> dict[ComponentType, float] | None:
+        """Resolve contribution overrides from the rule pack."""
         if rule_pack is None or rule_pack.contribution_overrides is None:
             return None
         overrides: dict[ComponentType, float] = {}
@@ -22,43 +27,48 @@ class RulePackApplicator:
         return overrides if overrides else None
 
     def resolve_excluded_types(
-        self,
-        rule_pack: Optional[RulePack],
+        self: Self,
+        rule_pack: RulePack | None,
     ) -> list[ComponentType]:
+        """Resolve the list of excluded component types from the rule pack."""
         if rule_pack is None:
             return []
         return list(rule_pack.excluded_types)
 
     def resolve_element_exclusions(
-        self,
-        rule_pack: Optional[RulePack],
-    ) -> Optional[dict[str, list[str]]]:
+        self: Self,
+        rule_pack: RulePack | None,
+    ) -> dict[str, list[str]] | None:
+        """Resolve element exclusion rules from the rule pack."""
         if rule_pack is None:
             return None
         return rule_pack.element_exclusions
 
     def resolve_element_inclusions(
-        self,
-        rule_pack: Optional[RulePack],
-    ) -> Optional[dict[str, list[str]]]:
+        self: Self,
+        rule_pack: RulePack | None,
+    ) -> dict[str, list[str]] | None:
+        """Resolve element inclusion rules from the rule pack."""
         if rule_pack is None:
             return None
         return rule_pack.element_inclusions
 
     def resolve_inclusion_criteria(
-        self,
-        rule_pack: Optional[RulePack],
-    ) -> Optional[dict[str, dict[str, list[str]]]]:
+        self: Self,
+        rule_pack: RulePack | None,
+    ) -> dict[str, dict[str, list[str]]] | None:
+        """Resolve inclusion criteria from the rule pack."""
         if rule_pack is None:
             return None
         return rule_pack.inclusion_criteria
 
     def apply_to_component(
-        self,
+        self: Self,
         component_type: ComponentType,
         cfm_element_id: str,
-        rule_pack: Optional[RulePack],
-    ) -> Optional[str]:
+        rule_pack: RulePack | None,
+    ) -> str | None:
+        """Return the exclusion rule applied to a component, if any."""
         if rule_pack is None:
             return None
         if rule_pack.element_exclusions:
@@ -73,7 +83,8 @@ class RulePackApplicator:
                     return f"excluded_by_pattern:{pattern}"
         return None
 
-    def validate_rule_pack(self, rule_pack: Optional[RulePack]) -> list[str]:
+    def validate_rule_pack(self: Self, rule_pack: RulePack | None) -> list[str]:
+        """Validate the rule pack and return a list of warning messages."""
         warnings: list[str] = []
         if rule_pack is None:
             return warnings

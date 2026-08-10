@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -13,7 +12,7 @@ from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry
 
 class _MockAdapter:
     def __init__(
-        self, adapter_id: str, supported_paths: Optional[list[str]] = None
+        self, adapter_id: str, supported_paths: list[str] | None = None
     ) -> None:
         self._adapter_id = adapter_id
         self._supported_paths = supported_paths or []

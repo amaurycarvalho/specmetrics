@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 from typing import Any
 
-
 from specmetrics.plugins.publisher.base import PublisherConfiguration
 from specmetrics.plugins.publisher.batcher import MetricBatcher
 

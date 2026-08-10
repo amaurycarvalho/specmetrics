@@ -51,3 +51,34 @@ class TestMeasurementAPIContract:
         assert m.specification_cost.total == 4.0
         assert m.code_generation_cost.total == 6.0
         assert m.measurement_metadata.total_elements_processed == 5
+
+
+class TestResolveCalibration:
+    def test_resolve_calibration_returns_metadata_profile(self):
+        """Kills TokenPointsHandler::_resolve_calibration__mutmut_1 (metadata=None)."""
+        from specmetrics.kernel.pipeline_context import PipelineContext
+        from specmetrics.plugins.calibration.models import CalibrationProfile
+        from specmetrics.plugins.measurement.token_points.plugin import (
+            TokenPointsHandler,
+        )
+
+        handler = TokenPointsHandler()
+        profile = CalibrationProfile(version="3.1", content_multiplier=0.99)
+        ctx = PipelineContext(metadata=profile)
+        resolved = handler._resolve_calibration(ctx)
+        assert resolved is profile
+        assert resolved.version == "3.1"
+        assert resolved.content_multiplier == 0.99
+
+    def test_resolve_calibration_falls_back_to_default_without_metadata(self):
+        """Kills TokenPointsHandler::_resolve_calibration__mutmut_1 (default path intact)."""
+        from specmetrics.kernel.pipeline_context import PipelineContext
+        from specmetrics.plugins.measurement.token_points.plugin import (
+            TokenPointsHandler,
+        )
+
+        handler = TokenPointsHandler()
+        ctx = PipelineContext()
+        resolved = handler._resolve_calibration(ctx)
+        assert resolved is not None
+        assert resolved.version == "1.0"

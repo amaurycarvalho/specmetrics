@@ -1,7 +1,9 @@
+"""Retry helper with exponential backoff for publisher batch exports."""
+
 from __future__ import annotations
 
 import time
-from typing import Callable, TypeVar
+from collections.abc import Callable
 
 import structlog
 
@@ -9,14 +11,13 @@ from .base import PublisherConfiguration
 
 logger = structlog.get_logger(__name__)
 
-T = TypeVar("T")
-
 
 def with_exponential_backoff(
-    fn: Callable[[], T],
+    fn: Callable[[], object],
     config: PublisherConfiguration,
     context: str = "",
-) -> T:
+) -> object:
+    """Call ``fn`` with exponential backoff up to the configured attempt limit."""
     if config.retry_max_attempts <= 0:
         return fn()
 

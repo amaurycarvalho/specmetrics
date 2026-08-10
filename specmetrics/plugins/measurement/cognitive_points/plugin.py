@@ -1,6 +1,8 @@
+"""Cognitive Points measurement plugin."""
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Self
 
 import structlog
 
@@ -18,22 +20,28 @@ logger = structlog.get_logger(__name__)
 
 
 class CognitivePointsHandler:
+    """Pipeline handler that computes Cognitive Points on measurement completion."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler processes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "cognitive_points_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the display name of this handler stage."""
         return "Cognitive Points Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Compute Cognitive Points for the given pipeline event."""
         ctx = event.context
-        cfm: Optional[CanonicalFunctionalModel] = ctx.canonical_model
-        csm: Optional[CanonicalSpecificationModel] = ctx.canonical_spec_model
+        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+        csm: CanonicalSpecificationModel | None = ctx.canonical_spec_model
         calibration = self._resolve_calibration(ctx)
 
         if not isinstance(cfm, CanonicalFunctionalModel):
@@ -142,7 +150,7 @@ class CognitivePointsHandler:
             "measurement_result", payload, event=cognitive_event
         )
 
-    def _resolve_calibration(self, ctx: PipelineContext) -> Optional[Any]:
+    def _resolve_calibration(self: Self, ctx: PipelineContext) -> CognitiveCalibrationProfile | None:
         metadata = ctx.metadata
         if isinstance(metadata, CognitiveCalibrationProfile):
             return metadata
@@ -152,18 +160,23 @@ class CognitivePointsHandler:
 
 
 class CognitivePointsPlugin:
-    def plugin_id(self) -> str:
+    """Plugin facade exposing the Cognitive Points measurement methodology."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the unique plugin identifier."""
         return "cognitive_points"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name supported by this plugin."""
         return "Cognitive Points"
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel | None,
         csm: CanonicalSpecificationModel | None = None,
-        calibration=None,
+        calibration: CognitiveCalibrationProfile | None = None,
     ) -> CognitivePointsMeasurement:
+        """Measure Cognitive Points from the given CFM and CSM models."""
         if calibration is None:
             from .calibration import get_default_calibration
 
@@ -172,6 +185,7 @@ class CognitivePointsPlugin:
 
 
 def create_cognitive_points_measurement_metadata() -> PluginMetadata:
+    """Create the plugin metadata for the Cognitive Points plugin."""
     return PluginMetadata(
         id="cognitive_points",
         api_version="0.1.0",

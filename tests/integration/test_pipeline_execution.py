@@ -103,9 +103,9 @@ class TestPipelineIntegration:
         assert any(
             e.event_type == EventType.PIPELINE_FAILED for e in ctx.published_events
         )
-        failed = [
+        failed = next(
             e for e in ctx.published_events if e.event_type == EventType.PIPELINE_FAILED
-        ][0]
+        )
         assert "FailingStage" in failed.payload["failed_stage"]
 
     def test_pipeline_context_contains_complete_event_log(self) -> None:

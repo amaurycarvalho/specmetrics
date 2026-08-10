@@ -1,10 +1,10 @@
+"""Classify specification activities by exploration, review, and validation type."""
+
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode
-
 
 EXPLORATION_PATTERNS = re.compile(
     r"(?i)(discover|research|investigat|explor|alternatives?\s+considered)"
@@ -25,7 +25,8 @@ VALIDATION_PATTERNS = re.compile(
 )
 
 
-def classify_activity_type(text: str) -> Optional[str]:
+def classify_activity_type(text: str) -> str | None:
+    """Classify an activity type from text, or None if unknown."""
     if EXPLORATION_PATTERNS.search(text):
         return "exploration"
     if CLARIFICATION_PATTERNS.search(text):
@@ -41,7 +42,8 @@ def classify_activity_type(text: str) -> Optional[str]:
 
 def classify_activity_type_with_context(
     node: GraphNode, graph: EvidenceGraph
-) -> Optional[str]:
+) -> str | None:
+    """Classify an activity type using text and graph context."""
     activity_type = classify_activity_type(node.text)
     if activity_type is not None:
         return activity_type

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 from specmetrics.plugins.adapter.speckit.plugin import SpecKitAdapter
 
 

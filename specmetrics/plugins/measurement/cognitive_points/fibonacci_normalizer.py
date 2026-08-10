@@ -1,18 +1,24 @@
+"""Fibonacci normalization for Cognitive Points measurement."""
+
 from __future__ import annotations
 
-from .models import FibonacciNormalizationResult
+from typing import Self
 
+from .models import FibonacciNormalizationResult
 
 _DEFAULT_THRESHOLDS: list[float] = [5, 12, 22, 35, 55, 85, 130]
 _DEFAULT_OUTPUT_VALUES: list[int] = [1, 3, 5, 8, 13, 20, 40, 100]
 
 
 class FibonacciNormalizer:
+    """Normalize raw scores into Fibonacci output values."""
+
     def __init__(
-        self,
+        self: Self,
         thresholds: list[float] | None = None,
         output_values: list[int] | None = None,
     ) -> None:
+        """Initialize the normalizer with optional thresholds and output values."""
         self._thresholds = list(thresholds) if thresholds else list(_DEFAULT_THRESHOLDS)
         self._output_values = (
             list(output_values) if output_values else list(_DEFAULT_OUTPUT_VALUES)
@@ -25,14 +31,17 @@ class FibonacciNormalizer:
             )
 
     @property
-    def thresholds(self) -> list[float]:
+    def thresholds(self: Self) -> list[float]:
+        """Return a copy of the configured thresholds."""
         return list(self._thresholds)
 
     @property
-    def output_values(self) -> list[int]:
+    def output_values(self: Self) -> list[int]:
+        """Return a copy of the configured output values."""
         return list(self._output_values)
 
-    def normalize(self, raw_score: float) -> FibonacciNormalizationResult:
+    def normalize(self: Self, raw_score: float) -> FibonacciNormalizationResult:
+        """Return the Fibonacci result for the given raw score."""
         threshold_applied: float = 0.0
         output_value: int = self._output_values[-1]
 
@@ -52,6 +61,7 @@ class FibonacciNormalizer:
 
 
 def normalize(raw_score: float) -> FibonacciNormalizationResult:
+    """Normalize a raw score using the default Fibonacci normalizer."""
     return FibonacciNormalizer().normalize(raw_score)
 
 
@@ -60,6 +70,7 @@ def normalize_with(
     thresholds: list[float],
     output_values: list[int],
 ) -> FibonacciNormalizationResult:
+    """Normalize a raw score using the given thresholds and output values."""
     return FibonacciNormalizer(
         thresholds=thresholds, output_values=output_values
     ).normalize(raw_score)

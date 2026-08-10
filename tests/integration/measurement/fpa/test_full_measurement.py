@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from specmetrics.kernel.cfm.metadata import BuildMetadata
 from specmetrics.kernel.cfm.model import (
@@ -22,7 +22,7 @@ def _evidence(text: str = "src") -> EvidenceRef:
 
 
 def _make_cfm() -> CanonicalFunctionalModel:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return CanonicalFunctionalModel(
         run_id="integ-test-run",
         data_groups={
@@ -119,7 +119,7 @@ class TestFullMeasurement:
         assert len(result_a.measured_functions) == len(result_b.measured_functions)
 
     def test_empty_cfm(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         empty_cfm = CanonicalFunctionalModel(
             run_id="empty-run",
             metadata=BuildMetadata(

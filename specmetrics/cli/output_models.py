@@ -1,3 +1,5 @@
+"""Pydantic output models for CLI result serialization."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,6 +8,8 @@ from pydantic import BaseModel
 
 
 class MeasureMetadata(BaseModel):
+    """Metadata describing a single measure run."""
+
     id: str = ""
     id_path: str = ""
     sdd_framework: str
@@ -15,6 +19,8 @@ class MeasureMetadata(BaseModel):
 
 
 class MetricResult(BaseModel):
+    """Summary of a single metric in a measure run."""
+
     name: str
     total: float = 0
     status: str = "completed"
@@ -22,6 +28,8 @@ class MetricResult(BaseModel):
 
 
 class StageInfo(BaseModel):
+    """Summary of a single pipeline stage in a measure run."""
+
     name: str
     count: int = 0
     count_type: str = "items"
@@ -29,12 +37,16 @@ class StageInfo(BaseModel):
 
 
 class ErrorRecord(BaseModel):
+    """An error recorded during a measure run."""
+
     stage: str = ""
     message: str = ""
     details: dict[str, Any] | None = None
 
 
 class MeasureOutput(BaseModel):
+    """Full serializable output of a measure run."""
+
     measure: MeasureMetadata
     results: list[MetricResult] = []
     stages: list[StageInfo] = []

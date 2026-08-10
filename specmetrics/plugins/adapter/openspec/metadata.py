@@ -1,3 +1,5 @@
+"""Metadata inference for OpenSpec specification artifacts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -61,6 +63,7 @@ def _infer_status(file_path: Path) -> str:
 
 
 def build_metadata(file_path: Path, repo_root: Path) -> dict[str, Any]:
+    """Build metadata describing the given OpenSpec artifact file."""
     artifact_type = ARTIFACT_TYPE_MAP.get(file_path.name, "unknown")
     kind = _infer_kind(file_path, artifact_type)
     domain = _infer_domain(file_path)

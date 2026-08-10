@@ -1,8 +1,10 @@
+"""Semantic extraction engine backed by an LLM gateway."""
+
 from __future__ import annotations
 
 import json
 import time
-from typing import Any
+from typing import Any, Self
 
 import structlog
 
@@ -20,7 +22,8 @@ from .semantic_extraction_engine import (
 logger = structlog.get_logger(__name__)
 
 
-class ExtractionError(Exception): ...
+class ExtractionError(Exception):
+    """Raised when the LLM provider fails to produce extractable output."""
 
 
 _SYSTEM_PROMPT = """You are a semantic extraction engine. Extract semantic elements from the given specification document.
@@ -34,14 +37,17 @@ Only extract elements that are explicitly present in the text. Do not infer or f
 
 
 class LiteLLMSemanticEngine(SemanticExtractionEngine):
+    """Semantic extraction engine that delegates to an LLM gateway."""
+
     def __init__(
-        self,
+        self: Self,
         model: str = "gpt-4",
         api_key: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 4096,
         gateway: LLMGateway | None = None,
     ) -> None:
+        """Initialize the LLM extraction engine with the given model options."""
         self._model = model
         self._api_key = api_key
         self._temperature = temperature
@@ -58,7 +64,7 @@ class LiteLLMSemanticEngine(SemanticExtractionEngine):
             )
             self._gateway = LLMGateway(config)
 
-    def _call_llm(self, document: Document) -> list[dict[str, Any]]:
+    def _call_llm(self: Self, document: Document) -> list[dict[str, Any]]:
         user_content = (
             f"Document: {document.id}\n"
             f"Type: {document.document_type}\n\n"
@@ -79,7 +85,7 @@ class LiteLLMSemanticEngine(SemanticExtractionEngine):
             ) from exc
 
     def _parse_elements(
-        self,
+        self: Self,
         raw_elements: list[dict[str, Any]],
         document: Document,
     ) -> list[ExtractedElement]:
@@ -114,7 +120,8 @@ class LiteLLMSemanticEngine(SemanticExtractionEngine):
             )
         return elements
 
-    def extract(self, documents: list[Document]) -> ExtractionResult:
+    def extract(self: Self, documents: list[Document]) -> ExtractionResult:
+        """Run LLM extraction over the given documents."""
         if not documents:
             return ExtractionResult(
                 elements=[],

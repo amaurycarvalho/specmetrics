@@ -1,19 +1,20 @@
 from __future__ import annotations
 
+import json
 
 from specmetrics.kernel.explanation.service import (
-    _build_metrics_from_elements,
-    _build_metrics_from_measurement_result,
     ExplainService,
     ExplanationConfig,
+    _build_metrics_from_elements,
+    _build_metrics_from_measurement_result,
 )
 
 
 def _make_cfm():
     from specmetrics.kernel.cfm.model import (
-        CanonicalFunctionalModel,
         Actor,
         BuildMetadata,
+        CanonicalFunctionalModel,
         EvidenceRef,
     )
 
@@ -199,3 +200,48 @@ class TestExplainService:
             "spec-path-test", spec_path="specs/my-feature/spec.md"
         )
         assert explanation.spec_path == "specs/my-feature/spec.md"
+
+
+class TestSaveToDisk:
+    def test_save_to_disk_creates_nested_dirs(self, tmp_path):
+        """Kills ExplainService::_save_to_disk__mutmut_2/4/6 (mkdir must create parents)."""
+        from structlog.testing import capture_logs
+
+        config = ExplanationConfig(storage_dir=str(tmp_path / "a" / "b"))
+        service = ExplainService(config=config)
+        with capture_logs() as logs:
+            service.explain("run-nested")
+        assert (tmp_path / "a" / "b" / "run-nested.json").exists()
+        assert logs == []
+
+    def test_save_to_disk_writes_explanation_json(self, tmp_path):
+        """Kills ExplainService::_save_to_disk__mutmut_10/20 (model dump must be written)."""
+        config = ExplanationConfig(storage_dir=str(tmp_path))
+        service = ExplainService(config=config)
+        service.explain("run-json")
+        raw = (tmp_path / "run-json.json").read_text()
+        loaded = json.loads(raw)
+        assert isinstance(loaded, dict)
+        assert loaded["run_id"] == "run-json"
+
+    def test_save_to_disk_indents_json_with_two_spaces(self, tmp_path):
+        """Kills ExplainService::_save_to_disk__mutmut_22/25/26 (json dumped with indent=2)."""
+        config = ExplanationConfig(storage_dir=str(tmp_path))
+        service = ExplainService(config=config)
+        service.explain("run-indent")
+        raw = (tmp_path / "run-indent.json").read_text()
+        loaded = json.loads(raw)
+        assert raw == json.dumps(loaded, indent=2)
+
+    def test_save_to_disk_logs_failure_when_write_blocked(self, tmp_path):
+        """Kills ExplainService::_save_to_disk__mutmut_27/30 (explanation_save_failed warning)."""
+        from structlog.testing import capture_logs
+
+        blocker = tmp_path / "blocker"
+        blocker.write_text("x")
+        config = ExplanationConfig(storage_dir=str(blocker))
+        service = ExplainService(config=config)
+        with capture_logs() as logs:
+            service.explain("run-fail")
+        assert logs[0]["event"] == "explanation_save_failed"
+        assert logs[0]["run_id"] == "run-fail"

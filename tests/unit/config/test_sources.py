@@ -63,3 +63,12 @@ class TestFlattenDict:
 
     def test_prefix(self):
         assert _flatten_dict({"x": 1}, "root") == {"root.x": 1}
+
+
+class TestCliSourceName:
+    """Kills survivors in ``CliSource.__init__`` (mutmut_1,5,6,7)."""
+
+    def test_default_name(self) -> None:
+        source = CliSource({})
+        assert source.name == "CLI arguments"
+        assert source.precedence == SourceLevel.CLI

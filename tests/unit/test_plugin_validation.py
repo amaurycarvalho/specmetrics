@@ -154,3 +154,53 @@ class TestPluginValidator:
         result2 = ValidationResult(is_valid=False, errors=["err1"])
         assert not result2.is_valid
         assert result2.errors == ["err1"]
+
+
+class TestPluginValidatorInitMutationTargets:
+    def test_platform_api_version_from_importlib(self) -> None:
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="3.2.1"
+        ):
+            validator = PluginValidator()
+        assert validator._platform_api_version == "3.2.1"
+
+    def test_platform_api_version_fallback(self) -> None:
+        with patch(
+            "specmetrics.kernel.plugin_validation.version",
+            side_effect=Exception("no dist"),
+        ):
+            validator = PluginValidator()
+        assert validator._platform_api_version == "0.0.0"
+
+
+class TestCheckRequiredFieldsMutationTargets:
+    def test_whitespace_only_required_field_rejected(self) -> None:
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
+            validator = PluginValidator()
+        meta = _make_metadata(id="   ")
+        result = validator.validate(meta)
+        assert not result.is_valid
+        assert any("id" in e for e in result.errors)
+
+    def test_non_string_required_field_rejected(self) -> None:
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
+            validator = PluginValidator()
+        meta = _make_metadata(id=123)
+        result = validator.validate(meta)
+        assert not result.is_valid
+        assert any("id" in e for e in result.errors)
+
+
+class TestCheckPluginTypeMutationTarget:
+    def test_unspecified_type_exact_message(self) -> None:
+        with patch(
+            "specmetrics.kernel.plugin_validation.version", return_value="1.0.0"
+        ):
+            validator = PluginValidator()
+        meta = _make_metadata(plugin_type=PluginType.UNSPECIFIED)
+        result = validator.validate(meta)
+        assert "Plugin type must be specified" in result.errors

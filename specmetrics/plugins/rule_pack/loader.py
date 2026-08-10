@@ -1,6 +1,9 @@
+"""Load rule pack definitions from YAML files."""
+
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Self
 
 import structlog
 from ruamel.yaml import YAML
@@ -29,10 +32,14 @@ GSC_KEYS: list[str] = [
 
 
 class RulePackLoader:
-    def __init__(self, rules_dir: str = ".specmetrics/rules") -> None:
+    """Loads rule pack definitions from a rules directory."""
+
+    def __init__(self: Self, rules_dir: str = ".specmetrics/rules") -> None:
+        """Initialize the loader with the rules directory."""
         self._rules_dir = Path(rules_dir)
 
-    def discover_files(self) -> list[Path]:
+    def discover_files(self: Self) -> list[Path]:
+        """Return the YAML rule pack files in the rules directory."""
         if not self._rules_dir.is_dir():
             logger.info("rule_pack_dir_not_found", path=str(self._rules_dir))
             return []
@@ -42,7 +49,8 @@ class RulePackLoader:
         )
         return files
 
-    def load_file(self, file_path: Path) -> tuple[RulePack | None, FileLoadResult]:
+    def load_file(self: Self, file_path: Path) -> tuple[RulePack | None, FileLoadResult]:
+        """Load a single rule pack file and return the pack and load result."""
         result = FileLoadResult(file_path=str(file_path))
         try:
             raw = yaml.load(file_path)
@@ -91,7 +99,8 @@ class RulePackLoader:
         result.status = "loaded"
         return rule_pack, result
 
-    def load_all(self) -> list[tuple[RulePack | None, FileLoadResult]]:
+    def load_all(self: Self) -> list[tuple[RulePack | None, FileLoadResult]]:
+        """Load all discovered rule pack files."""
         files = self.discover_files()
         if not files:
             return []

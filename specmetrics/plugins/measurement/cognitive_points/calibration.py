@@ -1,27 +1,35 @@
+"""Calibration profiles for Cognitive Points measurement."""
+
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from .bloom_classifier import _DEFAULT_BLOOM_MAPPINGS, _DEFAULT_BLOOM_WEIGHTS
-from .fibonacci_normalizer import _DEFAULT_THRESHOLDS, _DEFAULT_OUTPUT_VALUES
+from .fibonacci_normalizer import _DEFAULT_OUTPUT_VALUES, _DEFAULT_THRESHOLDS
 
 
 class BloomClassification(BaseModel):
+    """A single Bloom classification with rationale and configured weight."""
+
     bloom_level: str
     rationale: str = ""
     configured_weight: float = 1.0
 
 
 class FibonacciNormalizationProfile(BaseModel):
+    """Thresholds and output values used to normalize raw scores."""
+
     thresholds: list[float] = Field(default_factory=lambda: list(_DEFAULT_THRESHOLDS))
     output_values: list[int] = Field(
         default_factory=lambda: list(_DEFAULT_OUTPUT_VALUES)
     )
 
     @model_validator(mode="after")
-    def validate_lengths(self) -> FibonacciNormalizationProfile:
+    def validate_lengths(self: Self) -> FibonacciNormalizationProfile:
+        """Validate that output values count equals thresholds count plus one."""
         if len(self.output_values) != len(self.thresholds) + 1:
             raise ValueError(
                 f"len(output_values) ({len(self.output_values)}) must equal "
@@ -31,6 +39,8 @@ class FibonacciNormalizationProfile(BaseModel):
 
 
 class CognitiveCalibrationProfile(BaseModel):
+    """Configurable calibration profile for Cognitive Points."""
+
     version: str = "1.0"
     bloom_levels: dict[str, float] = Field(
         default_factory=lambda: dict(_DEFAULT_BLOOM_WEIGHTS)
@@ -46,12 +56,14 @@ class CognitiveCalibrationProfile(BaseModel):
 
 
 def get_default_calibration() -> CognitiveCalibrationProfile:
+    """Return the default Cognitive Points calibration profile."""
     return CognitiveCalibrationProfile()
 
 
 def load_calibration(
     calibration_dir: str | Path | None = None,
 ) -> CognitiveCalibrationProfile:
+    """Load a calibration profile, merging overrides from the given directory."""
     profile = get_default_calibration()
     if calibration_dir is not None:
         calibration_path = Path(calibration_dir)

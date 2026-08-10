@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from specmetrics.kernel.events import EventType
-from specmetrics.kernel.plugin_metadata import PluginType
-from specmetrics.kernel.events import PipelineEvent
+from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
+from specmetrics.kernel.plugin_metadata import PluginType
 from specmetrics.plugins.measurement.tshirt.models import (
     ExecutionMetadata,
     FunctionalWorkItem,

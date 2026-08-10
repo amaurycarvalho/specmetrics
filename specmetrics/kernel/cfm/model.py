@@ -1,11 +1,17 @@
+"""Canonical Functional Model (CFM) data structures.
+
+Defines the pydantic models that represent a canonical functional model derived
+from extracted evidence, along with the consumer protocol used by downstream
+measurement engine plugins.
+"""
+
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, Protocol
+from typing import Literal, Protocol, Self
 
 from pydantic import BaseModel
 
 from .metadata import BuildMetadata
-
 
 ActorType = Literal["person", "system", "role"]
 RuleType = Literal["constraint", "condition", "policy", "derivation"]
@@ -16,13 +22,17 @@ RelationshipType = Literal[
 
 
 class EvidenceRef(BaseModel):
+    """Reference to the evidence supporting a canonical functional model element."""
+
     graph_node_id: str
     document_id: str
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str
 
 
 class Actor(BaseModel):
+    """An actor that participates in functional processes."""
+
     id: str
     name: str
     actor_type: ActorType = "role"
@@ -31,6 +41,8 @@ class Actor(BaseModel):
 
 
 class Operation(BaseModel):
+    """An operation performed within a functional process."""
+
     id: str
     name: str
     description: str = ""
@@ -40,6 +52,8 @@ class Operation(BaseModel):
 
 
 class FunctionalProcess(BaseModel):
+    """A functional process grouping actors, operations, and data groups."""
+
     id: str
     name: str
     description: str = ""
@@ -51,6 +65,8 @@ class FunctionalProcess(BaseModel):
 
 
 class BusinessRule(BaseModel):
+    """A business rule governing functional behavior."""
+
     id: str
     name: str
     description: str = ""
@@ -61,6 +77,8 @@ class BusinessRule(BaseModel):
 
 
 class DataGroup(BaseModel):
+    """A group of related data entities."""
+
     id: str
     name: str
     description: str = ""
@@ -71,6 +89,8 @@ class DataGroup(BaseModel):
 
 
 class Relationship(BaseModel):
+    """A relationship between two functional model elements."""
+
     id: str
     source_id: str
     target_id: str
@@ -80,6 +100,8 @@ class Relationship(BaseModel):
 
 
 class UnclassifiedElement(BaseModel):
+    """An element that could not be classified into a known category."""
+
     id: str
     original_type: str
     content: str
@@ -88,6 +110,8 @@ class UnclassifiedElement(BaseModel):
 
 
 class CanonicalFunctionalModel(BaseModel):
+    """The canonical functional model holding all extracted elements."""
+
     model_config = {"frozen": True}
 
     run_id: str
@@ -101,7 +125,8 @@ class CanonicalFunctionalModel(BaseModel):
     metadata: BuildMetadata
     evidence_graph_ref: str = ""
 
-    def get_element(self, element_id: str) -> Any | None:
+    def get_element(self: Self, element_id: str) -> object | None:
+        """Return the element with the given id across all collections."""
         for collection in (
             self.actors,
             self.functional_processes,
@@ -117,7 +142,8 @@ class CanonicalFunctionalModel(BaseModel):
                 return rel
         return None
 
-    def get_elements_by_category(self, category: str) -> dict[str, Any]:
+    def get_elements_by_category(self: Self, category: str) -> dict[str, object]:
+        """Return the collection of elements for a given category."""
         mapping = {
             "actors": self.actors,
             "functional_processes": self.functional_processes,
@@ -128,8 +154,9 @@ class CanonicalFunctionalModel(BaseModel):
         }
         return mapping.get(category, {})
 
-    def get_elements_by_evidence(self, document_id: str) -> list[Any]:
-        result: list[Any] = []
+    def get_elements_by_evidence(self: Self, document_id: str) -> list[object]:
+        """Return all elements referencing evidence from the given document."""
+        result: list[object] = []
         for collection in (
             self.actors,
             self.functional_processes,
@@ -146,13 +173,15 @@ class CanonicalFunctionalModel(BaseModel):
                 result.append(rel)
         return result
 
-    def trace_evidence(self, element_id: str) -> EvidenceRef | None:
+    def trace_evidence(self: Self, element_id: str) -> EvidenceRef | None:
+        """Return the evidence reference for the given element id."""
         element = self.get_element(element_id)
         if element is None:
             return None
         return element.evidence
 
-    def get_relationships_for_element(self, element_id: str) -> list[Relationship]:
+    def get_relationships_for_element(self: Self, element_id: str) -> list[Relationship]:
+        """Return the relationships connected to the given element id."""
         return [
             rel
             for rel in self.relationships
@@ -167,4 +196,6 @@ class CFMConsumer(Protocol):
     CanonicalFunctionalModel without framework-specific dependencies.
     """
 
-    def consume(self, cfm: CanonicalFunctionalModel) -> Any: ...
+    def consume(self: Self, cfm: CanonicalFunctionalModel) -> object:
+        """Consume the canonical functional model."""
+        ...

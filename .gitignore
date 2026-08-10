@@ -46,11 +46,19 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+mutation_report.html
+.semgrep/
 *.cover
 *.py.cover
 .hypothesis/
 .pytest_cache/
 cover/
+
+# Mutation testing
+mutants/
+.mutmut-cache
+!mutants/mutmut-cicd-stats.json
+!mutants/survivor-analysis.md
 
 # Translations
 *.mo

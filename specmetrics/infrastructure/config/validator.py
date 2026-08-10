@@ -1,6 +1,8 @@
+"""Validation of configuration data against pydantic schemas."""
+
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, ValidationError
 
@@ -8,29 +10,41 @@ from .schema import ConfigWarning
 
 
 class ConfigValidationError(Exception):
+    """Raised when configuration fails validation."""
+
     def __init__(
-        self, message: str, field: str, value: Any, expected_type: str
+        self: Self, message: str, field: str, value: object, expected_type: str
     ) -> None:
+        """Initialize the error with validation details."""
+        self.message = message
         self.field = field
         self.value = value
         self.expected_type = expected_type
-        super().__init__(message)
+        super().__init__(message, field, value, expected_type)
 
 
 class ConfigParseError(Exception):
+    """Raised when a configuration file cannot be parsed."""
+
     def __init__(
-        self, message: str, file_path: str, line_number: int | None = None
+        self: Self, message: str, file_path: str, line_number: int | None = None
     ) -> None:
+        """Initialize the error with parse details."""
+        self.message = message
         self.file_path = file_path
         self.line_number = line_number
-        super().__init__(message)
+        super().__init__(message, file_path, line_number)
 
 
 class Validator:
-    def __init__(self, schema_model: type[BaseModel]) -> None:
+    """Validates configuration data against a pydantic schema."""
+
+    def __init__(self: Self, schema_model: type[BaseModel]) -> None:
+        """Initialize the validator with the target schema model."""
         self._schema_model = schema_model
 
-    def validate(self, data: dict[str, Any]) -> BaseModel:
+    def validate(self: Self, data: dict[str, Any]) -> BaseModel:
+        """Validate the data and return the parsed model, or raise on failure."""
         try:
             return self._schema_model.model_validate(data)
         except ValidationError as exc:
@@ -48,10 +62,11 @@ class Validator:
             ) from exc
 
     def check_unrecognized_keys(
-        self,
+        self: Self,
         data: dict[str, Any],
         known_prefixes: list[str] | None = None,
     ) -> list[ConfigWarning]:
+        """Return warnings for configuration keys not recognized by the schema."""
         warnings: list[ConfigWarning] = []
         known = known_prefixes or []
         for key in data:

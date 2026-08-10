@@ -1,6 +1,9 @@
+"""Semantic extraction models, protocol, and engine factory."""
+
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, Protocol
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal, Protocol, Self
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +14,7 @@ class EvidenceReference(BaseModel):
     """Pointer to source material that justifies an extracted element."""
 
     document_id: str = Field(min_length=1)
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str = Field(min_length=1)
     rule_id: str = ""
 
@@ -43,7 +46,7 @@ class ExtractionResult(BaseModel):
     engine_id: str
     processing_stats: ProcessingStats
 
-    def deterministic_dump(self) -> dict:
+    def deterministic_dump(self: Self) -> dict:
         """Return model dict excluding non-deterministic timing fields.
 
         Use this for byte-identical comparison across runs (SC-002).
@@ -54,11 +57,14 @@ class ExtractionResult(BaseModel):
 class SemanticExtractionEngine(Protocol):
     """Interface that all extraction engines must implement."""
 
-    def extract(self, documents: list[Document]) -> ExtractionResult: ...
+    def extract(self: Self, documents: list[Document]) -> ExtractionResult:
+        """Run extraction over the given documents and return the result."""
 
 
 class SemanticEngineFactory:
-    _ENGINE_MAP = {
+    """Factory that creates extraction engines from a provider name."""
+
+    _ENGINE_MAP: ClassVar[Mapping[str, str]] = {
         "none": "DeterministicSemanticEngine",
         "chatgpt": "LiteLLMSemanticEngine",
         "claude": "LiteLLMSemanticEngine",
@@ -66,7 +72,7 @@ class SemanticEngineFactory:
         "ollama": "LiteLLMSemanticEngine",
     }
 
-    _MODEL_MAP = {
+    _MODEL_MAP: ClassVar[Mapping[str, str]] = {
         "chatgpt": "gpt-4",
         "claude": "claude-3-opus",
         "gemini": "gemini-pro",
@@ -75,11 +81,12 @@ class SemanticEngineFactory:
 
     @classmethod
     def create(
-        cls,
+        cls: type[SemanticEngineFactory],
         provider: str,
         config: dict | None = None,
         gateway: Any | None = None,
     ) -> SemanticExtractionEngine:
+        """Create and return an extraction engine for the given provider."""
         engine_name = cls._ENGINE_MAP.get(provider)
         if engine_name is None:
             raise ValueError(f"Unknown provider: {provider}")

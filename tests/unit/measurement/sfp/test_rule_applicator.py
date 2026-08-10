@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-
+from specmetrics.plugins.measurement.sfp.models import RulePack
 from specmetrics.plugins.measurement.sfp.rule_applicator import (
     RulePackApplicator,
 )
-from specmetrics.plugins.measurement.sfp.models import RulePack
 
 
 def _make_rule_pack(**overrides) -> RulePack:
@@ -163,6 +162,54 @@ class TestT028_InvalidRulePackGeneratesWarnings:
 
     def test_valid_rule_pack_no_warnings(self):
         rule_pack = _make_rule_pack()
+        applicator = RulePackApplicator()
+        warnings = applicator.validate_rule_pack(rule_pack)
+        assert len(warnings) == 0
+
+
+class TestMissingExclusionKeys:
+    def test_missing_by_id_key_does_not_break(self):
+        rule_pack = _make_rule_pack(element_exclusions={"by_pattern": ["*_int_*"]})
+        applicator = RulePackApplicator()
+        result = applicator.apply_to_component(
+            "functional_process", "op-999", rule_pack
+        )
+        assert result is None
+
+    def test_missing_by_pattern_key_does_not_break(self):
+        rule_pack = _make_rule_pack(element_exclusions={"by_id": ["op-001"]})
+        applicator = RulePackApplicator()
+        result = applicator.apply_to_component(
+            "logical_function", "dg-999", rule_pack
+        )
+        assert result is None
+
+
+class TestValidationBoundaries:
+    def test_zero_contribution_override_warns(self):
+        rule_pack = _make_rule_pack(
+            contribution_overrides={"functional_process": 0.0},
+        )
+        applicator = RulePackApplicator()
+        warnings = applicator.validate_rule_pack(rule_pack)
+        assert any("Invalid contribution override" in w for w in warnings)
+
+    def test_sub_unit_positive_override_does_not_warn(self):
+        rule_pack = _make_rule_pack(
+            contribution_overrides={"functional_process": 0.5},
+        )
+        applicator = RulePackApplicator()
+        warnings = applicator.validate_rule_pack(rule_pack)
+        assert len(warnings) == 0
+
+    def test_functional_process_excluded_type_valid(self):
+        rule_pack = _make_rule_pack(excluded_types=["functional_process"])
+        applicator = RulePackApplicator()
+        warnings = applicator.validate_rule_pack(rule_pack)
+        assert len(warnings) == 0
+
+    def test_logical_function_excluded_type_valid(self):
+        rule_pack = _make_rule_pack(excluded_types=["logical_function"])
         applicator = RulePackApplicator()
         warnings = applicator.validate_rule_pack(rule_pack)
         assert len(warnings) == 0

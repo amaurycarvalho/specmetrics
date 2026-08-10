@@ -1,3 +1,5 @@
+"""MCP tool handler for running the measurement pipeline."""
+
 from __future__ import annotations
 
 import json
@@ -13,6 +15,7 @@ _orchestrator: PipelineOrchestrator | None = None
 
 
 def get_orchestrator() -> PipelineOrchestrator:
+    """Return the shared pipeline orchestrator, creating it on first use."""
     global _orchestrator
     if _orchestrator is None:
         _orchestrator = PipelineOrchestrator()
@@ -46,6 +49,7 @@ RUN_PIPELINE_TOOL = Tool(
 
 
 def handle_run_pipeline(arguments: dict) -> list[TextContent]:
+    """Run the measurement pipeline and return the result as text content."""
     project_path = Path(arguments["project_path"])
     stage_str = arguments.get("stage", "full")
     export_format_str = arguments.get("export_format", "json")

@@ -27,6 +27,21 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "ruff>=0.1.0",
+]
+quality = [
+    "ruff>=0.1.0",
+    "flake8>=6.0.0",
+    "flake8-bugbear>=23.0.0",
+    "flake8-annotations>=3.0.0",
+    "flake8-docstrings>=1.7.0",
+    "radon>=6.0.0",
+    "xenon>=0.9.0",
+    "lizard>=1.17.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "mutmut>=3.6.0",
+    "semgrep>=1.0.0",
 ]
 
 [project.scripts]
@@ -70,8 +85,53 @@ otel = "specmetrics.plugins.publisher.otel_publisher:OTelPublisher"
 [tool.setuptools.packages.find]
 include = ["specmetrics*"]
 
+[tool.setuptools.package-data]
+specmetrics = ["kernel/rules/*.yaml"]
+
+[tool.ruff.lint]
+extend-ignore = [
+    # Intentional: plugin discovery/adapters isolate third-party entry-point
+    # loading behind a broad catch so a broken plugin is skipped, not fatal.
+    "BLE001",
+    # Intentional: best-effort housekeeping/parsing where failure means "skip".
+    "S110",
+    # typer idiom: Option/Argument(...) in parameter defaults is required by the API.
+    "B008",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["-m", "not slow"]
 markers = [
     "slow: marks tests as slow (e.g., performance benchmarks); deselected by default",
 ]
+
+[tool.mutmut]
+source_paths = [
+    "specmetrics/",
+]
+pytest_add_cli_args_test_selection= [ 
+    "-m",
+    "not slow",
+    "tests/" 
+]
+pytest_add_cli_args = [
+    "-q",
+    "--disable-warnings",
+]
+runner = "pytest"
+do_not_mutate = [
+    "__init__.py",
+    "specmetrics/tests/*",
+    "tests/*",
+    ".*/*",
+    "build/*",
+]
+do_not_mutate_patterns = [
+    'logger\.\w+',
+    'raise \w+',
+]
+#mutate_only_covered_lines = true
+on_dependency_change = "rerun"
+timeout_constant = 1
+timeout_multiplier = 10

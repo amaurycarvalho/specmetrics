@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-import uuid
 import time
+import uuid
 
 import pytest
 
+from specmetrics.application.models import MetricOutputItem, PipelineResult
+from specmetrics.cli.formatters import format_text_result
 from specmetrics.kernel.cfm.model import (
     Actor,
     BusinessRule,
     CanonicalFunctionalModel,
     DataGroup,
-    EvidenceRef as CfmEvidenceRef,
     FunctionalProcess,
     Operation,
     Relationship,
+)
+from specmetrics.kernel.cfm.model import (
     BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CfmEvidenceRef,
 )
 from specmetrics.kernel.csm.model import (
     AcceptanceCriterion,
@@ -22,12 +28,16 @@ from specmetrics.kernel.csm.model import (
     CanonicalSpecificationModel,
     Constraint,
     Decision,
-    EvidenceRef as CsmEvidenceRef,
     GlossaryTerm,
     OpenQuestion,
     Risk,
     SpecificationActivity,
+)
+from specmetrics.kernel.csm.model import (
     BuildMetadata as CsmBuildMetadata,
+)
+from specmetrics.kernel.csm.model import (
+    EvidenceRef as CsmEvidenceRef,
 )
 from specmetrics.plugins.measurement.cognitive_points.calculator import (
     calculate,
@@ -38,8 +48,6 @@ from specmetrics.plugins.measurement.cognitive_points.calibration import (
 from specmetrics.plugins.measurement.cognitive_points.models import (
     CognitivePointsMeasurement,
 )
-from specmetrics.application.models import PipelineResult, MetricOutputItem
-from specmetrics.cli.formatters import format_text_result
 
 
 def _uid() -> str:
@@ -266,6 +274,116 @@ class TestCalculateFromKnownModels:
         assert (
             result.total_cognitive_points == result.fibonacci_normalization.output_value
         )
+
+
+class TestCustomCalibration:
+    def test_custom_calibration_applied(self):
+        from specmetrics.plugins.measurement.cognitive_points.calibration import (
+            FibonacciNormalizationProfile,
+        )
+
+        cal = CognitiveCalibrationProfile(
+            bloom_levels={"analyze": 6.0},
+            bloom_mappings={"functional_process": "analyze"},
+            fibonacci_normalization=FibonacciNormalizationProfile(
+                thresholds=[100], output_values=[1, 5]
+            ),
+        )
+        result = calculate(_make_cfm(), _make_csm(), cal, run_id="custom")
+        fp = next(
+            c
+            for c in result.functional_validation_effort.contributions
+            if c.element_type == "functional_processes"
+        )
+        assert fp.bloom_level == "analyze"
+        assert fp.cognitive_weight == 6.0
+        assert result.fibonacci_normalization.threshold_applied == 100
+        assert result.fibonacci_normalization.output_value == 1
+
+    def test_bloom_breakdown_exact_spec(self):
+        result = calculate(
+            None, _make_csm(), _make_default_calibration(), run_id="spec-bd"
+        )
+        assert result.specification_review_effort.bloom_breakdown == {
+            "understand": 3,
+            "analyze": 3,
+            "evaluate": 1,
+            "apply": 1,
+            "remember": 1,
+        }
+
+    def test_bloom_breakdown_exact_cfm(self):
+        result = calculate(
+            _make_cfm(), None, _make_default_calibration(), run_id="cfm-bd"
+        )
+        assert result.functional_validation_effort.bloom_breakdown == {
+            "create": 1,
+            "apply": 2,
+            "understand": 2,
+            "remember": 1,
+        }
+
+    def test_empty_models_zero_counts(self):
+        result = calculate(
+            None, None, _make_default_calibration(), run_id="zero-counts"
+        )
+        assert result.measurement_metadata.csm_element_count == 0
+        assert result.measurement_metadata.cfm_element_count == 0
+        assert result.measurement_metadata.total_elements_processed == 0
+
+    def test_missing_warning_exact_messages(self):
+        result = calculate(None, None, _make_default_calibration(), run_id="warn")
+        by_code = {w.code: w.message for w in result.measurement_metadata.warnings}
+        assert by_code["MISSING_CSM"] == (
+            "Canonical Specification Model (CSM) is not available. "
+            "Specification Review Effort defaults to 0."
+        )
+        assert by_code["MISSING_CFM"] == (
+            "Canonical Functional Model (CFM) is not available. "
+            "Functional Validation Effort defaults to 0."
+        )
+
+    def test_default_calibration_when_none(self):
+        result = calculate(None, None, run_id="default-cal")
+        assert result.calibration_version == "1.0"
+        assert result.total_cognitive_points == 1
+
+    def test_unclassified_cfm_warning(self):
+        from specmetrics.kernel.cfm.model import UnclassifiedElement
+
+        ev = _make_cfm_evidence()
+        cfm = _make_cfm()
+        cfm = cfm.model_copy(
+            update={
+                "unclassified": {
+                    "u1": UnclassifiedElement(
+                        id="u1",
+                        original_type="mystery",
+                        content="something",
+                        evidence=ev,
+                    ),
+                }
+            }
+        )
+        result = calculate(cfm, None, _make_default_calibration(), run_id="unk")
+        codes = [w.code for w in result.measurement_metadata.warnings]
+        assert "UNKNOWN_CFM_ELEMENTS" in codes
+
+    def test_duration_reported(self, monkeypatch):
+        calls = iter([100.0, 100.123456])
+
+        class FakeTime:
+            @staticmethod
+            def monotonic():
+                return next(calls)
+
+        import specmetrics.plugins.measurement.cognitive_points.calculator as mod
+
+        monkeypatch.setattr(mod.time, "monotonic", FakeTime.monotonic)
+        result = calculate(
+            None, None, _make_default_calibration(), run_id="duration"
+        )
+        assert result.measurement_metadata.duration_ms == 123.46
 
 
 class TestAggregation:

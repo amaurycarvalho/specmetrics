@@ -1,9 +1,15 @@
+"""Framework-agnostic adapter interfaces for specification documents.
+
+Adapters discover specification documents in a repository, read them,
+and normalize them into common Document objects for downstream stages.
+"""
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, Self, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +52,7 @@ class SpecificationAdapter(Protocol):
     """
 
     @property
-    def supported_document_types(self) -> list[str]:
+    def supported_document_types(self: Self) -> list[str]:
         """Return the list of canonical document types this adapter can produce.
 
         Accessible before scanning so the pipeline can determine which adapter
@@ -54,14 +60,14 @@ class SpecificationAdapter(Protocol):
         when the adapter cannot or does not constrain its output types.
         """
 
-    def scan(self, repository_path: Path) -> list[Document]:
+    def scan(self: Self, repository_path: Path) -> list[Document]:
         """Discover all specification documents in the repository.
 
         Must be read-only, idempotent, and must not perform semantic
         interpretation of content.
         """
 
-    def supports(self, path: Path) -> bool:
+    def supports(self: Self, path: Path) -> bool:
         """Return True if this adapter can handle the given repository path.
 
         Must be fast (no full scan) and should check for framework markers

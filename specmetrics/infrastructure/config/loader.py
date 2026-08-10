@@ -1,14 +1,24 @@
+"""Configuration loading and resolution.
+
+Discovers configuration sources (system, user, project, environment), merges
+them by precedence, validates the result against the core schema, and exposes
+a ``ConfigProvider`` to the rest of the application.
+"""
+
 from __future__ import annotations
 
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
+
+from pydantic import BaseModel
 
 from .plugin import PluginConfigCollector
 from .resolver import Resolver
 from .schema import (
     ConfigProvider,
+    ConfigurationDump,
     ConfigWarning,
     CoreConfig,
     ResolvedConfiguration,
@@ -20,12 +30,16 @@ logger = logging.getLogger(__name__)
 
 
 class Loader:
-    def _get_xdg_config_home(self) -> Path:
+    """Discovers and loads configuration sources for a project."""
+
+    def _get_xdg_config_home(self: Self) -> Path:
+        """Return the XDG config home directory path."""
         return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 
     def discover_sources(
-        self, project_root: Path, cli_config_path: Path | None = None
+        self: Self, project_root: Path, cli_config_path: Path | None = None
     ) -> list[ConfigurationSource]:
+        """Discover configuration files at system, user, and project levels."""
         sources: list[ConfigurationSource] = []
         config_files = ["config.yml", "config.yaml", "config.json"]
 
@@ -62,7 +76,8 @@ class Loader:
 
         return sources
 
-    def load_sources(self, sources: list[ConfigurationSource]) -> dict[str, Any]:
+    def load_sources(self: Self, sources: list[ConfigurationSource]) -> dict[str, Any]:
+        """Load and merge all sources, later-precedence sources win."""
         merged: dict[str, Any] = {}
         for source in sorted(sources, key=lambda s: s.precedence):
             try:
@@ -72,14 +87,18 @@ class Loader:
                 logger.warning("Failed to load source %s: %s", source.name, exc)
         return merged
 
-    def _expand_env_vars(self, value: str) -> str:
+    def _expand_env_vars(self: Self, value: str) -> str:
+        """Expand environment variables inside a string."""
         return os.path.expandvars(value)
 
 
 class ConfigurationSystem:
+    """Facade that discovers, resolves, and validates project configuration."""
+
     def __init__(
-        self, project_root: Path | None = None, config_path: Path | None = None
+        self: Self, project_root: Path | None = None, config_path: Path | None = None
     ) -> None:
+        """Initialize the configuration system for a project root."""
         self._project_root = project_root or Path.cwd()
         self._config_path = config_path or self._resolve_env_config_path()
         self._loader = Loader()
@@ -89,6 +108,7 @@ class ConfigurationSystem:
 
     @staticmethod
     def _resolve_env_config_path() -> Path | None:
+        """Resolve the config path from the ``SPECMETRICS_CONFIG_PATH`` env var."""
         env_path = os.environ.get("SPECMETRICS_CONFIG_PATH")
         if env_path:
             expanded = os.path.expandvars(env_path)
@@ -97,10 +117,12 @@ class ConfigurationSystem:
                 return resolved
         return None
 
-    def register_plugin_schema(self, plugin_id: str, schema: type) -> None:
+    def register_plugin_schema(self: Self, plugin_id: str, schema: type) -> None:
+        """Register a plugin configuration schema by plugin id."""
         self._plugin_collector.register(plugin_id, schema)
 
-    def load(self) -> ConfigProvider:
+    def load(self: Self) -> ConfigProvider:
+        """Load, resolve, and validate configuration; return a provider."""
         sources = self._loader.discover_sources(self._project_root, self._config_path)
 
         env_source = EnvironmentSource()
@@ -133,7 +155,7 @@ class ConfigurationSystem:
             )
             warnings.append(
                 ConfigWarning(
-                    message=str(exc),
+                    message=exc.message,
                     key=exc.field,
                 )
             )
@@ -146,7 +168,7 @@ class ConfigurationSystem:
                     self._plugin_collector.validate_plugin_config(
                         plugin_id, {key.split(".", 2)[2]: value}
                     )
-                except (KeyError, Exception):
+                except Exception:
                     pass
             else:
                 self._apply_value(config, key, value)
@@ -167,9 +189,10 @@ class ConfigurationSystem:
 
         return _ConfigProviderImpl(self._config)
 
-    def _apply_value(self, obj: Any, key: str, value: Any) -> None:
+    def _apply_value(self: Self, obj: BaseModel, key: str, value: object) -> None:
+        """Apply a flattened config value onto a pydantic model by dotted key."""
         parts = key.split(".")
-        current = obj
+        current: object = obj
         for part in parts[:-1]:
             if hasattr(current, part):
                 current = getattr(current, part)
@@ -188,12 +211,16 @@ class ConfigurationSystem:
 
 
 class _ConfigProviderImpl:
-    def __init__(self, config: ResolvedConfiguration) -> None:
+    """Concrete ``ConfigProvider`` backed by a resolved configuration."""
+
+    def __init__(self: Self, config: ResolvedConfiguration) -> None:
+        """Initialize the provider with the resolved configuration."""
         self._config = config
 
-    def get(self, key: str, default: Any = ...) -> Any:
+    def get(self: Self, key: str, default: object = ...) -> object:
+        """Return the value for a dotted key, or ``default`` when missing."""
         parts = key.split(".")
-        current = self._config.values
+        current: object = self._config.values
         for part in parts:
             if hasattr(current, part):
                 current = getattr(current, part)
@@ -203,17 +230,20 @@ class _ConfigProviderImpl:
                 raise KeyError(f"Configuration key not found: {key}")
         return current
 
-    def get_model(self, model_type: type) -> Any:
+    def get_model(self: Self, model_type: type) -> BaseModel:
+        """Return the resolved config as the given model type."""
         if isinstance(self._config.values, model_type):
             return self._config.values
         return model_type.model_validate(self._config.values.model_dump())
 
     @property
-    def dump(self):
+    def dump(self: Self) -> ConfigurationDump:
+        """Return an introspectable dump of the resolved configuration."""
         from .introspection import build_dump
 
         return build_dump(self._config)
 
     @property
-    def warnings(self) -> list[ConfigWarning]:
+    def warnings(self: Self) -> list[ConfigWarning]:
+        """Return warnings collected during loading and validation."""
         return self._config.warnings

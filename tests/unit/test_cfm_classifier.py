@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from specmetrics.kernel.cfm.classifier import classify_node, strip_framework_labels
 from specmetrics.kernel.evidence_graph import GraphNode
 
@@ -104,3 +103,23 @@ class TestStripFrameworkLabels:
             strip_framework_labels("Login - OpenSpec Section")
             == "Login - OpenSpec Section"
         )
+
+
+class TestIsDataLike:
+    def test_matches_known_data_suffixes(self) -> None:
+        from specmetrics.kernel.cfm.classifier import _is_data_like
+
+        assert _is_data_like("CustomerRecord") is True
+        assert _is_data_like("UserProfile") is True
+        assert _is_data_like("Config") is True
+
+    def test_case_insensitive(self) -> None:
+        from specmetrics.kernel.cfm.classifier import _is_data_like
+
+        assert _is_data_like("CUSTOMERRECORD") is True
+        assert _is_data_like("account") is True
+
+    def test_non_data_name_returns_false(self) -> None:
+        from specmetrics.kernel.cfm.classifier import _is_data_like
+
+        assert _is_data_like("SignIn") is False

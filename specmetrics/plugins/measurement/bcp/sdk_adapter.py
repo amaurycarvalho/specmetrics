@@ -1,7 +1,10 @@
+"""Adapter around the external BCP calculation SDK."""
+
 from __future__ import annotations
 
 import os
 import time
+from typing import Self
 
 import structlog
 
@@ -12,7 +15,7 @@ logger = structlog.get_logger(__name__)
 BCP_CLIENT = None
 
 
-def _import_bcp_client():
+def _import_bcp_client() -> object:
     global BCP_CLIENT
     if BCP_CLIENT is not None:
         return BCP_CLIENT
@@ -34,6 +37,7 @@ def _import_bcp_client():
 
 
 def check_credentials(provider: str = "openai") -> str | None:
+    """Return the name of the missing credential variable, if any."""
     if provider == "openai":
         key = os.environ.get("OPENAI_API_KEY")
         if not key:
@@ -45,12 +49,22 @@ def check_credentials(provider: str = "openai") -> str | None:
     return None
 
 
+def _is_auth_error(err_str: str) -> bool:
+    return any(
+        kw in err_str
+        for kw in ["401", "403", "auth", "unauthorized", "invalid api key"]
+    )
+
+
 class BcpSdkAdapter:
+    """Thin wrapper around the external BCP calculation SDK."""
+
     def __init__(
-        self,
+        self: Self,
         provider: str = "openai",
         log_level: str = "INFO",
     ) -> None:
+        """Initialize the adapter and attempt to import the SDK client."""
         self._provider = provider
         self._log_level = log_level
         self._client_class = None
@@ -71,28 +85,20 @@ class BcpSdkAdapter:
                 self._import_error = str(exc)
 
     @property
-    def is_available(self) -> bool:
+    def is_available(self: Self) -> bool:
+        """Return whether the SDK client is ready for use."""
         return self._client is not None and self._import_error is None
 
     @property
-    def provider(self) -> str:
+    def provider(self: Self) -> str:
+        """Return the configured LLM provider name."""
         return self._provider
 
-    def calculate(self, story_content: str) -> SDKResult:
-        if not self.is_available:
-            return SDKResult(
-                total_bcp=0.0,
-                provider=self._provider,
-                errors=[self._import_error or "SDK not available"],
-            )
-
-        missing = check_credentials(self._provider)
-        if missing:
-            return SDKResult(
-                total_bcp=0.0,
-                provider=self._provider,
-                errors=[f"Missing environment variable: {missing}"],
-            )
+    def calculate(self: Self, story_content: str) -> SDKResult:
+        """Calculate the BCP score for a single story."""
+        unavailable = self._unavailable_result()
+        if unavailable is not None:
+            return unavailable
 
         start = time.monotonic()
         last_error: str | None = None
@@ -104,43 +110,13 @@ class BcpSdkAdapter:
                     time.sleep(delay)
 
                 response = self._client.calculate(story_content)
-                duration_ms = (time.monotonic() - start) * 1000
-
-                if not isinstance(response, dict):
-                    return SDKResult(
-                        total_bcp=0.0,
-                        provider=self._provider,
-                        duration_ms=round(duration_ms, 2),
-                        errors=["SDK returned non-dict response"],
-                    )
-
-                total_bcp = float(response.get("total_bcp", 0))
-                breakdown = response.get("breakdown", {})
-                if isinstance(breakdown, dict):
-                    breakdown = {k: float(v) for k, v in breakdown.items()}
-
-                return SDKResult(
-                    total_bcp=total_bcp,
-                    breakdown=breakdown,
-                    raw_response=response,
-                    provider=self._provider,
-                    duration_ms=round(duration_ms, 2),
-                )
+                return self._parse_response(response, start)
 
             except Exception as exc:
                 last_error = str(exc)
-                err_str = str(exc).lower()
-                if any(
-                    kw in err_str
-                    for kw in ["401", "403", "auth", "unauthorized", "invalid api key"]
-                ):
-                    duration_ms = (time.monotonic() - start) * 1000
-                    return SDKResult(
-                        total_bcp=0.0,
-                        provider=self._provider,
-                        duration_ms=round(duration_ms, 2),
-                        errors=[f"Auth error: {exc}"],
-                    )
+                auth_result = self._auth_error_result(exc, start)
+                if auth_result is not None:
+                    return auth_result
 
                 logger.debug(
                     "bcp_sdk_retry",
@@ -156,5 +132,58 @@ class BcpSdkAdapter:
             errors=[f"Failed after 3 retries: {last_error}"],
         )
 
-    def batch_calculate(self, stories: list[str]) -> list[SDKResult]:
+    def _unavailable_result(self: Self) -> SDKResult | None:
+        if not self.is_available:
+            return SDKResult(
+                total_bcp=0.0,
+                provider=self._provider,
+                errors=[self._import_error or "SDK not available"],
+            )
+
+        missing = check_credentials(self._provider)
+        if missing:
+            return SDKResult(
+                total_bcp=0.0,
+                provider=self._provider,
+                errors=[f"Missing environment variable: {missing}"],
+            )
+        return None
+
+    def _parse_response(self: Self, response: object, start: float) -> SDKResult:
+        duration_ms = (time.monotonic() - start) * 1000
+        if not isinstance(response, dict):
+            return SDKResult(
+                total_bcp=0.0,
+                provider=self._provider,
+                duration_ms=round(duration_ms, 2),
+                errors=["SDK returned non-dict response"],
+            )
+
+        total_bcp = float(response.get("total_bcp", 0))
+        breakdown = response.get("breakdown", {})
+        if isinstance(breakdown, dict):
+            breakdown = {k: float(v) for k, v in breakdown.items()}
+
+        return SDKResult(
+            total_bcp=total_bcp,
+            breakdown=breakdown,
+            raw_response=response,
+            provider=self._provider,
+            duration_ms=round(duration_ms, 2),
+        )
+
+    def _auth_error_result(self: Self, exc: Exception, start: float) -> SDKResult | None:
+        err_str = str(exc).lower()
+        if not _is_auth_error(err_str):
+            return None
+        duration_ms = (time.monotonic() - start) * 1000
+        return SDKResult(
+            total_bcp=0.0,
+            provider=self._provider,
+            duration_ms=round(duration_ms, 2),
+            errors=[f"Auth error: {exc}"],
+        )
+
+    def batch_calculate(self: Self, stories: list[str]) -> list[SDKResult]:
+        """Calculate BCP scores for a batch of stories."""
         return [self.calculate(story) for story in stories]

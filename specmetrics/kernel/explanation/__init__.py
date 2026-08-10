@@ -1,3 +1,5 @@
+"""Public API for measurement explanations and comparisons."""
+
 from .models import (
     AppliedRule,
     ElementChange,
@@ -16,9 +18,9 @@ __all__ = [
     "ElementChange",
     "ElementContribution",
     "EvidenceReference",
+    "ExplainService",
     "ExplanationComparison",
     "ExplanationSummary",
-    "ExplainService",
     "MeasurementExplanation",
     "MetricChange",
     "MetricExplanation",

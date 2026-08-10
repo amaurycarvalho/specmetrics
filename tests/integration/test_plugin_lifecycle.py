@@ -3,13 +3,13 @@ from unittest.mock import patch
 from specmetrics.kernel import (
     EventType,
     HandlerRegistry,
+    PipelineContext,
+    PipelineEngine,
     PluginMetadata,
     PluginRegistry,
     PluginStatus,
     PluginType,
     PluginValidator,
-    PipelineContext,
-    PipelineEngine,
     load_plugins,
 )
 

@@ -1,24 +1,31 @@
+"""Base classes, models, and shared types for publisher plugins."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
+from typing import Self
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from specmetrics.plugins.exporter.models import ExportMetadata, Measurement
 
 
 class PublisherConfigError(Exception):
-    pass
+    """Raised when publisher configuration data is invalid."""
 
 
 class Protocol(str, Enum):
+    """Transport protocol used when publishing metrics."""
+
     GRPC = "grpc"
     HTTP = "http"
 
 
 class ConnectionState(str, Enum):
+    """Lifecycle state of a publisher connection."""
+
     INITIALIZED = "initialized"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -27,6 +34,8 @@ class ConnectionState(str, Enum):
 
 
 class PublisherConfiguration(BaseModel):
+    """Runtime configuration for a single publisher endpoint."""
+
     endpoint_url: str = ""
     protocol: Protocol = Protocol.GRPC
     api_key: str | None = None
@@ -44,7 +53,9 @@ class PublisherConfiguration(BaseModel):
 
     @field_validator("retry_max_delay_seconds")
     @classmethod
-    def _validate_retry_delay(cls, v, info):
+    def _validate_retry_delay(
+        cls: type[Self], v: float, info: ValidationInfo
+    ) -> float:
         base = info.data.get("retry_base_delay_seconds", 1.0)
         if v < base:
             raise ValueError(
@@ -54,7 +65,7 @@ class PublisherConfiguration(BaseModel):
 
     @field_validator("endpoint_url")
     @classmethod
-    def _validate_endpoint_url(cls, v):
+    def _validate_endpoint_url(cls: type[Self], v: str) -> str:
         if v and not v.startswith(("http://", "https://", "grpc://")):
             raise ValueError(
                 "endpoint_url must start with http://, https://, or grpc://"
@@ -63,6 +74,8 @@ class PublisherConfiguration(BaseModel):
 
 
 class PublisherStatus(BaseModel):
+    """Snapshot of a publisher instance's current runtime status."""
+
     endpoint_url: str = ""
     connection_state: ConnectionState = ConnectionState.INITIALIZED
     last_successful_publish_at: datetime | None = None
@@ -74,31 +87,44 @@ class PublisherStatus(BaseModel):
 
 
 class PublishResult(BaseModel):
+    """Outcome of a single publish attempt."""
+
     success: bool
     message: str = ""
     metrics_count: int = 0
 
 
 class PublisherConfig(BaseModel):
+    """Per-publisher configuration used during a pipeline run."""
+
     endpoint_url: str = ""
     auth_credentials: dict | None = None
     publishing_interval: int = 30
 
 
 class PublisherPlugin(ABC):
-    @abstractmethod
-    def publisher_id(self) -> str: ...
+    """Base class that all publisher plugins must implement."""
 
     @abstractmethod
-    def name(self) -> str: ...
+    def publisher_id(self: Self) -> str:
+        """Return the unique identifier for this publisher."""
+        ...
+
+    @abstractmethod
+    def name(self: Self) -> str:
+        """Return the display name of this publisher."""
+        ...
 
     @abstractmethod
     def publish(
-        self,
+        self: Self,
         measurements: list[Measurement],
         metadata: ExportMetadata,
         config: PublisherConfig,
-    ) -> PublishResult: ...
+    ) -> PublishResult:
+        """Publish the given measurements with the provided metadata."""
+        ...
 
-    def get_status(self) -> PublisherStatus:
+    def get_status(self: Self) -> PublisherStatus:
+        """Return the current status of the publisher."""
         return PublisherStatus()

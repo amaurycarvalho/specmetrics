@@ -3,10 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from specmetrics.kernel.cfm.model import (
+    BuildMetadata,
     CanonicalFunctionalModel,
     Operation,
+)
+from specmetrics.kernel.cfm.model import (
     EvidenceRef as CFMEvidenceRef,
-    BuildMetadata,
 )
 from specmetrics.plugins.measurement.snap.assessor import SNAPAssessor
 from specmetrics.plugins.measurement.snap.models import (

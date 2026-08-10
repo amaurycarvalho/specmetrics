@@ -35,11 +35,28 @@ class TestDataFunctionComplexity:
         assert classify_data_function_complexity(6, 20) == "High"
 
 
+    def test_custom_ret_boundaries_respected(self):
+        assert classify_data_function_complexity(
+            15, 1, ret_boundaries=[10, 20, 30]
+        ) == "Low"
+
+    def test_det_on_boundary_second_band(self):
+        assert classify_data_function_complexity(2, 50) == "Average"
+
+    def test_low_cell_uses_exact_label(self):
+        assert classify_data_function_complexity(1, 20) == "Low"
+
+
 class TestTransactionalComplexityEI:
     def test_low_ei(self):
         # 0-1 FTRs, 1-4 DETs → Low
         assert classify_transactional_complexity("EI", 0, 3) == "Low"
         assert classify_transactional_complexity("EI", 1, 4) == "Low"
+
+    def test_custom_ftr_boundaries_respected(self):
+        assert classify_transactional_complexity(
+            "EI", 3, 1, ftr_boundaries=[10, 20, 30]
+        ) == "Low"
 
     def test_average_ei(self):
         # 2 FTRs, 5-15 DETs → Average
@@ -101,3 +118,16 @@ class TestUFPWeights:
     def test_weight_override(self):
         overrides = {"ILF": {"Low": 99, "Average": 100, "High": 101}}
         assert get_ufp_weight("ILF", "Low", overrides) == 99
+
+
+def test_custom_ret_boundaries_override_defaults():
+    """Mutmut 2: explicit ret boundaries must be honored over the defaults."""
+    assert classify_data_function_complexity(
+        15, 1, ret_boundaries=[10, 20, 30]
+    ) == "Low"
+
+
+def test_det_at_upper_boundary_is_second_band():
+    """Mutmut 4: det equal to the second boundary stays in the second band."""
+    assert classify_data_function_complexity(2, 50) == "Average"
+    assert classify_transactional_complexity("EI", 2, 15) == "Average"

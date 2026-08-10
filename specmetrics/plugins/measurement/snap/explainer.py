@@ -1,12 +1,19 @@
+"""Explanation builder for SNAP assessment results."""
+
 from __future__ import annotations
 
-from .models import SNAPMeasurementResult, AssessedItem, AssessmentExplanation
+from typing import Self
+
+from .models import AssessedItem, AssessmentExplanation, SNAPMeasurementResult
 
 
 class AssessmentExplainer:
+    """Builds human-readable explanations for assessed items."""
+
     def build_explanations(
-        self, result: SNAPMeasurementResult
+        self: Self, result: SNAPMeasurementResult
     ) -> list[AssessmentExplanation]:
+        """Build explanations for every assessed item in the result."""
         explanations: list[AssessmentExplanation] = []
         for item in result.assessed_items:
             explanation = self._explain_item(item, result)
@@ -14,7 +21,7 @@ class AssessmentExplainer:
         return explanations
 
     def _explain_item(
-        self,
+        self: Self,
         item: AssessedItem,
         result: SNAPMeasurementResult,
     ) -> AssessmentExplanation:
@@ -32,13 +39,13 @@ class AssessmentExplainer:
             evidence_chain=evidence_chain,
         )
 
-    def _build_identification_reason(self, item: AssessedItem) -> str:
+    def _build_identification_reason(self: Self, item: AssessedItem) -> str:
         return (
             f"CFM semantic marker='{item.cfm_semantic_marker}' on element "
             f"'{item.cfm_element_id}' → {item.category_id} category"
         )
 
-    def _build_contribution_reason(self, item: AssessedItem) -> str:
+    def _build_contribution_reason(self: Self, item: AssessedItem) -> str:
         if item.excluded:
             return "Item excluded by Rule Pack; contribution set to 0"
         if item.rule_applied and "excluded" not in item.rule_applied:
@@ -48,7 +55,7 @@ class AssessmentExplainer:
             )
         return f"Default SNAP weight for {item.category_id}: {item.contribution} SNAP"
 
-    def _build_evidence_chain(self, item: AssessedItem) -> list[str]:
+    def _build_evidence_chain(self: Self, item: AssessedItem) -> list[str]:
         chain: list[str] = []
         for ref in item.evidence_refs:
             section = f" (section {ref.section_id})" if ref.section_id else ""

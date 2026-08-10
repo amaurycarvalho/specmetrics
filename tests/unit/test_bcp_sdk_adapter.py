@@ -52,6 +52,7 @@ class TestBcpSdkAdapter:
             assert result.breakdown["business_logic"] == 8.0
             assert len(result.errors) == 0
 
+    @pytest.mark.slow
     def test_retry_on_transient_error(self):
         mock_client = MagicMock()
         mock_client.calculate.side_effect = [
@@ -68,6 +69,7 @@ class TestBcpSdkAdapter:
             assert result.total_bcp == 10.0
             assert len(result.errors) == 0
 
+    @pytest.mark.slow
     def test_fails_after_3_retries(self):
         mock_client = MagicMock()
         mock_client.calculate.side_effect = Exception("always fails")
@@ -117,3 +119,54 @@ class TestBcpSdkAdapter:
             results = adapter.batch_calculate(["# A", "# B"])
             assert len(results) == 2
             assert results[0].total_bcp == 10.0
+
+
+class TestAuthErrorResult:
+    def _adapter(self, provider: str = "openai") -> BcpSdkAdapter:
+        adapter = BcpSdkAdapter(provider=provider)
+        adapter._provider = provider
+        return adapter
+
+    def test_auth_error_result_duration_computed_in_ms(self):
+        """Kills BcpSdkAdapter::_auth_error_result__mutmut_7/8/9 (duration_ms arithmetic)."""
+        adapter = self._adapter()
+        with patch(
+            "specmetrics.plugins.measurement.bcp.sdk_adapter.time.monotonic",
+            return_value=1001.567897,
+        ):
+            result = adapter._auth_error_result(Exception("401 Unauthorized"), 1000.0)
+        assert result is not None
+        assert result.duration_ms == pytest.approx(1567.9, abs=0.01)
+
+    def test_auth_error_result_provider_propagated(self):
+        """Kills BcpSdkAdapter::_auth_error_result__mutmut_15 (provider= arg deleted)."""
+        adapter = self._adapter(provider="claude")
+        with patch(
+            "specmetrics.plugins.measurement.bcp.sdk_adapter.time.monotonic",
+            side_effect=[1000.0, 1001.0],
+        ):
+            result = adapter._auth_error_result(Exception("401 Unauthorized"), 1000.0)
+        assert result is not None
+        assert result.provider == "claude"
+
+    def test_auth_error_result_duration_rounded_to_two_decimals(self):
+        """Kills BcpSdkAdapter::_auth_error_result__mutmut_16/20/21/22/23 (round semantics)."""
+        adapter = self._adapter()
+        with patch(
+            "specmetrics.plugins.measurement.bcp.sdk_adapter.time.monotonic",
+            return_value=1001.567897,
+        ):
+            result = adapter._auth_error_result(Exception("401 Unauthorized"), 1000.0)
+        assert result is not None
+        assert result.duration_ms == pytest.approx(1567.9, abs=0.01)
+
+    def test_auth_error_detection_uses_lowercase_error(self):
+        """Kills BcpSdkAdapter::_auth_error_result__mutmut_2 (str(exc).lower() replaced)."""
+        adapter = self._adapter()
+        with patch(
+            "specmetrics.plugins.measurement.bcp.sdk_adapter.time.monotonic",
+            side_effect=[1000.0, 1001.0],
+        ):
+            result = adapter._auth_error_result(Exception("invalid API key"), 1000.0)
+        assert result is not None
+        assert result.total_bcp == 0.0

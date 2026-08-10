@@ -89,6 +89,20 @@ class TestVAF:
         assert vaf == 0.65 + (0.01 * total)
 
 
+class TestComplexityOverrides:
+    def test_returns_complexity_overrides_when_present(self, applicator):
+        rp = RulePack(
+            id="cx-overrides",
+            complexity_overrides={"ILF": {"ret_boundaries": [1, 2, 6]}},
+        )
+        overrides = applicator.resolve_complexity_overrides(rp)
+        assert overrides == {"ILF": {"ret_boundaries": [1, 2, 6]}}
+
+    def test_none_when_rule_pack_has_no_overrides(self, applicator):
+        rp = RulePack(id="no-cx", complexity_overrides=None)
+        assert applicator.resolve_complexity_overrides(rp) is None
+
+
 class TestElementExclusions:
     def test_exclude_by_id(self, applicator):
         rp = RulePack(
@@ -102,6 +116,14 @@ class TestElementExclusions:
         rp = RulePack(
             id="exclude-element",
             element_exclusions={"by_id": ["dg_17"], "by_pattern": []},
+        )
+        result = applicator.apply_to_function("ILF", "dg_99", rp)
+        assert result is None
+
+    def test_no_by_id_key_defers_to_empty(self, applicator):
+        rp = RulePack(
+            id="exclude-element",
+            element_exclusions={"by_pattern": ["fn_*"]},
         )
         result = applicator.apply_to_function("ILF", "dg_99", rp)
         assert result is None

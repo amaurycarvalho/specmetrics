@@ -1,4 +1,8 @@
+"""Normalization utilities for Story Points measurement."""
+
 from __future__ import annotations
+
+from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -9,6 +13,8 @@ _DEFAULT_OUTPUT_VALUES: list[int] = [1, 2, 3, 5, 8, 13, 20, 40, 100]
 
 
 class NormalizationResult(BaseModel):
+    """Result of normalizing a raw score."""
+
     raw_score: float
     output_value: int
     rank_position: int = 0
@@ -16,13 +22,16 @@ class NormalizationResult(BaseModel):
 
 
 class NormalizationProfile(BaseModel):
+    """Thresholds and output values used for normalization."""
+
     thresholds: list[float] = Field(default_factory=lambda: list(_DEFAULT_THRESHOLDS))
     output_values: list[int] = Field(
         default_factory=lambda: list(_DEFAULT_OUTPUT_VALUES)
     )
 
     @model_validator(mode="after")
-    def validate_lengths(self) -> NormalizationProfile:
+    def validate_lengths(self: Self) -> NormalizationProfile:
+        """Validate that output values count equals thresholds count plus one."""
         if len(self.output_values) != len(self.thresholds) + 1:
             raise ValueError(
                 f"len(output_values) ({len(self.output_values)}) must equal "
@@ -32,27 +41,33 @@ class NormalizationProfile(BaseModel):
 
 
 class RelativeRankingNormalizer:
+    """Normalize raw scores into Fibonacci values using relative ranking."""
+
     def __init__(
-        self,
+        self: Self,
         fibonacci_scale: list[int] | None = None,
         ranking_strategy: str = "percentile",
     ) -> None:
+        """Initialize the normalizer with an optional Fibonacci scale."""
         self._fibonacci_scale = (
             list(fibonacci_scale) if fibonacci_scale else list(DEFAULT_FIBONACCI_SCALE)
         )
         self._ranking_strategy = ranking_strategy
 
     @property
-    def fibonacci_scale(self) -> list[int]:
+    def fibonacci_scale(self: Self) -> list[int]:
+        """Return a copy of the configured Fibonacci scale."""
         return list(self._fibonacci_scale)
 
     @property
-    def ranking_strategy(self) -> str:
+    def ranking_strategy(self: Self) -> str:
+        """Return the configured ranking strategy."""
         return self._ranking_strategy
 
     def normalize_all(
-        self, scores: list[tuple[str, float]]
+        self: Self, scores: list[tuple[str, float]]
     ) -> dict[str, NormalizationResult]:
+        """Return normalized results for the given element scores."""
         sorted_scores = sorted(scores, key=lambda x: x[1])
         n = len(sorted_scores)
         scale = self._fibonacci_scale
@@ -83,7 +98,8 @@ class RelativeRankingNormalizer:
 
         return results
 
-    def normalize(self, raw_score: float) -> NormalizationResult:
+    def normalize(self: Self, raw_score: float) -> NormalizationResult:
+        """Return a normalization result for the given raw score."""
         return NormalizationResult(
             raw_score=raw_score,
             output_value=self._fibonacci_scale[-1],
@@ -91,11 +107,14 @@ class RelativeRankingNormalizer:
 
 
 class FibonacciNormalizer:
+    """Normalize raw scores into Fibonacci output values by thresholds."""
+
     def __init__(
-        self,
+        self: Self,
         thresholds: list[float] | None = None,
         output_values: list[int] | None = None,
     ) -> None:
+        """Initialize the normalizer with optional thresholds and output values."""
         _DEFAULT_THRESHOLDS: list[float] = [2, 4, 8, 14, 22, 35, 55, 85]
         _DEFAULT_OUTPUT_VALUES: list[int] = [1, 2, 3, 5, 8, 13, 20, 40, 100]
         self._thresholds = list(thresholds) if thresholds else list(_DEFAULT_THRESHOLDS)
@@ -110,14 +129,17 @@ class FibonacciNormalizer:
             )
 
     @property
-    def thresholds(self) -> list[float]:
+    def thresholds(self: Self) -> list[float]:
+        """Return a copy of the configured thresholds."""
         return list(self._thresholds)
 
     @property
-    def output_values(self) -> list[int]:
+    def output_values(self: Self) -> list[int]:
+        """Return a copy of the configured output values."""
         return list(self._output_values)
 
-    def normalize(self, raw_score: float) -> NormalizationResult:
+    def normalize(self: Self, raw_score: float) -> NormalizationResult:
+        """Return the normalized result for the given raw score."""
         threshold_applied: float = 0.0
         output_value: int = self._output_values[-1]
 
@@ -137,6 +159,7 @@ class FibonacciNormalizer:
 
 
 def normalize(raw_score: float) -> NormalizationResult:
+    """Normalize a raw score using the default Fibonacci normalizer."""
     return FibonacciNormalizer().normalize(raw_score)
 
 
@@ -145,6 +168,7 @@ def normalize_with(
     thresholds: list[float],
     output_values: list[int],
 ) -> NormalizationResult:
+    """Normalize a raw score using the given thresholds and output values."""
     return FibonacciNormalizer(
         thresholds=thresholds, output_values=output_values
     ).normalize(raw_score)

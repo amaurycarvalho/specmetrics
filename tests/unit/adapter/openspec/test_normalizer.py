@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from specmetrics.plugins.adapter.openspec.normalizer import (
-    normalize_document,
     _parse_sections,
+    normalize_document,
 )
 
 
@@ -119,3 +119,54 @@ class TestParseSections:
 
     def test_empty_content(self) -> None:
         assert _parse_sections("") == []
+
+
+class TestMutationKillers:
+    """Mutation-killing tests for openspec ``normalizer`` internals."""
+
+    def test_section_body_strips_joined_lines(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _parse_sections
+
+        sections = _parse_sections("# H1\n\nline one\nline two\n")
+        assert sections[0].content == "line one\nline two"
+
+    def test_section_id_is_sequential(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _parse_sections
+
+        sections = _parse_sections("# H1\n\n## H2\n")
+        assert sections[0].id == "sec-1"
+        assert sections[0].subsections[0].id == "sec-2"
+
+    def test_section_level_preserved(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _parse_sections
+
+        sections = _parse_sections("## H2\n")
+        assert sections[0].level == 2
+
+    def test_same_level_sections_are_siblings(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _parse_sections
+
+        sections = _parse_sections("# H1\n\n# H2\n")
+        assert len(sections) == 2
+        assert sections[0].title == "H1"
+        assert sections[1].title == "H2"
+        assert not sections[0].subsections
+
+    def test_make_document_id_uses_relative_path(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _make_document_id
+
+        spec = tmp_path / "openspec" / "specs" / "auth" / "spec.md"
+        spec.parent.mkdir(parents=True)
+        spec.write_text("# Auth")
+        doc_id = _make_document_id(spec, tmp_path)
+        assert doc_id == "openspec:specification:openspec/specs/auth/spec.md"
+
+    def test_make_document_id_outside_root_uses_absolute(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.openspec.normalizer import _make_document_id
+
+        outside = tmp_path / "outside" / "spec.md"
+        outside.parent.mkdir(parents=True)
+        outside.write_text("# Spec")
+        repo_root = tmp_path / "repo"
+        doc_id = _make_document_id(outside, repo_root)
+        assert doc_id == f"openspec:specification:{outside}"

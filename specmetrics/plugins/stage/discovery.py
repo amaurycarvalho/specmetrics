@@ -1,32 +1,44 @@
+"""Stage that discovers specification documents via registered adapters."""
+
 from __future__ import annotations
+
+from typing import Self
 
 import structlog
 
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.pipeline_context import PipelineContext
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 logger = structlog.get_logger(__name__)
 
 
 class AdapterDiscoveryHandler:
-    def __init__(self) -> None:
+    """Handler that discovers documents through the adapter registry."""
+
+    def __init__(self: Self) -> None:
+        """Initialize the handler."""
         self._handled_event_type = EventType.REPOSITORY_LOADED
         self._handler_id = "adapter_discovery"
         self._stage_name = "discovery"
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the handled event type."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the handler identifier."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return self._stage_name
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle the event and return the updated pipeline context."""
         context = event.context
         repo_path = getattr(context, "repository", None)
         if repo_path is None:
@@ -41,7 +53,7 @@ class AdapterDiscoveryHandler:
 
         scanned = adapter_registry.scan_all(repo_path)
         all_documents = []
-        for adapter_id, docs in scanned.items():
+        for docs in scanned.values():
             all_documents.extend(docs)
 
         logger.info(
@@ -56,9 +68,8 @@ class AdapterDiscoveryHandler:
         )
 
 
-def create_adapter_discovery_metadata():
-    from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
-
+def create_adapter_discovery_metadata() -> PluginMetadata:
+    """Create metadata for the adapter discovery stage."""
     return PluginMetadata(
         id="adapter_discovery",
         api_version="0.1.0",

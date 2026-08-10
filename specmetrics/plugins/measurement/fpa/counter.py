@@ -1,6 +1,8 @@
+"""Counter that measures functions from a canonical functional model."""
+
 from __future__ import annotations
 
-from typing import Optional
+from typing import Self
 from uuid import uuid4
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
@@ -11,10 +13,10 @@ from .complexity import (
     get_ufp_weight,
 )
 from .models import (
-    FPAMeasurementResult,
     ComplexityDistributionRow,
     ComplexityRating,
     EvidenceRef,
+    FPAMeasurementResult,
     FunctionType,
     MeasuredFunction,
     MeasurementSummary,
@@ -24,14 +26,41 @@ from .models import (
 
 
 class FPACounter:
+    """Counts function points from a canonical functional model."""
+
     def count(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack_id: Optional[str] = None,
-        weight_overrides: Optional[dict[str, dict[str, int]]] = None,
-        excluded_types: Optional[list[FunctionType]] = None,
+        rule_pack_id: str | None = None,
+        weight_overrides: dict[str, dict[str, int]] | None = None,
+        excluded_types: list[FunctionType] | None = None,
     ) -> FPAMeasurementResult:
+        """Count function points from the given CFM."""
         excluded = set(excluded_types or [])
+        data_functions, data_warnings = self._count_data_functions(cfm, excluded, weight_overrides)
+        transactional_functions, transactional_warnings = self._count_transactional_functions(
+            cfm, excluded, weight_overrides
+        )
+        functions = data_functions + transactional_functions
+        warnings = data_warnings + transactional_warnings
+
+        summary = self._build_summary(functions)
+
+        return FPAMeasurementResult(
+            run_id=str(uuid4()),
+            cfm_run_id=cfm.run_id,
+            rule_pack_id=rule_pack_id,
+            measured_functions=functions,
+            summary=summary,
+            warnings=warnings,
+        )
+
+    def _count_data_functions(
+        self: Self,
+        cfm: CanonicalFunctionalModel,
+        excluded: set[FunctionType],
+        weight_overrides: dict[str, dict[str, int]] | None,
+    ) -> tuple[list[MeasuredFunction], list[MeasurementWarning]]:
         functions: list[MeasuredFunction] = []
         warnings: list[MeasurementWarning] = []
 
@@ -66,19 +95,31 @@ class FPACounter:
                 )
             ]
 
-            fn = MeasuredFunction(
-                id=f"fn-{dg.id}",
-                name=dg.name,
-                function_type=ft,
-                complexity=complexity,
-                det_count=det_count,
-                ret_count=ret_count,
-                ufp_weight=weight,
-                cfm_element_id=dg.id,
-                cfm_element_type="DataGroup",
-                evidence_refs=refs,
+            functions.append(
+                MeasuredFunction(
+                    id=f"fn-{dg.id}",
+                    name=dg.name,
+                    function_type=ft,
+                    complexity=complexity,
+                    det_count=det_count,
+                    ret_count=ret_count,
+                    ufp_weight=weight,
+                    cfm_element_id=dg.id,
+                    cfm_element_type="DataGroup",
+                    evidence_refs=refs,
+                )
             )
-            functions.append(fn)
+
+        return functions, warnings
+
+    def _count_transactional_functions(
+        self: Self,
+        cfm: CanonicalFunctionalModel,
+        excluded: set[FunctionType],
+        weight_overrides: dict[str, dict[str, int]] | None,
+    ) -> tuple[list[MeasuredFunction], list[MeasurementWarning]]:
+        functions: list[MeasuredFunction] = []
+        warnings: list[MeasurementWarning] = []
 
         for op in cfm.operations.values():
             direction = op.metadata.get("direction", "")
@@ -118,32 +159,24 @@ class FPACounter:
                 )
             ]
 
-            fn = MeasuredFunction(
-                id=f"fn-{op.id}",
-                name=op.name,
-                function_type=ft,
-                complexity=complexity,
-                det_count=det_count,
-                ftr_count=ftr_count,
-                ufp_weight=weight,
-                cfm_element_id=op.id,
-                cfm_element_type="Operation",
-                evidence_refs=refs,
+            functions.append(
+                MeasuredFunction(
+                    id=f"fn-{op.id}",
+                    name=op.name,
+                    function_type=ft,
+                    complexity=complexity,
+                    det_count=det_count,
+                    ftr_count=ftr_count,
+                    ufp_weight=weight,
+                    cfm_element_id=op.id,
+                    cfm_element_type="Operation",
+                    evidence_refs=refs,
+                )
             )
-            functions.append(fn)
 
-        summary = self._build_summary(functions)
+        return functions, warnings
 
-        return FPAMeasurementResult(
-            run_id=str(uuid4()),
-            cfm_run_id=cfm.run_id,
-            rule_pack_id=rule_pack_id,
-            measured_functions=functions,
-            summary=summary,
-            warnings=warnings,
-        )
-
-    def _classify_operation(self, direction: str) -> Optional[FunctionType]:
+    def _classify_operation(self: Self, direction: str) -> FunctionType | None:
         mapping = {
             "input": "EI",
             "output": "EO",
@@ -152,7 +185,7 @@ class FPACounter:
         result = mapping.get(direction)
         return result  # type: ignore[return-value]
 
-    def _build_summary(self, functions: list[MeasuredFunction]) -> MeasurementSummary:
+    def _build_summary(self: Self, functions: list[MeasuredFunction]) -> MeasurementSummary:
         total_fp = sum(f.ufp_weight for f in functions)
         by_type: dict[FunctionType, TypeBreakdown] = {}
         by_complexity: dict[ComplexityRating, int] = {}

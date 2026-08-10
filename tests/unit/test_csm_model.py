@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-
 import pytest
 from pydantic import ValidationError
 
+from specmetrics.kernel.csm.metadata import BuildMetadata
 from specmetrics.kernel.csm.model import (
     AcceptanceCriterion,
     Assumption,
     CanonicalSpecificationModel,
     Constraint,
-    CsmElement,
     CsmConsumer,
+    CsmElement,
     Decision,
     EvidenceRef,
     GlossaryTerm,
@@ -19,8 +19,6 @@ from specmetrics.kernel.csm.model import (
     Risk,
     SpecificationActivity,
 )
-from specmetrics.kernel.csm.metadata import BuildMetadata
-
 
 UUID1 = "00000000-0000-4000-8000-000000000001"
 UUID2 = "00000000-0000-4000-8000-000000000002"

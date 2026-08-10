@@ -1,7 +1,13 @@
+"""Registry for specification document adapters.
+
+Discovers, lists, and scans registered adapters for specification
+documents in a repository.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Self
 
 import structlog
 
@@ -23,10 +29,11 @@ class AdapterRegistry:
     specification adapters.
     """
 
-    def __init__(self, plugin_registry: PluginRegistry) -> None:
+    def __init__(self: Self, plugin_registry: PluginRegistry) -> None:
+        """Initialize the adapter registry wrapping the given plugin registry."""
         self._plugin_registry = plugin_registry
 
-    def list_adapters(self) -> list[SpecificationAdapter]:
+    def list_adapters(self: Self) -> list[SpecificationAdapter]:
         """Return all registered adapter instances."""
         descriptors = self._plugin_registry.get_by_type(PluginType.ADAPTER.value)
         adapters: list[SpecificationAdapter] = []
@@ -40,7 +47,7 @@ class AdapterRegistry:
                     adapters.append(handler)
         return adapters
 
-    def find_adapter(self, path: Path) -> Optional[SpecificationAdapter]:
+    def find_adapter(self: Self, path: Path) -> SpecificationAdapter | None:
         """Find the first adapter that supports the given path."""
         for adapter in self.list_adapters():
             try:
@@ -50,7 +57,7 @@ class AdapterRegistry:
                 logger.warning("adapter_supports_failed", path=str(path))
         return None
 
-    def scan_all(self, path: Path) -> dict[str, list[Document]]:
+    def scan_all(self: Self, path: Path) -> dict[str, list[Document]]:
         """Run scan() on all adapters that support the given path.
 
         Returns a dict mapping adapter IDs to their scan results.

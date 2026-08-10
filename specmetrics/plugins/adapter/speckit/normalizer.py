@@ -1,3 +1,5 @@
+"""Normalize SpecKit specification files into canonical documents."""
+
 from __future__ import annotations
 
 import re
@@ -98,6 +100,7 @@ def _make_document_id(file_path: Path, repo_root: Path) -> str:
 
 
 def normalize_document(file_path: Path, repo_root: Path) -> Document:
+    """Normalize a SpecKit file into a canonical document."""
     content = file_path.read_text(encoding="utf-8")
     sections = _parse_sections(content)
     metadata = build_metadata(file_path, repo_root)

@@ -1,7 +1,10 @@
+"""Built-in extraction provider for SpecKit framework documents."""
+
 from __future__ import annotations
 
 import logging
 import time
+from typing import Self
 
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.extraction_provider import (
@@ -23,13 +26,16 @@ class SpecKitProvider:
     using structural section-based parsing.
     """
 
-    def __init__(self, provider_id: str = "speckit-provider") -> None:
+    def __init__(self: Self, provider_id: str = "speckit-provider") -> None:
+        """Initialize the provider with the given provider id."""
         self._provider_id = provider_id
 
-    def supports_type(self, document_type: str) -> bool:
+    def supports_type(self: Self, document_type: str) -> bool:
+        """Return whether this provider supports the document type."""
         return document_type in SPECKIT_TYPES
 
-    def extract(self, document: Document) -> ExtractionResult:
+    def extract(self: Self, document: Document) -> ExtractionResult:
+        """Extract semantic elements from the given document."""
         started_at = time.monotonic()
         elements: list[ExtractedElement] = []
 
@@ -74,5 +80,6 @@ class SpecKitProvider:
             ),
         )
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
+        """Return a string representation of the provider."""
         return f"SpecKitProvider({self._provider_id})"

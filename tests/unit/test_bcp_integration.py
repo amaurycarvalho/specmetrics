@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 
 from specmetrics.kernel.cfm.model import (
     Actor,
+    BuildMetadata,
     CanonicalFunctionalModel,
     EvidenceRef,
     FunctionalProcess,
-    BuildMetadata,
 )
 from specmetrics.plugins.measurement.bcp.models import BCPMeasurementResult
 from specmetrics.plugins.measurement.bcp.plugin import BCPPlugin
@@ -60,9 +60,8 @@ class TestFullMeasurementFlow:
         with patch(
             "specmetrics.plugins.measurement.bcp.plugin.BcpSdkAdapter",
             return_value=mock_adapter,
-        ):
-            with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}):
-                result = plugin.measure(cfm)
+        ), patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}):
+            result = plugin.measure(cfm)
 
         assert isinstance(result, BCPMeasurementResult)
         assert result.total_bcp == 25.0

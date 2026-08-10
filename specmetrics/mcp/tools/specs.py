@@ -1,3 +1,5 @@
+"""MCP tool handlers for listing and reading specification documents."""
+
 from __future__ import annotations
 
 import json
@@ -7,6 +9,7 @@ from mcp.types import TextContent, Tool
 
 
 def _discover_specs(project_path: Path) -> list[dict]:
+    """Discover specification documents under a project's specs directory."""
     specs_dir = project_path / "specs"
     if not specs_dir.exists():
         return []
@@ -44,6 +47,7 @@ LIST_SPECS_TOOL = Tool(
 
 
 def handle_list_specs(arguments: dict) -> list[TextContent]:
+    """List specification documents in a project."""
     project_path = Path(arguments["project_path"]).resolve()
     specs = _discover_specs(project_path)
     return [TextContent(type="text", text=json.dumps(specs, indent=2))]
@@ -66,6 +70,7 @@ READ_SPEC_TOOL = Tool(
 
 
 def handle_read_spec(arguments: dict) -> list[TextContent]:
+    """Read the content of a specification document."""
     spec_path = Path(arguments["spec_path"]).resolve()
     if not spec_path.exists():
         raise ValueError(f"Spec file not found: {spec_path}")

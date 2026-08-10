@@ -1,3 +1,5 @@
+"""Stage metadata for the evidence graph builder."""
+
 from __future__ import annotations
 
 from specmetrics.kernel.events import EventType
@@ -6,6 +8,7 @@ from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 
 def create_evidence_graph_metadata() -> PluginMetadata:
+    """Create metadata for the evidence graph stage."""
     return PluginMetadata(
         id="evidence_graph_stage",
         api_version="0.1.0",

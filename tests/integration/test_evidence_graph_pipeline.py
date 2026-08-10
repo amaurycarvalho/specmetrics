@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from specmetrics.kernel.events import EventType, PipelineEvent
 from specmetrics.kernel.evidence_graph import (
     fingerprint_node,

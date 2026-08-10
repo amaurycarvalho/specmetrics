@@ -9,12 +9,12 @@ from specmetrics.kernel.cfm.model import (
     EvidenceRef,
     Operation,
 )
-from specmetrics.plugins.measurement.sfp.plugin import SFPMeasurementPlugin
-from specmetrics.plugins.measurement.sfp.models import RulePack
 from specmetrics.plugins.measurement.sfp.counter import (
     DEFAULT_FP_CONTRIBUTION,
     DEFAULT_LF_CONTRIBUTION,
 )
+from specmetrics.plugins.measurement.sfp.models import RulePack
+from specmetrics.plugins.measurement.sfp.plugin import SFPMeasurementPlugin
 
 
 def _make_evidence(

@@ -6,16 +6,18 @@ from uuid import uuid4
 import pytest
 
 from specmetrics.kernel.cfm.model import (
+    Actor,
+    BuildMetadata,
+    BusinessRule,
     CanonicalFunctionalModel,
-    Operation,
     DataGroup,
     FunctionalProcess,
-    BusinessRule,
-    Actor,
-    UnclassifiedElement,
-    EvidenceRef as CFMEvidenceRef,
-    BuildMetadata,
+    Operation,
     Relationship,
+    UnclassifiedElement,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CFMEvidenceRef,
 )
 from specmetrics.plugins.measurement.snap.assessor import SNAPAssessor
 from specmetrics.plugins.measurement.snap.models import (
@@ -455,6 +457,7 @@ class TestCategoryVersionValidation:
 
 
 class TestScalability:
+    @pytest.mark.slow
     def test_scaling_not_worse_than_linear(self):
         import time
 

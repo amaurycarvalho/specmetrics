@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from specmetrics.kernel.events import EventType
 from specmetrics.kernel.evidence_graph import (
     GraphNode,
     NodeAlreadyExistsError,
@@ -10,7 +11,9 @@ from specmetrics.kernel.evidence_graph import (
     fingerprint_node,
 )
 from specmetrics.kernel.evidence_graph_stage import EvidenceGraphStage, NetworkXBackend
-from specmetrics.kernel.extraction_provider import ExtractedElement, EvidenceReference
+from specmetrics.kernel.extraction_provider import EvidenceReference, ExtractedElement
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
+from specmetrics.plugins.stage.evidence_graph import create_evidence_graph_metadata
 
 
 @pytest.fixture
@@ -197,7 +200,7 @@ class TestGraphNodeModel:
             text="x",
             confidence=0.5,
         )
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             GraphNode(
                 id="n1",
                 node_type="extracted_element",
@@ -284,3 +287,38 @@ class TestIncrementalUpdate:
         stage.update_for_document("doc1", {"elements": []})
         doc1_nodes = backend.query_nodes({"document_id": "doc1"})
         assert doc1_nodes == []
+
+
+class TestEvidenceGraphMetadata:
+    def test_create_evidence_graph_metadata_field_values(self) -> None:
+        meta = create_evidence_graph_metadata()
+        assert isinstance(meta, PluginMetadata)
+        assert meta.id == "evidence_graph_stage"
+        assert meta.api_version == "0.1.0"
+        assert meta.plugin_type == PluginType.SEMANTIC
+        assert meta.handled_event_types == (
+            EventType.SEMANTIC_EXTRACTION_COMPLETED,
+        )
+        assert meta.name == "Evidence Graph Stage"
+        assert (
+            meta.description
+            == "Builds a provenance graph from extracted elements and persists it"
+        )
+        assert meta.version == "0.1.0"
+        assert meta.handler_factory is not None
+        handler = meta.handler_factory()
+        assert isinstance(handler, EvidenceGraphStage)
+
+
+class TestEvidenceGraphErrors:
+    def test_node_not_found_error_stores_node_id(self) -> None:
+        err = NodeNotFoundError("n1")
+        assert err.node_id == "n1"
+
+    def test_node_already_exists_error_stores_node_id(self) -> None:
+        err = NodeAlreadyExistsError("n2")
+        assert err.node_id == "n2"
+
+    def test_self_loop_error_stores_node_id(self) -> None:
+        err = SelfLoopError("n3")
+        assert err.node_id == "n3"

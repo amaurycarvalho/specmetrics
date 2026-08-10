@@ -1,6 +1,9 @@
+"""Pattern-based matching library for semantic extraction."""
+
 from __future__ import annotations
 
 import hashlib
+from typing import Self
 
 import structlog
 
@@ -20,24 +23,27 @@ def _content_hash(document_id: str, section_id: str | None, text: str) -> str:
 
 
 class PatternLibrary:
-    def __init__(self, rule_packs: list[list[ExtractionRule]]) -> None:
+    """Compiled library of extraction rules for matching observations."""
+
+    def __init__(self: Self, rule_packs: list[list[ExtractionRule]]) -> None:
+        """Initialize the pattern library by merging the given rule packs."""
         merged: dict[str, ExtractionRule] = {}
         for pack in rule_packs:
             for rule in pack:
                 existing = merged.get(rule.id)
-                if existing is None or rule.priority > existing.priority:
-                    merged[rule.id] = rule
-                elif rule.priority == existing.priority and rule.id < existing.id:
+                if existing is None or rule.priority > existing.priority or rule.priority == existing.priority and rule.id < existing.id:
                     merged[rule.id] = rule
 
         self._rules = sorted(merged.values(), key=lambda r: (-r.priority, r.id))
         logger.info("pattern_library_initialized", total_rules=len(self._rules))
 
     @property
-    def rules(self) -> list[ExtractionRule]:
+    def rules(self: Self) -> list[ExtractionRule]:
+        """Return the compiled extraction rules."""
         return list(self._rules)
 
-    def match(self, observations: list[Observation]) -> list[ExtractedElement]:
+    def match(self: Self, observations: list[Observation]) -> list[ExtractedElement]:
+        """Match the given observations against the compiled rules."""
         elements: list[ExtractedElement] = []
         for obs in observations:
             section_type = obs.context.get("section_type", "")
@@ -51,37 +57,7 @@ class PatternLibrary:
 
             matched_rule: ExtractionRule | None = None
             for rule in self._rules:
-                pat = rule.pattern
-
-                heading_match = pat.get("heading", "")
-                if heading_match:
-                    match_values = (
-                        [heading_match]
-                        if isinstance(heading_match, str)
-                        else heading_match
-                    )
-                    for h_candidate in candidates:
-                        for m in match_values:
-                            if isinstance(m, str) and m.lower() == h_candidate.lower():
-                                matched_rule = rule
-                                break
-                        if matched_rule:
-                            break
-                    if matched_rule:
-                        break
-                    continue
-
-                keywords = pat.get("keywords", [])
-                if keywords:
-                    min_matches = pat.get("min_matches", len(keywords))
-                    matched = sum(1 for kw in keywords if kw.lower() in content.lower())
-                    if matched >= min_matches:
-                        matched_rule = rule
-                        break
-                    continue
-
-                structure = pat.get("structure")
-                if structure:
+                if self._rule_matches(rule, candidates, content):
                     matched_rule = rule
                     break
 
@@ -102,3 +78,38 @@ class PatternLibrary:
                 elements.append(element)
 
         return elements
+
+    def _rule_matches(
+        self: Self,
+        rule: ExtractionRule,
+        candidates: list[str],
+        content: str,
+    ) -> bool:
+        """Return True when the rule's first defined pattern matches."""
+        pat = rule.pattern
+        if pat.get("heading"):
+            return self._match_heading(pat, candidates)
+        if pat.get("keywords"):
+            return self._match_keywords(pat, content)
+        return bool(pat.get("structure"))
+
+    def _match_heading(
+        self: Self, pat: dict, candidates: list[str]
+    ) -> bool:
+        """Return True when any heading pattern value matches a candidate."""
+        heading_match = pat.get("heading", "")
+        match_values = (
+            [heading_match] if isinstance(heading_match, str) else heading_match
+        )
+        for h_candidate in candidates:
+            for m in match_values:
+                if isinstance(m, str) and m.lower() == h_candidate.lower():
+                    return True
+        return False
+
+    def _match_keywords(self: Self, pat: dict, content: str) -> bool:
+        """Return True when enough keywords appear in the content."""
+        keywords = pat.get("keywords", [])
+        min_matches = pat.get("min_matches", len(keywords))
+        matched = sum(1 for kw in keywords if kw.lower() in content.lower())
+        return matched >= min_matches

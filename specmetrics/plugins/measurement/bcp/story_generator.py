@@ -1,19 +1,38 @@
+"""User story generation from canonical functional model elements."""
+
 from __future__ import annotations
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel, FunctionalProcess
 
 
 def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
+    """Generate a user story for the given functional process."""
     lines: list[str] = []
     lines.append(f"# User Story: {fp.name}")
     lines.append("")
 
+    _append_actor(fp, cfm, lines)
+    _append_operations(fp, cfm, lines)
+    _append_business_rules(fp, cfm, lines)
+    _append_data_groups(fp, cfm, lines)
+    _append_relationships(fp, cfm, lines)
+
+    return "\n".join(lines).strip()
+
+
+def _append_actor(
+    fp: FunctionalProcess, cfm: CanonicalFunctionalModel, lines: list[str]
+) -> None:
     actor_names = _resolve_actor_names(fp, cfm)
     if actor_names:
         description = fp.description or fp.name
         lines.append(f"As a {actor_names}, I want to {description}")
         lines.append("")
 
+
+def _append_operations(
+    fp: FunctionalProcess, cfm: CanonicalFunctionalModel, lines: list[str]
+) -> None:
     ops = _resolve_operations(fp, cfm)
     if ops:
         lines.append("## Acceptance Criteria:")
@@ -21,6 +40,10 @@ def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
             lines.append(f"- {op_name}")
         lines.append("")
 
+
+def _append_business_rules(
+    fp: FunctionalProcess, cfm: CanonicalFunctionalModel, lines: list[str]
+) -> None:
     rules = _resolve_business_rules(fp, cfm)
     if rules:
         lines.append("### Business Rules:")
@@ -28,6 +51,10 @@ def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
             lines.append(f"- {rule_text}")
         lines.append("")
 
+
+def _append_data_groups(
+    fp: FunctionalProcess, cfm: CanonicalFunctionalModel, lines: list[str]
+) -> None:
     dgs = _resolve_data_groups(fp, cfm)
     if dgs:
         lines.append("### Data Groups:")
@@ -35,13 +62,15 @@ def generate_story(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:
             lines.append(f"- {dg_name}")
         lines.append("")
 
+
+def _append_relationships(
+    fp: FunctionalProcess, cfm: CanonicalFunctionalModel, lines: list[str]
+) -> None:
     rels = _resolve_relationships(fp, cfm)
     if rels:
         lines.append("### Relationships:")
         for rel_text in rels:
             lines.append(f"- {rel_text}")
-
-    return "\n".join(lines).strip()
 
 
 def _resolve_actor_names(fp: FunctionalProcess, cfm: CanonicalFunctionalModel) -> str:

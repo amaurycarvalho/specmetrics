@@ -1,3 +1,5 @@
+"""CLI commands for managing the SpecMetrics MCP server."""
+
 from __future__ import annotations
 
 import asyncio
@@ -5,17 +7,31 @@ import os
 import signal
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from specmetrics.mcp.server import MCPServer, ServerConfiguration, TransportType
+if TYPE_CHECKING:
+    from specmetrics.mcp.server import (
+        MCPServer,
+        ServerConfiguration,
+        TransportType,
+    )
 
 mcp_cli = typer.Typer(name="mcp", help="Manage the SpecMetrics MCP server")
 
 PID_FILE = Path("/tmp/specmetrics-mcp.pid")
 
 
+def _load_mcp_server() -> tuple[type[MCPServer], type[ServerConfiguration], type[TransportType]]:
+    """Import the heavy MCP server module lazily to keep ``cli.app`` cheap."""
+    from specmetrics.mcp.server import MCPServer, ServerConfiguration, TransportType
+
+    return MCPServer, ServerConfiguration, TransportType
+
+
 def _read_pid() -> int | None:
+    """Read the stored MCP server PID, or return None when unavailable."""
     if not PID_FILE.exists():
         return None
     try:
@@ -25,30 +41,45 @@ def _read_pid() -> int | None:
 
 
 def _write_pid(pid: int) -> None:
+    """Persist the MCP server PID to the PID file."""
     PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     PID_FILE.write_text(str(pid))
 
 
 def _remove_pid() -> None:
+    """Remove the MCP server PID file if present."""
     PID_FILE.unlink(missing_ok=True)
 
 
 @mcp_cli.command()
 def start(
-    host: str = typer.Option(None, "--host", help="Network interface to bind"),
-    port: int = typer.Option(None, "--port", help="TCP port to listen on"),
-    transport: str = typer.Option(
-        None, "--transport", help="Transport protocol: stdio or sse"
-    ),
-    max_connections: int = typer.Option(
-        None, "--max-connections", help="Maximum concurrent connections"
-    ),
-    log_level: str = typer.Option(None, "--log-level", help="Logging verbosity"),
-    config_file: str = typer.Option(
-        "specmetrics.yml", "--config", "-c", help="Path to configuration file"
-    ),
-):
+    host: Annotated[
+        str | None,
+        typer.Option("--host", help="Network interface to bind"),
+    ] = None,
+    port: Annotated[
+        int | None,
+        typer.Option("--port", help="TCP port to listen on"),
+    ] = None,
+    transport: Annotated[
+        str | None,
+        typer.Option("--transport", help="Transport protocol: stdio or sse"),
+    ] = None,
+    max_connections: Annotated[
+        int | None,
+        typer.Option("--max-connections", help="Maximum concurrent connections"),
+    ] = None,
+    log_level: Annotated[
+        str | None,
+        typer.Option("--log-level", help="Logging verbosity"),
+    ] = None,
+    config_file: Annotated[
+        str,
+        typer.Option("--config", "-c", help="Path to configuration file"),
+    ] = "specmetrics.yml",
+) -> None:
     """Start the MCP server."""
+    MCPServer, ServerConfiguration, TransportType = _load_mcp_server()
     overrides = {
         k: v
         for k, v in {
@@ -76,10 +107,11 @@ def start(
 
 @mcp_cli.command()
 def stop(
-    timeout: int = typer.Option(
-        10, "--timeout", help="Seconds to wait for graceful shutdown"
-    ),
-):
+    timeout: Annotated[
+        int,
+        typer.Option("--timeout", help="Seconds to wait for graceful shutdown"),
+    ] = 10,
+) -> None:
     """Stop the MCP server."""
     pid = _read_pid()
     if pid is None:
@@ -113,7 +145,7 @@ def stop(
 
 
 @mcp_cli.command()
-def status():
+def status() -> None:
     """Show MCP server status."""
     pid = _read_pid()
     if pid is None:

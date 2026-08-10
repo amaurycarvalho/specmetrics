@@ -1,7 +1,9 @@
+"""Registry that tracks discovered plugins and their handlers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Self
 
 import structlog
 
@@ -16,6 +18,8 @@ logger = structlog.get_logger(__name__)
 
 @dataclass
 class PluginDescriptor:
+    """Describes a discovered plugin and its registration state."""
+
     metadata: PluginMetadata
     entry_point_name: str
     status: PluginStatus = PluginStatus.PENDING
@@ -23,13 +27,17 @@ class PluginDescriptor:
 
 
 class PluginRegistry:
-    def __init__(self) -> None:
+    """Registry of plugins indexed by ID, entry point, event type, and type."""
+
+    def __init__(self: Self) -> None:
+        """Initialize an empty plugin registry."""
         self._plugins: dict[str, PluginDescriptor] = {}
         self._by_event_type: dict[EventType, list[PluginDescriptor]] = {}
         self._by_plugin_type: dict[str, list[PluginDescriptor]] = {}
         self._by_entry_point: dict[str, PluginDescriptor] = {}
 
-    def register(self, descriptor: PluginDescriptor) -> None:
+    def register(self: Self, descriptor: PluginDescriptor) -> None:
+        """Register a plugin descriptor, replacing any duplicate entry point."""
         existing = self._by_entry_point.get(descriptor.entry_point_name)
         if existing is not None:
             logger.warning(
@@ -39,36 +47,50 @@ class PluginRegistry:
                 previous_plugin_id=existing.metadata.id,
                 previous_status=existing.status.value,
             )
-            old_id = existing.metadata.id
-            if old_id != descriptor.metadata.id:
-                self._plugins.pop(old_id, None)
-                for et in existing.metadata.handled_event_types:
-                    by_event = self._by_event_type.get(et)
-                    if by_event:
-                        self._by_event_type[et] = [
-                            d for d in by_event if d.metadata.id != old_id
-                        ]
-                pt_key = existing.metadata.plugin_type.value
-                by_type = self._by_plugin_type.get(pt_key)
-                if by_type:
-                    self._by_plugin_type[pt_key] = [
-                        d for d in by_type if d.metadata.id != old_id
-                    ]
+            self._unregister_existing(existing, descriptor)
 
         self._by_entry_point[descriptor.entry_point_name] = descriptor
         self._plugins[descriptor.metadata.id] = descriptor
+        self._append_event_index(descriptor)
+        self._append_type_index(descriptor)
 
+    def _unregister_existing(
+        self: Self, existing: PluginDescriptor, descriptor: PluginDescriptor
+    ) -> None:
+        """Remove an existing descriptor from all indices except entry points."""
+        old_id = existing.metadata.id
+        if old_id == descriptor.metadata.id:
+            return
+        self._plugins.pop(old_id, None)
+        for et in existing.metadata.handled_event_types:
+            by_event = self._by_event_type.get(et)
+            if by_event:
+                self._by_event_type[et] = [
+                    d for d in by_event if d.metadata.id != old_id
+                ]
+        pt_key = existing.metadata.plugin_type.value
+        by_type = self._by_plugin_type.get(pt_key)
+        if by_type:
+            self._by_plugin_type[pt_key] = [
+                d for d in by_type if d.metadata.id != old_id
+            ]
+
+    def _append_event_index(self: Self, descriptor: PluginDescriptor) -> None:
+        """Add a descriptor to the event-type index."""
         for et in descriptor.metadata.handled_event_types:
             if et not in self._by_event_type:
                 self._by_event_type[et] = []
             self._by_event_type[et].append(descriptor)
 
+    def _append_type_index(self: Self, descriptor: PluginDescriptor) -> None:
+        """Add a descriptor to the plugin-type index."""
         pt_key = descriptor.metadata.plugin_type.value
         if pt_key not in self._by_plugin_type:
             self._by_plugin_type[pt_key] = []
         self._by_plugin_type[pt_key].append(descriptor)
 
-    def get_handler(self, event_type: EventType) -> Optional[EventHandler]:
+    def get_handler(self: Self, event_type: EventType) -> EventHandler | None:
+        """Return the first registered handler for the given event type."""
         descriptors = self._by_event_type.get(event_type)
         if not descriptors:
             return None
@@ -80,7 +102,8 @@ class PluginRegistry:
                 return d.metadata.handler_factory()
         return None
 
-    def get_handlers(self, event_type: EventType) -> list[EventHandler]:
+    def get_handlers(self: Self, event_type: EventType) -> list[EventHandler]:
+        """Return all registered handlers for the given event type."""
         descriptors = self._by_event_type.get(event_type, [])
         result: list[EventHandler] = []
         for d in descriptors:
@@ -91,17 +114,20 @@ class PluginRegistry:
                 result.append(d.metadata.handler_factory())
         return result
 
-    def list_plugins(self) -> list[PluginDescriptor]:
+    def list_plugins(self: Self) -> list[PluginDescriptor]:
+        """Return all registered plugin descriptors."""
         return list(self._plugins.values())
 
-    def get_by_type(self, plugin_type: str) -> list[PluginDescriptor]:
+    def get_by_type(self: Self, plugin_type: str) -> list[PluginDescriptor]:
+        """Return all registered plugins of the given plugin type."""
         return list(self._by_plugin_type.get(plugin_type, []))
 
     def install_handlers(
-        self,
+        self: Self,
         handler_registry: HandlerRegistry,
         metrics_filter: list[str] | None = None,
     ) -> None:
+        """Register handlers from all registered plugins into the given registry."""
         for descriptor in self._plugins.values():
             if descriptor.status != PluginStatus.REGISTERED:
                 continue
@@ -112,7 +138,7 @@ class PluginRegistry:
                 plugin_ids = {CLI_ID_TO_PLUGIN_ID.get(m, m) for m in metrics_filter}
                 if descriptor.metadata.id not in plugin_ids:
                     continue
-            for et in descriptor.metadata.handled_event_types:
+            for _et in descriptor.metadata.handled_event_types:
                 handler = descriptor.metadata.handler_factory
                 if handler is not None:
                     handler_registry.register(handler())

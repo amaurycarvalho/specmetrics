@@ -4,6 +4,7 @@ import uuid
 
 from specmetrics.kernel.cfm.model import (
     Actor,
+    BuildMetadata,
     BusinessRule,
     CanonicalFunctionalModel,
     DataGroup,
@@ -11,7 +12,6 @@ from specmetrics.kernel.cfm.model import (
     FunctionalProcess,
     Operation,
     Relationship,
-    BuildMetadata,
 )
 from specmetrics.plugins.measurement.storypoints.factor_scorer import (
     DEFAULT_FACTOR_COEFFICIENTS,
@@ -158,6 +158,49 @@ class TestExternalIntegrations:
         score = score_factor("external_integrations", fp_id, cfm, fp)
         assert score == 0.0
 
+    def test_counts_only_communicates_with(self):
+        rel_id = _uid()
+        cfm, fp_id = _make_cfm_with_fp()
+        rel = Relationship(
+            id=rel_id,
+            source_id=fp_id,
+            target_id=_uid(),
+            relationship_type="uses",
+            evidence=_make_evidence(),
+        )
+        cfm.relationships.append(rel)
+        fp = cfm.functional_processes[fp_id]
+        score = score_factor("external_integrations", fp_id, cfm, fp)
+        assert score == 0.0
+
+    def test_counts_when_fp_is_target(self):
+        cfm, fp_id = _make_cfm_with_fp()
+        rel = Relationship(
+            id=_uid(),
+            source_id=_uid(),
+            target_id=fp_id,
+            relationship_type="communicates_with",
+            evidence=_make_evidence(),
+        )
+        cfm.relationships.append(rel)
+        fp = cfm.functional_processes[fp_id]
+        score = score_factor("external_integrations", fp_id, cfm, fp)
+        assert score == 1.0
+
+    def test_ignores_when_fp_is_unrelated(self):
+        cfm, fp_id = _make_cfm_with_fp()
+        rel = Relationship(
+            id=_uid(),
+            source_id=_uid(),
+            target_id=_uid(),
+            relationship_type="communicates_with",
+            evidence=_make_evidence(),
+        )
+        cfm.relationships.append(rel)
+        fp = cfm.functional_processes[fp_id]
+        score = score_factor("external_integrations", fp_id, cfm, fp)
+        assert score == 0.0
+
 
 class TestBusinessRuleDensity:
     def test_counts_related_business_rules(self):
@@ -191,6 +234,22 @@ class TestExceptionHandling:
     def test_detects_exception_operation(self):
         cfm, fp_id = _make_cfm_with_fp(operation_count=1, has_exception=True)
         fp = cfm.functional_processes[fp_id]
+        score = score_factor("exception_handling", fp_id, cfm, fp)
+        assert score == 1.0
+
+    def test_detects_conditional_operation(self):
+        cfm, fp_id = _make_cfm_with_fp(operation_count=1)
+        fp = cfm.functional_processes[fp_id]
+        op = next(iter(cfm.operations.values()))
+        op.metadata = {"type": "conditional"}
+        score = score_factor("exception_handling", fp_id, cfm, fp)
+        assert score == 1.0
+
+    def test_detects_branching_operation(self):
+        cfm, fp_id = _make_cfm_with_fp(operation_count=1)
+        fp = cfm.functional_processes[fp_id]
+        op = next(iter(cfm.operations.values()))
+        op.metadata = {"type": "branching"}
         score = score_factor("exception_handling", fp_id, cfm, fp)
         assert score == 1.0
 
@@ -251,3 +310,81 @@ class TestScoreAllFactorsEmpty:
         cfm.functional_processes[fp_id] = fp
         factors = score_all_factors(fp_id, cfm, fp)
         assert all(v == 0.0 for v in factors.values())
+
+
+class TestScoreFactorUnknown:
+    def test_unknown_factor_returns_zero(self):
+        cfm, fp_id = _make_cfm_with_fp(actor_count=1)
+        fp = cfm.functional_processes[fp_id]
+        assert score_factor("does_not_exist", fp_id, cfm, fp) == 0.0
+
+
+class TestScoreAllFactorsUsesFpId:
+    def test_fp_dependent_factors_nonzero(self):
+        cfm, fp_id = _make_cfm_with_fp(
+            operation_count=2,
+            business_rule_count=1,
+            relationship_count=1,
+        )
+        fp = cfm.functional_processes[fp_id]
+        factors = score_all_factors(fp_id, cfm, fp)
+        assert factors["external_integrations"] == 1.0 * 2.0
+        assert factors["workflow_breadth"] == 2.0 * 1.0
+        assert factors["business_rule_density"] == 1.0 * 1.5
+
+
+def test_external_integrations_requires_communicates_with():
+    """Mutmut 3: only 'communicates_with' relationships count towards the score."""
+    cfm, fp_id = _make_cfm_with_fp()
+    rel = Relationship(
+        id=_uid(),
+        source_id=fp_id,
+        target_id=_uid(),
+        relationship_type="uses",
+        evidence=_make_evidence(),
+    )
+    cfm.relationships.append(rel)
+    fp = cfm.functional_processes[fp_id]
+    assert score_factor("external_integrations", fp_id, cfm, fp) == 0.0
+
+
+def test_external_integrations_ignores_unrelated_target():
+    """Mutmut 9: a relationship must involve fp as source or target."""
+    cfm, fp_id = _make_cfm_with_fp()
+    rel = Relationship(
+        id=_uid(),
+        source_id=_uid(),
+        target_id=_uid(),
+        relationship_type="communicates_with",
+        evidence=_make_evidence(),
+    )
+    cfm.relationships.append(rel)
+    fp = cfm.functional_processes[fp_id]
+    assert score_factor("external_integrations", fp_id, cfm, fp) == 0.0
+
+
+def test_exception_handling_matches_conditional_exact():
+    """Mutmut 8/9: the literal 'conditional' operation type must be recognized."""
+    cfm, fp_id = _make_cfm_with_fp(operation_count=1)
+    fp = cfm.functional_processes[fp_id]
+    op = next(iter(cfm.operations.values()))
+    op.metadata = {"type": "conditional"}
+    assert score_factor("exception_handling", fp_id, cfm, fp) == 1.0
+
+
+def test_exception_handling_matches_branching_exact():
+    """Mutmut 10/11: the literal 'branching' operation type must be recognized."""
+    cfm, fp_id = _make_cfm_with_fp(operation_count=1)
+    fp = cfm.functional_processes[fp_id]
+    op = next(iter(cfm.operations.values()))
+    op.metadata = {"type": "branching"}
+    assert score_factor("exception_handling", fp_id, cfm, fp) == 1.0
+
+
+def test_exception_handling_matches_exception_exact():
+    """The literal 'exception' operation type must be recognized."""
+    cfm, fp_id = _make_cfm_with_fp(operation_count=1)
+    fp = cfm.functional_processes[fp_id]
+    op = next(iter(cfm.operations.values()))
+    op.metadata = {"type": "exception"}
+    assert score_factor("exception_handling", fp_id, cfm, fp) == 1.0

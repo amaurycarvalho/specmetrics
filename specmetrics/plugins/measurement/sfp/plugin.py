@@ -1,6 +1,8 @@
+"""SFP measurement plugin: handler, plugin, and metadata factory."""
+
 from __future__ import annotations
 
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol, Self
 
 import structlog
 
@@ -11,21 +13,34 @@ from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 from .counter import SFPCounter
 from .explainer import MeasurementExplainer
-from .models import SFPMeasurementResult, RulePack
+from .models import RulePack, SFPMeasurementResult
 
 logger = structlog.get_logger(__name__)
 
 
 class MeasurementPlugin(Protocol):
-    def plugin_id(self) -> str: ...
-    def supported_methodology(self) -> str: ...
-    def supported_component_types(self) -> list[str]: ...
+    """Protocol that every measurement engine plugin must satisfy."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
+        ...
+
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
+        ...
+
+    def supported_component_types(self: Self) -> list[str]:
+        """Return the component types measured by this plugin."""
+        ...
+
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
+        rule_pack: RulePack | None = None,
         async_execution: bool = False,
-    ) -> SFPMeasurementResult: ...
+    ) -> SFPMeasurementResult:
+        """Measure SFP for the given canonical functional model."""
+        ...
 
 
 try:
@@ -51,22 +66,69 @@ except Exception:
     _lf_gauge = None
 
 
+def _resolve_rule_pack(
+    rule_pack: RulePack | None,
+) -> tuple[
+    str | None,
+    object | None,
+    object | None,
+    object | None,
+    object | None,
+    object | None,
+]:
+    if rule_pack is None:
+        return (None, None, None, None, None, None)
+    return (
+        rule_pack.id,
+        rule_pack.contribution_overrides,
+        rule_pack.excluded_types,
+        rule_pack.element_exclusions,
+        rule_pack.element_inclusions,
+        rule_pack.inclusion_criteria,
+    )
+
+
+def _record_metrics(result: SFPMeasurementResult, duration_ms: float) -> None:
+    if _measurement_duration is not None:
+        _measurement_duration.record(duration_ms)
+    if _fp_gauge is not None:
+        fp_count = sum(
+            1
+            for c in result.measured_components
+            if c.component_type == "functional_process"
+        )
+        _fp_gauge.set(fp_count)
+    if _lf_gauge is not None:
+        lf_count = sum(
+            1
+            for c in result.measured_components
+            if c.component_type == "logical_function"
+        )
+        _lf_gauge.set(lf_count)
+
+
 class SFPMeasurementPlugin:
-    def plugin_id(self) -> str:
+    """Measurement engine plugin for Simple Function Points."""
+
+    def plugin_id(self: Self) -> str:
+        """Return the plugin identifier."""
         return "sfp"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name implemented by this plugin."""
         return "Simple Function Points (SFP)"
 
-    def supported_component_types(self) -> list[str]:
+    def supported_component_types(self: Self) -> list[str]:
+        """Return the component types measured by this plugin."""
         return ["functional_process", "logical_function"]
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel,
-        rule_pack: Optional[RulePack] = None,
+        rule_pack: RulePack | None = None,
         async_execution: bool = False,
     ) -> SFPMeasurementResult:
+        """Measure SFP for the given canonical functional model."""
         if cfm is None:
             raise ValueError("CFM input cannot be None")
 
@@ -74,20 +136,14 @@ class SFPMeasurementPlugin:
 
         start_time = time.monotonic()
 
-        rule_pack_id = None
-        contribution_overrides = None
-        excluded_component_types = None
-        element_exclusions = None
-        element_inclusions = None
-        inclusion_criteria = None
-
-        if rule_pack is not None:
-            rule_pack_id = rule_pack.id
-            contribution_overrides = rule_pack.contribution_overrides
-            excluded_component_types = rule_pack.excluded_types
-            element_exclusions = rule_pack.element_exclusions
-            element_inclusions = rule_pack.element_inclusions
-            inclusion_criteria = rule_pack.inclusion_criteria
+        (
+            rule_pack_id,
+            contribution_overrides,
+            excluded_component_types,
+            element_exclusions,
+            element_inclusions,
+            inclusion_criteria,
+        ) = _resolve_rule_pack(rule_pack)
 
         logger.info(
             "sfp_measurement_started",
@@ -111,22 +167,7 @@ class SFPMeasurementPlugin:
 
         duration_ms = (time.monotonic() - start_time) * 1000
 
-        if _measurement_duration is not None:
-            _measurement_duration.record(duration_ms)
-        if _fp_gauge is not None:
-            fp_count = sum(
-                1
-                for c in result.measured_components
-                if c.component_type == "functional_process"
-            )
-            _fp_gauge.set(fp_count)
-        if _lf_gauge is not None:
-            lf_count = sum(
-                1
-                for c in result.measured_components
-                if c.component_type == "logical_function"
-            )
-            _lf_gauge.set(lf_count)
+        _record_metrics(result, duration_ms)
 
         logger.info(
             "sfp_measurement_completed",
@@ -139,7 +180,10 @@ class SFPMeasurementPlugin:
         if async_execution:
             import asyncio
 
-            loop = asyncio.get_event_loop()
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
             future = loop.create_future()
             future.set_result(result)
             return future  # type: ignore[return-value]
@@ -148,19 +192,25 @@ class SFPMeasurementPlugin:
 
 
 class SFPMeasurementHandler:
+    """Pipeline event handler for SFP measurement."""
+
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler consumes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "sfp_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the human-readable name of this handler stage."""
         return "SFP Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Measure SFP for the event context and merge stage output."""
         ctx = event.context
         cfm = ctx.canonical_model
 
@@ -187,6 +237,7 @@ class SFPMeasurementHandler:
 
 
 def create_sfp_measurement_metadata() -> PluginMetadata:
+    """Build the plugin metadata entry for the SFP measurement plugin."""
     return PluginMetadata(
         id="sfp",
         api_version="0.1.0",

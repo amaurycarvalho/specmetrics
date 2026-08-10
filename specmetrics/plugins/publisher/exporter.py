@@ -1,3 +1,5 @@
+"""Factory functions for OpenTelemetry metric exporters."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,13 +11,14 @@ from .base import Protocol, PublisherConfiguration
 logger = structlog.get_logger(__name__)
 
 
-def create_otlp_exporter(config: PublisherConfiguration) -> Any:
+def create_otlp_exporter(config: PublisherConfiguration) -> object:
+    """Create an OTLP metric exporter matching the configured protocol."""
     if config.protocol == Protocol.GRPC:
         return _create_grpc_exporter(config)
     return _create_http_exporter(config)
 
 
-def _create_grpc_exporter(config: PublisherConfiguration) -> Any:
+def _create_grpc_exporter(config: PublisherConfiguration) -> object:
     from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
         OTLPMetricExporter,
     )
@@ -33,15 +36,15 @@ def _create_grpc_exporter(config: PublisherConfiguration) -> Any:
     elif not config.tls_verify and config.tls_ca_cert_path:
         import grpc
 
-        ssl_creds = grpc.ssl_channel_credentials(
-            root_certificates=open(config.tls_ca_cert_path, "rb").read()
-        )
+        with open(config.tls_ca_cert_path, "rb") as fh:
+            root_certificates = fh.read()
+        ssl_creds = grpc.ssl_channel_credentials(root_certificates=root_certificates)
         kwargs["credentials"] = ssl_creds
 
     return OTLPMetricExporter(**kwargs)
 
 
-def _create_http_exporter(config: PublisherConfiguration) -> Any:
+def _create_http_exporter(config: PublisherConfiguration) -> object:
     from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
         OTLPMetricExporter,
     )

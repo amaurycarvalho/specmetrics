@@ -1,22 +1,38 @@
+"""Exception hierarchy for the SpecMetrics kernel."""
+
+from __future__ import annotations
+
+from typing import Self
+
+
 class PipelineError(Exception):
-    pass
+    """Base class for all pipeline errors."""
 
 
 class PluginError(PipelineError):
-    def __init__(self, plugin_id: str, message: str):
+    """Raised when a plugin fails to initialize or execute."""
+
+    def __init__(self: Self, plugin_id: str, message: str) -> None:
+        """Initialize the error with the failing plugin ID and message."""
+        super().__init__(plugin_id, message)
         self.plugin_id = plugin_id
         self.message = message
-        super().__init__(f"[{plugin_id}] {message}")
 
 
 class StageError(PipelineError):
-    def __init__(self, stage_name: str, message: str):
+    """Raised when a pipeline stage fails to execute."""
+
+    def __init__(self: Self, stage_name: str, message: str) -> None:
+        """Initialize the error with the failing stage name and message."""
+        super().__init__(stage_name, message)
         self.stage_name = stage_name
         self.message = message
-        super().__init__(f"[{stage_name}] {message}")
 
 
 class HandlerNotFoundError(PipelineError):
-    def __init__(self, event_type: str):
-        self.event_type = event_type
+    """Raised when no handler is registered for an event type."""
+
+    def __init__(self: Self, event_type: str) -> None:
+        """Initialize the error with the unhandled event type."""
         super().__init__(f"No handler registered for event type: {event_type}")
+        self.event_type = event_type

@@ -1,8 +1,11 @@
+"""Pipeline stage that extracts semantic elements from specification documents."""
+
 from __future__ import annotations
 
-from pydantic import BaseModel
+from typing import Self
 
 import structlog
+from pydantic import BaseModel
 
 from .events import EventType, PipelineEvent
 from .extraction_provider import ExtractionResult
@@ -15,8 +18,11 @@ _NON_TEXT_THRESHOLD = 0.3
 
 
 def _is_likely_binary(content: str) -> bool:
-    """Heuristic check: if more than 30 % of characters are nulls or
-    control chars (excluding common whitespace), treat as binary."""
+    """Detect whether a string is likely binary content.
+
+    Heuristic: if more than 30% of characters are nulls or control chars
+    (excluding common whitespace), treat the content as binary.
+    """
     if not content:
         return False
     control = sum(1 for c in content if ord(c) < 32 and c not in "\n\r\t\f\v")
@@ -34,8 +40,9 @@ class ExtractionStage(EventHandler):
     """
 
     def __init__(
-        self, router: ProviderRouter, gateway: LLMGateway | None = None
+        self: Self, router: ProviderRouter, gateway: LLMGateway | None = None
     ) -> None:
+        """Initialize the stage with a provider router and optional gateway."""
         self._router = router
         self._gateway = gateway
         self._handled_event_type = EventType.DOCUMENTS_DISCOVERED
@@ -43,19 +50,23 @@ class ExtractionStage(EventHandler):
         self._stage_name = "semantic_extraction"
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this stage handles."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this stage."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the name of this pipeline stage."""
         return self._stage_name
 
     @classmethod
-    def config_schema(cls) -> type[BaseModel] | None:
+    def config_schema(cls: type[Self]) -> type[BaseModel] | None:
+        """Return the plugin config schema, or None if unavailable."""
         try:
             from specmetrics.plugins.semantic.llm_provider import LLMProviderConfig
 
@@ -63,7 +74,8 @@ class ExtractionStage(EventHandler):
         except ImportError:
             return None
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle a documents-discovered event and route documents to providers."""
         context = event.context
         self._inject_gateway(context)
         docs_data = getattr(context, "adapter_result", None) or {}
@@ -122,7 +134,7 @@ class ExtractionStage(EventHandler):
             value=payload,
         )
 
-    def _inject_gateway(self, context: PipelineContext) -> None:
+    def _inject_gateway(self: Self, context: PipelineContext) -> None:
         if self._gateway is not None:
             return
         metadata = getattr(context, "metadata", None) or {}

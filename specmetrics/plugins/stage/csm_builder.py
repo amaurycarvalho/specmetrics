@@ -1,3 +1,5 @@
+"""Stage metadata for the canonical specification model builder."""
+
 from __future__ import annotations
 
 from specmetrics.kernel.csm.builder import CsmBuilderStage
@@ -6,6 +8,7 @@ from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
 
 
 def create_csm_builder_metadata() -> PluginMetadata:
+    """Create metadata for the CSM builder stage."""
     return PluginMetadata(
         id="csm_builder_stage",
         api_version="0.1.0",

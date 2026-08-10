@@ -1,25 +1,16 @@
+"""CLI command for explaining measurement results."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Annotated
 
 import structlog
 import typer
 
-from specmetrics.kernel.explanation.formatters.json import (
-    format_comparison as json_format_comparison,
-)
-from specmetrics.kernel.explanation.formatters.json import (
-    format_explanation as json_format_explanation,
-)
-from specmetrics.kernel.explanation.formatters.text import (
-    format_comparison as text_format_comparison,
-)
-from specmetrics.kernel.explanation.formatters.text import (
-    format_explanation as text_format_explanation,
-)
-from specmetrics.kernel.explanation.loader import load_cfm, load_evidence_graph
-from specmetrics.kernel.explanation.service import ExplainService
+if TYPE_CHECKING:
+    from typing import Any
 
 logger = structlog.get_logger(__name__)
 
@@ -29,37 +20,82 @@ explain_cli = typer.Typer(
 )
 
 
+def _load_explanation() -> dict[str, Any]:
+    """Import the explanation module lazily to keep ``cli.app`` cheap."""
+    from specmetrics.kernel.explanation.formatters.json import (
+        format_comparison as json_format_comparison,
+    )
+    from specmetrics.kernel.explanation.formatters.json import (
+        format_explanation as json_format_explanation,
+    )
+    from specmetrics.kernel.explanation.formatters.text import (
+        format_comparison as text_format_comparison,
+    )
+    from specmetrics.kernel.explanation.formatters.text import (
+        format_explanation as text_format_explanation,
+    )
+    from specmetrics.kernel.explanation.loader import (
+        load_cfm,
+        load_evidence_graph,
+    )
+    from specmetrics.kernel.explanation.service import ExplainService
+
+    return {
+        "json": (json_format_explanation, json_format_comparison),
+        "text": (text_format_explanation, text_format_comparison),
+        "loader": (load_cfm, load_evidence_graph),
+        "service": ExplainService,
+    }
+
+
 @explain_cli.command()
 def explain(
-    run_id: str = typer.Argument(
-        ...,
-        help="Identifier of the measurement run to explain",
-    ),
-    metric: str | None = typer.Option(
-        None,
-        "--metric",
-        help="Specific metric to explain (e.g., functional_size)",
-    ),
-    format: str = typer.Option(
-        "text",
-        "--format",
-        help="Output format: text or json",
-    ),
-    compare: str | None = typer.Option(
-        None,
-        "--compare",
-        help="Compare with another run ID",
-    ),
-    run_dir: Path | None = typer.Option(
-        None,
-        "--run-dir",
-        help="Directory containing measurement run artifacts",
-        exists=False,
-        file_okay=False,
-        dir_okay=True,
-        resolve_path=True,
-    ),
+    run_id: Annotated[
+        str,
+        typer.Argument(
+            help="Identifier of the measurement run to explain",
+        ),
+    ],
+    metric: Annotated[
+        str | None,
+        typer.Option(
+            "--metric",
+            help="Specific metric to explain (e.g., functional_size)",
+        ),
+    ] = None,
+    format: Annotated[
+        str,
+        typer.Option(
+            "--format",
+            help="Output format: text or json",
+        ),
+    ] = "text",
+    compare: Annotated[
+        str | None,
+        typer.Option(
+            "--compare",
+            help="Compare with another run ID",
+        ),
+    ] = None,
+    run_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--run-dir",
+            help="Directory containing measurement run artifacts",
+            exists=False,
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
 ) -> None:
+    """Explain a measurement run with evidence traces and rule effects."""
+    deps = _load_explanation()
+    json_format_explanation, json_format_comparison = deps["json"]
+    text_format_explanation, text_format_comparison = deps["text"]
+    load_cfm, load_evidence_graph = deps["loader"]
+    ExplainService = deps["service"]
+
     service = ExplainService()
 
     cfm = None

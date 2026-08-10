@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from specmetrics.kernel.adapter_interface import Document, DocumentSection
 from specmetrics.kernel.extraction_provider import EvidenceReference
@@ -26,6 +26,8 @@ _GATEWAY_MODULE = "specmetrics.kernel.llm_gateway"
 
 class TestLLMProviderValidResponse:
     def setup_method(self) -> None:
+        LLMExtractionProvider._no_key = False
+        LLMExtractionProvider._config_warned = False
         self.provider = LLMExtractionProvider(api_key="test-key")
         self.doc = Document(
             id="doc-1",
@@ -172,3 +174,52 @@ class TestLLMProviderConfigCheck:
         from specmetrics.plugins.semantic.llm_provider import LLMProviderConfig
 
         assert schema is LLMProviderConfig
+
+
+class TestLLMProviderCheckConfigKillers:
+    """Kills survivors in ``LLMExtractionProvider._check_config`` (mutmut_4..6)."""
+
+    def test_check_config_warns_once_then_silent(self) -> None:
+        LLMExtractionProvider._no_key = False
+        LLMExtractionProvider._config_warned = False
+        provider = LLMExtractionProvider(api_key="none")
+        provider._api_key = None
+        first = provider._check_config()
+        assert first is not None
+        assert "LLM extraction disabled" in first
+        second = provider._check_config()
+        assert second is None
+
+
+class TestLLMProviderFallbackKillers:
+    """Kills survivors in ``LLMExtractionProvider._fallback_extract`` (mutmut_2,5..21)."""
+
+    def test_fallback_extract_duration_is_milliseconds(self, monkeypatch) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+
+        provider = LLMExtractionProvider(api_key="test-key")
+        doc = Document(
+            id="doc-1",
+            path="specs/test.md",
+            document_type="section",
+            content="# Login\nAs a User, I want to login",
+        )
+        monkeypatch.setattr("time.monotonic", lambda: 1000.0)
+        result = provider._fallback_extract(doc, 999.0)
+        assert result.processing_stats.duration_ms == 1000
+
+    def test_fallback_extract_passes_document_and_returns_elements(self) -> None:
+        from specmetrics.kernel.adapter_interface import Document
+
+        provider = LLMExtractionProvider(api_key="test-key")
+        doc = Document(
+            id="doc-1",
+            path="specs/test.md",
+            document_type="section",
+            content="# Login\nAs a User, I want to login, So that I can access my account",
+        )
+        result = provider._fallback_extract(doc, 0.0)
+        assert result.provider_id == "llm-provider"
+        assert len(result.elements) >= 1
+        assert result.processing_stats.elements_extracted == len(result.elements)
+        assert result.processing_stats.errors == 0

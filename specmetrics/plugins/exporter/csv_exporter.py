@@ -1,7 +1,9 @@
+"""CSV exporter plugin for writing measurements as comma-separated values."""
+
 from __future__ import annotations
 
 import csv
-from typing import IO
+from typing import IO, Self
 
 from specmetrics.kernel.cfm.model import EvidenceRef
 
@@ -10,22 +12,28 @@ from .models import ExportMetadata, Measurement
 
 
 class CsvExporter(ExporterPlugin):
-    def format_id(self) -> str:
+    """Exporter that serializes measurements to CSV format."""
+
+    def format_id(self: Self) -> str:
+        """Return the unique identifier for this export format."""
         return "csv"
 
-    def file_extension(self) -> str:
+    def file_extension(self: Self) -> str:
+        """Return the file extension used for exported files."""
         return ".csv"
 
-    def content_type(self) -> str:
+    def content_type(self: Self) -> str:
+        """Return the MIME content type for this export format."""
         return "text/csv"
 
     def export(
-        self,
+        self: Self,
         measurements: list[Measurement],
         evidence_refs: list[EvidenceRef],
         metadata: ExportMetadata,
         output: IO,
     ) -> None:
+        """Write the measurements to ``output`` as CSV rows."""
         try:
             fieldnames = [
                 "function_id",

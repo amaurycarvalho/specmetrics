@@ -18,24 +18,24 @@ class TestTShirtClassifier:
         for size in DEFAULT_MAPPING:
             mn, mx = size.story_point_range
             for sp in range(mn, mx + 1):
-                label, rule = classifier.classify(sp)
+                label, _rule = classifier.classify(sp)
                 assert label == size.label, (
                     f"SP={sp} should be {size.label}, got {label}"
                 )
 
     def test_sp1_is_xs(self):
         classifier = TShirtClassifier()
-        label, rule = classifier.classify(1)
+        label, _rule = classifier.classify(1)
         assert label == "XS"
 
     def test_sp2_is_s(self):
         classifier = TShirtClassifier()
-        label, rule = classifier.classify(2)
+        label, _rule = classifier.classify(2)
         assert label == "S"
 
     def test_sp3_is_s(self):
         classifier = TShirtClassifier()
-        label, rule = classifier.classify(3)
+        label, _rule = classifier.classify(3)
         assert label == "S"
 
     def test_sp5_is_m(self):
@@ -70,7 +70,7 @@ class TestTShirtClassifier:
 
     def test_sp100_is_xxl(self):
         classifier = TShirtClassifier()
-        label, rule = classifier.classify(100)
+        label, _rule = classifier.classify(100)
         assert label == "XXL"
 
 
@@ -166,7 +166,7 @@ class TestClassifyAll:
             {"element_id": "fp-002", "element_name": "B", "normalized_value": 8},
             {"element_id": "fp-003", "element_name": "C", "normalized_value": 20},
         ]
-        items, warnings = classify_all(sp_items)
+        items, _warnings = classify_all(sp_items)
         assert len(items) == 3
         assert items[0].tshirt_size == "S"
         assert items[1].tshirt_size == "L"
@@ -211,7 +211,51 @@ class TestPerformance:
             for i in range(500)
         ]
         start = time.monotonic()
-        items, warnings = classify_all(sp_items)
+        items, _warnings = classify_all(sp_items)
         elapsed = time.monotonic() - start
         assert len(items) == 500
         assert elapsed < 1.0
+
+
+class TestValidationMessages:
+    def test_empty_mapping_error_message_exact(self):
+        """Kills _validate_mapping__mutmut_3/4 (empty mapping message literal)."""
+        with pytest.raises(
+            ValueError, match="Mapping must contain at least one size"
+        ):
+            TShirtClassifier(mapping=[])
+
+    def test_duplicate_labels_error_message_exact(self):
+        """Kills _validate_mapping__mutmut_9/10 (duplicate labels message literal)."""
+        with pytest.raises(
+            ValueError, match="Mapping contains duplicate size labels"
+        ):
+            TShirtClassifier(
+                mapping=[
+                    TShirtSize(label="S", story_point_range=(1, 3), ordinal=1),
+                    TShirtSize(label="S", story_point_range=(4, 8), ordinal=2),
+                ]
+            )
+
+
+class TestValidationSorting:
+    def test_mapping_sorted_by_range_min_not_max(self):
+        """Kills _validate_mapping__mutmut_20 (sort key uses range[1] instead of [0])."""
+        classifier = TShirtClassifier(
+            mapping=[
+                TShirtSize(label="S", story_point_range=(5, 5), ordinal=2),
+                TShirtSize(label="XS", story_point_range=(1, 1), ordinal=1),
+            ]
+        )
+        assert classifier.classify(1)[0] == "XS"
+        assert classifier.classify(5)[0] == "S"
+
+    def test_adjacent_ranges_with_equal_boundary_rejected(self):
+        """Kills _validate_mapping__mutmut_30 (>= narrowed to >)."""
+        with pytest.raises(ValueError, match="Overlapping"):
+            TShirtClassifier(
+                mapping=[
+                    TShirtSize(label="S", story_point_range=(1, 3), ordinal=1),
+                    TShirtSize(label="M", story_point_range=(3, 5), ordinal=2),
+                ]
+            )

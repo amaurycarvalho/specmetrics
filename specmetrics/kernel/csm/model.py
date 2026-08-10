@@ -1,7 +1,14 @@
+"""Canonical Specification Model (CSM) data structures.
+
+Defines the pydantic models that represent a canonical specification derived
+from extracted evidence, along with the consumer protocol used by downstream
+measurement engine plugins.
+"""
+
 from __future__ import annotations
 
 import uuid
-from typing import Any, Literal, Optional, Protocol, runtime_checkable
+from typing import Literal, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, field_validator
 
@@ -9,13 +16,17 @@ from .metadata import BuildMetadata
 
 
 class EvidenceRef(BaseModel):
+    """Reference to the evidence supporting a canonical model element."""
+
     graph_node_id: str
     document_id: str
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str
 
 
 class CsmElement(BaseModel):
+    """Base class for canonical specification elements."""
+
     id: str
     description: str
     evidence_references: list[EvidenceRef]
@@ -23,7 +34,7 @@ class CsmElement(BaseModel):
 
     @field_validator("id")
     @classmethod
-    def _validate_uuid_v4(cls, v: str) -> str:
+    def _validate_uuid_v4(cls: type[Self], v: str) -> str:
         val = uuid.UUID(v)
         if val.version != 4:
             raise ValueError(f"id must be a UUID v4 string, got version {val.version}")
@@ -31,13 +42,15 @@ class CsmElement(BaseModel):
 
     @field_validator("description")
     @classmethod
-    def _validate_non_empty(cls, v: str) -> str:
+    def _validate_non_empty(cls: type[Self], v: str) -> str:
         if not v or not v.strip():
             raise ValueError("description must not be empty")
         return v
 
 
 class SpecificationActivity(CsmElement):
+    """A specification activity element."""
+
     activity_type: Literal[
         "exploration", "clarification", "refinement", "review", "validation"
     ]
@@ -53,44 +66,62 @@ class SpecificationActivity(CsmElement):
 
 
 class Decision(CsmElement):
+    """A decision element."""
+
     rationale: str = ""
     alternatives: list[str] = []
     timestamp: str = ""
 
 
 class Assumption(CsmElement):
+    """An assumption element."""
+
     validated_date: str | None = None
 
 
 class Constraint(CsmElement):
+    """A constraint element."""
+
     constraint_type: Literal["regulatory", "technical", "organizational"]
     source: str = ""
 
 
 class Risk(CsmElement):
+    """A risk element."""
+
     probability: str = ""
     impact: str = ""
     mitigation: str = ""
 
 
 class OpenQuestion(CsmElement):
+    """An open question element."""
+
     resolved: bool = False
     resolution: str = ""
 
 
 class AcceptanceCriterion(CsmElement):
+    """An acceptance criterion element."""
+
     verification_method: Literal["test", "review", "inspection"] = "test"
 
 
 class GlossaryTerm(CsmElement):
+    """A glossary term element."""
+
     aliases: list[str] = []
 
 
 class Reference(CsmElement):
+    """A reference element."""
+
     original_label: str = ""
 
 
 class CanonicalSpecificationModel(BaseModel):
+    """The canonical specification model holding all extracted elements."""
+
     model_config = {"frozen": True}
 
     run_id: str
@@ -106,7 +137,8 @@ class CanonicalSpecificationModel(BaseModel):
     metadata: BuildMetadata
     evidence_graph_ref: str = ""
 
-    def get_element(self, element_id: str) -> CsmElement | None:
+    def get_element(self: Self, element_id: str) -> CsmElement | None:
+        """Return the element with the given id across all collections."""
         for collection in (
             self.specification_activities,
             self.decisions,
@@ -122,7 +154,8 @@ class CanonicalSpecificationModel(BaseModel):
                 return collection[element_id]
         return None
 
-    def get_elements(self, category: str) -> dict[str, CsmElement]:
+    def get_elements(self: Self, category: str) -> dict[str, CsmElement]:
+        """Return the collection of elements for a given category."""
         mapping: dict[str, dict[str, CsmElement]] = {
             "specification_activities": self.specification_activities,
             "decisions": self.decisions,
@@ -136,7 +169,8 @@ class CanonicalSpecificationModel(BaseModel):
         }
         return mapping.get(category, {})
 
-    def get_elements_by_evidence(self, document_id: str) -> list[CsmElement]:
+    def get_elements_by_evidence(self: Self, document_id: str) -> list[CsmElement]:
+        """Return all elements referencing evidence from the given document."""
         result: list[CsmElement] = []
         for collection in (
             self.specification_activities,
@@ -156,7 +190,8 @@ class CanonicalSpecificationModel(BaseModel):
                         break
         return result
 
-    def trace_evidence(self, element_id: str) -> list[EvidenceRef] | None:
+    def trace_evidence(self: Self, element_id: str) -> list[EvidenceRef] | None:
+        """Return the evidence references for the given element id."""
         element = self.get_element(element_id)
         if element is None:
             return None
@@ -165,4 +200,8 @@ class CanonicalSpecificationModel(BaseModel):
 
 @runtime_checkable
 class CsmConsumer(Protocol):
-    def consume(self, csm: CanonicalSpecificationModel) -> Any: ...
+    """Protocol for consumers of a canonical specification model."""
+
+    def consume(self: Self, csm: CanonicalSpecificationModel) -> object:
+        """Consume the canonical specification model."""
+        ...

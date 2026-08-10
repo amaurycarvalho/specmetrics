@@ -28,7 +28,7 @@ class TestResolver:
         resolver = Resolver()
         cli = CliSource({"timeout": 30})
         resolver.add_source(cli, cli.load())
-        resolved, provenance, warnings = resolver.resolve()
+        resolved, provenance, _warnings = resolver.resolve()
         assert resolved.get("timeout") == 30
         assert "timeout" in provenance
 
@@ -50,3 +50,24 @@ class TestResolver:
         with pytest.raises(ConfigCircularRefError) as exc:
             resolver.resolve()
         assert "a" in str(exc.value)
+
+
+class TestCircularRefErrorExact:
+    """Kills survivors in ``ConfigCircularRefError.__init__`` (mutmut_1,2,4)."""
+
+    def test_involved_keys_and_exact_message(self) -> None:
+        err = ConfigCircularRefError(["a", "b", "a"])
+        assert err.involved_keys == ["a", "b", "a"]
+        assert str(err) == "Circular reference detected: a -> b -> a"
+
+
+class TestCircularRefDetectionKillers:
+    """Kills survivors in ``Resolver._detect_circular_refs`` (mutmut_28)."""
+
+    def test_shared_reference_is_not_circular(self) -> None:
+        resolver = Resolver()
+        data = {"a": "${b}", "c": "${b}", "b": "plain"}
+        resolver.add_source(CliSource(data), data)
+        resolved, _, _ = resolver.resolve()
+        assert resolved["a"] == "${b}"
+        assert resolved["c"] == "${b}"

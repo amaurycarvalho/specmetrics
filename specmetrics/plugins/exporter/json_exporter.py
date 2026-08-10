@@ -1,7 +1,9 @@
+"""JSON exporter plugin for writing measurements as structured JSON."""
+
 from __future__ import annotations
 
 import json
-from typing import IO
+from typing import IO, Self
 
 from specmetrics.kernel.cfm.model import EvidenceRef
 
@@ -10,22 +12,28 @@ from .models import ExportMetadata, Measurement
 
 
 class JsonExporter(ExporterPlugin):
-    def format_id(self) -> str:
+    """Exporter that serializes measurements to JSON format."""
+
+    def format_id(self: Self) -> str:
+        """Return the unique identifier for this export format."""
         return "json"
 
-    def file_extension(self) -> str:
+    def file_extension(self: Self) -> str:
+        """Return the file extension used for exported files."""
         return ".json"
 
-    def content_type(self) -> str:
+    def content_type(self: Self) -> str:
+        """Return the MIME content type for this export format."""
         return "application/json"
 
     def export(
-        self,
+        self: Self,
         measurements: list[Measurement],
         evidence_refs: list[EvidenceRef],
         metadata: ExportMetadata,
         output: IO,
     ) -> None:
+        """Write the measurements to ``output`` as a JSON document."""
         try:
             data = {
                 "metadata": metadata.model_dump(mode="json"),

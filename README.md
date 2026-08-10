@@ -275,6 +275,41 @@ make build
 make lint test
 ```
 
+#### Quality Gate
+
+The quality gate enforces complexity, duplication, coverage, mutation and
+security thresholds (RFC-043). Run it locally with:
+
+```bash
+make quality-gate
+```
+
+Individual checks: `make complexity`, `make duplication`, `make mutation`,
+`make security`. See [Quality Gate](docs/adrs/ADR-002%20-%20Quality%20Gate.md) for thresholds and the
+exception process.
+
+### Mutation testing
+
+Make sure everything is installed.
+
+```bash
+make install-quality-tools
+```
+
+Run it locally (it can be time-consuming and require significant processing).
+
+```bash
+make mutation-run
+```
+
+Then, generate the results report and use it with your AI agent to fix your unit tests.
+
+```bash
+make mutation-results
+```
+
+Finally, run the mutation testing again and check if it pass the quality gate.
+
 ### How to Test (e2e)
 
 ```bash

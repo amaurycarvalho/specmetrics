@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import uuid
 import time
+import uuid
 
 import pytest
 
@@ -10,26 +10,34 @@ from specmetrics.kernel.cfm.model import (
     BusinessRule,
     CanonicalFunctionalModel,
     DataGroup,
-    EvidenceRef as CfmEvidenceRef,
     FunctionalProcess,
     Operation,
     Relationship,
+)
+from specmetrics.kernel.cfm.model import (
     BuildMetadata as CfmBuildMeta,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CfmEvidenceRef,
 )
 from specmetrics.kernel.csm.model import (
     AcceptanceCriterion,
     Assumption,
     CanonicalSpecificationModel,
     Decision,
-    EvidenceRef as CsmEvidenceRef,
+)
+from specmetrics.kernel.csm.model import (
     BuildMetadata as CsmBuildMeta,
 )
-from specmetrics.plugins.measurement.storypoints.calculator import calculate
-from specmetrics.plugins.measurement.storypoints.models import (
-    StoryPointMeasurementResult,
+from specmetrics.kernel.csm.model import (
+    EvidenceRef as CsmEvidenceRef,
 )
+from specmetrics.plugins.measurement.storypoints.calculator import calculate
 from specmetrics.plugins.measurement.storypoints.calibrator import (
     StoryPointsCalibrationProfile,
+)
+from specmetrics.plugins.measurement.storypoints.models import (
+    StoryPointMeasurementResult,
 )
 from specmetrics.plugins.measurement.storypoints.token_counter import (
     count_tokens_for_element,
@@ -251,6 +259,74 @@ class TestAggregation:
             m1.total_story_points + m2.total_story_points
         )
         assert len(aggregated.items) == len(m1.items) + len(m2.items)
+
+    def test_aggregate_metadata_sums(self):
+        from specmetrics.plugins.measurement.storypoints.calculator import calculate
+        from specmetrics.plugins.measurement.storypoints.models import (
+            aggregate,
+        )
+
+        def _cfm_with_dups() -> CanonicalFunctionalModel:
+            ev = _make_evidence()
+            fps = {}
+            for _ in range(3):
+                fid = _uid()
+                fps[fid] = FunctionalProcess(
+                    id=fid, name="Same", actor_ids=[], evidence=ev
+                )
+            return CanonicalFunctionalModel(
+                run_id="dups",
+                functional_processes=fps,
+                metadata=CfmBuildMeta(run_id="dups", version="1.0", source="test"),
+            )
+
+        m1 = calculate(_cfm_with_dups(), run_id="run1")
+        m2 = calculate(_cfm_with_dups(), run_id="run2")
+        agg = aggregate([m1, m2])
+        assert agg.execution_metadata.fps_merged_as_duplicates == 4
+        assert agg.execution_metadata.fps_estimated == 2
+        assert agg.execution_metadata.total_fps_processed == 6
+        assert agg.content_multiplier == m1.content_multiplier
+        assert agg.calibration_version == m1.calibration_version
+        assert agg.run_id == "aggregated:run1,run2"
+
+    def test_aggregate_empty_raises(self):
+        from specmetrics.plugins.measurement.storypoints.models import (
+            aggregate,
+        )
+
+        with pytest.raises(ValueError, match="empty list of measurements"):
+            aggregate([])
+
+
+class TestWarnings:
+    def test_missing_cfm_warning(self):
+        result = calculate(None, run_id="warn")
+        assert result.execution_metadata.duration_ms == 0.0
+        assert result.calibration_version == "1.0"
+        warning = next(
+            w for w in result.warnings if w.code == "MISSING_CFM"
+        )
+        assert warning.message == (
+            "Canonical Functional Model (CFM) is not available. "
+            "Story Points defaults to 0."
+        )
+
+    def test_no_fps_warning(self):
+        cfm = _make_empty_cfm()
+        result = calculate(cfm, run_id="warn2")
+        warning = next(w for w in result.warnings if w.code == "NO_FPS_FOUND")
+        assert warning.message == (
+            "No functional processes found in CFM. "
+            "Only CSM and non-FP CFM elements contribute to estimation."
+        )
+
+    def test_content_tokens_by_type_exact(self):
+        desc = "alpha beta gamma delta"
+        cfm = _make_cfm_with_descriptions([("fp-001", "Proc", desc)])
+        result = calculate(cfm, run_id="tokens")
+        expected = count_tokens_for_element("Proc", desc)
+        assert result.content_tokens_by_type["functional_process"] == expected
 
 
 class TestPerformance:
@@ -499,3 +575,108 @@ def _make_empty_cfm() -> CanonicalFunctionalModel:
         run_id="empty",
         metadata=CfmBuildMeta(run_id="empty", version="1.0", source="test"),
     )
+
+
+def _cfm_fp_only(fp_count: int = 2) -> CanonicalFunctionalModel:
+    fps: dict[str, FunctionalProcess] = {}
+    for i in range(fp_count):
+        fid = f"fp-{i}"
+        ev = CfmEvidenceRef(
+            graph_node_id=f"g-{i}",
+            document_id=f"d-{i}",
+            section_id=f"s-{i}",
+            text=f"evidence {i}",
+        )
+        fps[fid] = FunctionalProcess(
+            id=fid,
+            name=f"Process {i}",
+            actor_ids=[],
+            evidence=ev,
+        )
+    return CanonicalFunctionalModel(
+        run_id="fp-only",
+        functional_processes=fps,
+        metadata=CfmBuildMeta(run_id="fp-only", version="1.0", source="test"),
+    )
+
+
+def test_missing_model_result_preserves_content_multiplier():
+    """Mutmut 13: missing-model results keep the configured content multiplier."""
+    cal = StoryPointsCalibrationProfile(content_multiplier=0.42)
+    result = calculate(None, run_id="mm", calibration=cal)
+    assert result.content_multiplier == 0.42
+
+
+def test_missing_model_result_preserves_calibration_version():
+    """Mutmut 14: missing-model results keep the configured calibration version."""
+    cal = StoryPointsCalibrationProfile(version="2.5")
+    result = calculate(None, run_id="mm2", calibration=cal)
+    assert result.calibration_version == "2.5"
+
+
+def test_missing_model_result_duration_ms_zero():
+    """Mutmut 26: missing-model results report a zero duration."""
+    result = calculate(None, run_id="mm3")
+    assert result.execution_metadata.duration_ms == 0.0
+
+
+def test_missing_model_result_warning_exact():
+    """Mutmut 36/37/38: the MISSING_CFM warning message is exact."""
+    result = calculate(None, run_id="mm4")
+    warning = result.warnings[0]
+    assert warning.code == "MISSING_CFM"
+    assert warning.message == (
+        "Canonical Functional Model (CFM) is not available. "
+        "Story Points defaults to 0."
+    )
+
+
+def test_fp_only_cfm_keeps_zero_non_fp_counts():
+    """Mutmut 5/6/7: absent non-FP/CSM elements must keep zero counts."""
+    cfm = _cfm_fp_only(2)
+    result = calculate(cfm, run_id="fp-only")
+    md = result.execution_metadata
+    assert md.total_fps_processed == 2
+    assert md.fps_estimated == 2
+    assert md.total_elements_processed == 2
+    assert md.csm_elements_processed == 0
+    assert md.elements_without_base_weight == 0
+
+
+def test_no_fps_warning_message_exact():
+    """Mutmut 68/69/70: the NO_FPS_FOUND warning message is exact."""
+    cfm = _make_empty_cfm()
+    result = calculate(cfm, run_id="nofps")
+    warning = next(w for w in result.warnings if w.code == "NO_FPS_FOUND")
+    assert warning.message == (
+        "No functional processes found in CFM. "
+        "Only CSM and non-FP CFM elements contribute to estimation."
+    )
+
+
+def test_csm_only_no_no_fps_warning_when_cfm_none():
+    """Mutmut 58: with cfm=None the NO_FPS_FOUND branch must be skipped."""
+    csm = _make_csm_only()
+    result = calculate(None, run_id="csmonly", csm=csm)
+    assert "NO_FPS_FOUND" not in [w.code for w in result.warnings]
+
+
+def test_apply_ranking_uses_calibration_fibonacci_scale():
+    """Mutmut 2/4: ranking must use the calibration's Fibonacci scale."""
+    cfm = _make_cfm_with_descriptions([
+        ("fp-001", "Process A", "a"),
+        ("fp-002", "Process B", "b"),
+    ])
+    cal = StoryPointsCalibrationProfile(fibonacci_scale=[1, 2, 3, 5, 8])
+    result = calculate(cfm, run_id="scale", calibration=cal)
+    max_val = max(i.normalized_value for i in result.items)
+    assert max_val == 8
+
+
+def test_apply_ranking_sets_rank_positions():
+    """Mutmut 11: every ranked item must receive a rank position."""
+    cfm = _cfm_fp_only(2)
+    result = calculate(cfm, run_id="rp")
+    assert all(i.rank_position is not None for i in result.items)
+    positions = sorted(i.rank_position for i in result.items)
+    assert positions == [0, 1]

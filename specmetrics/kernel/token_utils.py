@@ -1,3 +1,5 @@
+"""Token counting utilities with a tiktoken-backed primary implementation."""
+
 from __future__ import annotations
 
 try:
@@ -6,6 +8,7 @@ try:
     _enc = tiktoken.get_encoding("cl100k_base")
 
     def count_tokens(text: str) -> int:
+        """Return the number of tokens in the given text."""
         return len(_enc.encode(text))
 
 except ImportError:
@@ -17,4 +20,5 @@ except ImportError:
     )
 
     def count_tokens(text: str) -> int:
+        """Return an approximate token count based on character length."""
         return max(1, len(text) // 4)

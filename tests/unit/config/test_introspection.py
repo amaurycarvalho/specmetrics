@@ -34,3 +34,59 @@ class TestBuildDump:
         config = ResolvedConfiguration(values=CoreConfig())
         dump = build_dump(config)
         assert len(dump.entries) >= 0
+
+
+
+from specmetrics.infrastructure.config.schema import (
+    SecuritySettings,
+    SourceProvenance,
+)
+from specmetrics.infrastructure.config.sources import SourceLevel
+
+
+class TestBuildDumpFromProvenance:
+    """Kills survivors in ``build_dump``/``_walk_model`` when provenance exists."""
+
+    def test_provenance_entries_masked_and_leveled(self) -> None:
+        config = ResolvedConfiguration(
+            values=CoreConfig(security=SecuritySettings(api_key=SecretStr("sekret"))),
+            provenance={
+                "security.api_key": SourceProvenance(
+                    key="security.api_key",
+                    source="env",
+                    level=SourceLevel.ENVIRONMENT,
+                    is_default=False,
+                ),
+                "logging.level": SourceProvenance(
+                    key="logging.level",
+                    source="env",
+                    level=SourceLevel.ENVIRONMENT,
+                ),
+            },
+        )
+        dump = build_dump(config)
+        by_key = {e.key: e for e in dump.entries}
+        assert len(by_key) == 2
+        assert by_key["security.api_key"].value == "**********"
+        assert by_key["security.api_key"].is_sensitive is True
+        assert by_key["security.api_key"].level == "environment"
+        assert by_key["logging.level"].value == "info"
+        assert by_key["logging.level"].is_sensitive is False
+        assert by_key["logging.level"].is_default is False
+
+
+class TestBuildDumpFromModel:
+    """Kills survivors in ``_build_from_model``/``_walk_model`` (default path)."""
+
+    def test_default_entries_full(self) -> None:
+        config = ResolvedConfiguration(values=CoreConfig())
+        dump = build_dump(config)
+        by_key = {e.key: e for e in dump.entries}
+        assert "pipeline" in by_key
+        assert by_key["pipeline.stage_timeout"].value == 60
+        assert by_key["pipeline.stage_timeout"].source == "default"
+        assert by_key["pipeline.stage_timeout"].level == "system"
+        assert by_key["pipeline.stage_timeout"].is_default is True
+        assert by_key["logging.level"].value == "info"
+        assert by_key["security.api_key"].value == "**********"
+        assert by_key["security.api_key"].is_sensitive is True

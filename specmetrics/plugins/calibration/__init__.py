@@ -1,3 +1,5 @@
+"""Calibration profile loading and merging plugin package."""
+
 from .models import (
     CalibrationProfile,
     CodeGenerationCostWeights,
@@ -6,8 +8,8 @@ from .models import (
 from .plugin import CalibrationPlugin, create_calibration_metadata
 
 __all__ = [
-    "CalibrationProfile",
     "CalibrationPlugin",
+    "CalibrationProfile",
     "CodeGenerationCostWeights",
     "SpecificationCostWeights",
     "create_calibration_metadata",

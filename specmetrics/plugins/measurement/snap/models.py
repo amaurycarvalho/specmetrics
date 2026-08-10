@@ -1,8 +1,10 @@
+"""Data models for the SNAP measurement plugin."""
+
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -35,29 +37,37 @@ SEMANTIC_MARKER_TO_CATEGORY: dict[SemanticMarker, CategoryId] = {
 
 
 class EvidenceRef(BaseModel):
+    """Reference to the evidence supporting an assessed item."""
+
     model_config = {"frozen": True}
 
     graph_node_id: str
     document_id: str
-    section_id: Optional[str] = None
+    section_id: str | None = None
     text: str
 
 
 class AssessmentWarning(BaseModel):
+    """A non-fatal warning raised during SNAP assessment."""
+
     code: str
     message: str
-    cfm_element_id: Optional[str] = None
-    details: Optional[dict[str, str]] = None
+    cfm_element_id: str | None = None
+    details: dict[str, str] | None = None
 
 
 class AssessmentError(BaseModel):
+    """An error raised during SNAP assessment."""
+
     code: str
     message: str
-    cfm_element_id: Optional[str] = None
+    cfm_element_id: str | None = None
     recoverable: bool = False
 
 
 class AssessedItem(BaseModel):
+    """A single element assessed for SNAP points."""
+
     id: str
     name: str
     category_id: CategoryId
@@ -65,22 +75,27 @@ class AssessedItem(BaseModel):
     cfm_element_id: str
     cfm_semantic_marker: SemanticMarker
     evidence_refs: list[EvidenceRef] = []
-    rule_applied: Optional[str] = None
+    rule_applied: str | None = None
     excluded: bool = False
 
     @model_validator(mode="after")
-    def validate_assessed_item(self) -> AssessedItem:
+    def validate_assessed_item(self: Self) -> AssessedItem:
+        """Validate that excluded items have zero contribution."""
         if self.excluded and self.contribution != 0:
             raise ValueError("excluded items must have contribution=0")
         return self
 
 
 class CategoryBreakdown(BaseModel):
+    """Item count and total SNAP for a single category."""
+
     item_count: int
     total_snap: float
 
 
 class AssessmentSummary(BaseModel):
+    """Aggregated summary of a SNAP assessment run."""
+
     total_item_count: int
     total_active_count: int
     total_snap: float
@@ -88,6 +103,8 @@ class AssessmentSummary(BaseModel):
 
 
 class CategoryAssessment(BaseModel):
+    """Assessed items grouped under a single SNAP category."""
+
     category_id: CategoryId
     category_name: str
     category_version: str
@@ -95,13 +112,16 @@ class CategoryAssessment(BaseModel):
     total_contribution: float = 0.0
 
     @model_validator(mode="after")
-    def validate_category(self) -> CategoryAssessment:
+    def validate_category(self: Self) -> CategoryAssessment:
+        """Validate that a category contains at least one item."""
         if not self.items:
             raise ValueError("category must have non-empty items list")
         return self
 
 
 class AssessmentExplanation(BaseModel):
+    """Explanation of how a single item was assessed."""
+
     item_id: str
     cfm_element_id: str
     cfm_element_name: str
@@ -112,21 +132,24 @@ class AssessmentExplanation(BaseModel):
 
 
 class SNAPMeasurementResult(BaseModel):
+    """Full result of a SNAP assessment run."""
+
     model_config = {"frozen": True}
 
     run_id: str
     cfm_run_id: str
-    rule_pack_id: Optional[str] = None
+    rule_pack_id: str | None = None
     categories: list[CategoryAssessment] = []
     assessed_items: list[AssessedItem] = []
     summary: AssessmentSummary
     explanations: list[AssessmentExplanation] = []
     warnings: list[AssessmentWarning] = []
     errors: list[AssessmentError] = []
-    assessed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    assessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     @model_validator(mode="after")
-    def validate_consistency(self) -> SNAPMeasurementResult:
+    def validate_consistency(self: Self) -> SNAPMeasurementResult:
+        """Validate internal consistency of the assessment result."""
         if self.errors and self.summary.total_snap is not None:
             raise ValueError("Cannot have total_snap when errors are present")
         ids = [a.id for a in self.assessed_items]
@@ -141,6 +164,8 @@ class SNAPMeasurementResult(BaseModel):
 
 
 class CategoryDefinition(BaseModel):
+    """Definition of a SNAP assessment category."""
+
     id: CategoryId
     name: str
     description: str
@@ -148,7 +173,8 @@ class CategoryDefinition(BaseModel):
     default_contribution: float
 
     @model_validator(mode="after")
-    def validate_version(self) -> CategoryDefinition:
+    def validate_version(self: Self) -> CategoryDefinition:
+        """Validate that the category version is a valid SemVer string."""
         pattern = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
         if not re.match(pattern, self.version):
             raise ValueError(
@@ -190,9 +216,11 @@ DEFAULT_CATEGORIES: list[CategoryDefinition] = [
 
 
 class RulePack(BaseModel):
+    """Rule pack that tunes SNAP assessment behavior."""
+
     id: str
     methodology: str = "SNAP"
-    contribution_overrides: Optional[dict[str, float]] = None
+    contribution_overrides: dict[str, float] | None = None
     excluded_categories: list[str] = []
-    item_exclusions: Optional[dict[str, list[str]]] = None
-    inclusion_policies: Optional[list[dict[str, str]]] = None
+    item_exclusions: dict[str, list[str]] | None = None
+    inclusion_policies: list[dict[str, str]] | None = None

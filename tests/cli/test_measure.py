@@ -1,18 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-from specmetrics.application.measure_id import generate_measure_id
-from specmetrics.cli.measure import run_measure, _parse_metrics
-
+from unittest.mock import MagicMock, patch
 
 from specmetrics.application.enums import (
     PipelineStatus,
     StageExecutionStatus,
     StageName,
 )
+from specmetrics.application.measure_id import generate_measure_id
 from specmetrics.application.models import StageResult
+from specmetrics.cli.measure import _parse_metrics, run_measure
 
 
 class TestParseMetrics:
@@ -134,3 +132,55 @@ class TestRunMeasure:
             config_path=None,
         )
         assert exit_code == 0
+
+
+class TestPrintResult:
+    def test_json_output_prints_json(self, capsys):
+        """Kills _print_result__mutmut_1 (== vs !=) and __mutmut_2 (print(None))."""
+
+        from specmetrics.application.enums import OutputFormat, PipelineStatus
+        from specmetrics.application.models import PipelineResult
+        from specmetrics.cli.measure import _print_result
+
+        result = PipelineResult(status=PipelineStatus.SUCCESS)
+        _print_result(result, OutputFormat.JSON, verbose=False)
+        out = capsys.readouterr().out
+        assert '"status": "success"' in out
+
+    def test_text_output_prints_text(self, capsys):
+        """Kills _print_result__mutmut_1 (== vs !=) and __mutmut_4 (print(None))."""
+        from specmetrics.application.enums import OutputFormat, PipelineStatus
+        from specmetrics.application.models import PipelineResult
+        from specmetrics.cli.measure import _print_result
+
+        result = PipelineResult(status=PipelineStatus.SUCCESS, run_id="run-1")
+        _print_result(result, OutputFormat.TEXT, verbose=False)
+        out = capsys.readouterr().out
+        assert "Measurement Complete" in out
+
+    def test_text_output_verbose_passes_verbose(self, capsys):
+        """Kills _print_result__mutmut_6 (verbose=None) and __mutmut_8 (dropped arg)."""
+        from unittest.mock import patch
+
+        from specmetrics.application.enums import OutputFormat, PipelineStatus
+        from specmetrics.application.models import PipelineResult
+        from specmetrics.cli.measure import _print_result
+
+        result = PipelineResult(status=PipelineStatus.SUCCESS)
+        with patch("specmetrics.cli.measure.format_text_result", return_value="rendered") as fmt:
+            _print_result(result, OutputFormat.TEXT, verbose=True)
+        fmt.assert_called_once_with(result, verbose=True)
+
+    def test_json_uses_format_json_result(self, capsys):
+        """Kills _print_result__mutmut_2 (print(None) on the JSON branch)."""
+        from unittest.mock import patch
+
+        from specmetrics.application.enums import OutputFormat, PipelineStatus
+        from specmetrics.application.models import PipelineResult
+        from specmetrics.cli.measure import _print_result
+
+        result = PipelineResult(status=PipelineStatus.SUCCESS)
+        with patch("specmetrics.cli.measure.format_json_result", return_value='{"k": 1}') as fmt:
+            _print_result(result, OutputFormat.JSON, verbose=False)
+        fmt.assert_called_once_with(result)
+        assert capsys.readouterr().out == '{"k": 1}\n'

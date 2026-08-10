@@ -1,8 +1,12 @@
+"""Introspection of resolved configuration values.
+
+Builds a flat ``ConfigurationDump`` for debugging and inspection, masking
+sensitive values and annotating the source level of each key.
+"""
+
 from __future__ import annotations
 
-from typing import Any
-
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from .schema import (
     ConfigurationDump,
@@ -13,6 +17,7 @@ from .sources import SourceLevel
 
 
 def build_dump(config: ResolvedConfiguration) -> ConfigurationDump:
+    """Build a dump of the resolved configuration with provenance and masking."""
     entries: list[DumpEntry] = []
     for key, prov in config.provenance.items():
         value = _resolve_value(config.values, key)
@@ -36,9 +41,9 @@ def build_dump(config: ResolvedConfiguration) -> ConfigurationDump:
     )
 
 
-def _resolve_value(model: Any, key: str) -> Any:
+def _resolve_value(model: BaseModel, key: str) -> object:
     parts = key.split(".")
-    current = model
+    current: object = model
     for part in parts:
         if hasattr(current, part):
             current = getattr(current, part)
@@ -47,25 +52,23 @@ def _resolve_value(model: Any, key: str) -> Any:
     return current
 
 
-def _is_sensitive_value(value: Any) -> bool:
+def _is_sensitive_value(value: object) -> bool:
     return isinstance(value, SecretStr)
 
 
-def _mask_if_sensitive(value: Any, is_sensitive: bool) -> Any:
+def _mask_if_sensitive(value: object, is_sensitive: bool) -> object:
     if is_sensitive:
-        if isinstance(value, SecretStr):
-            return "**********"
         return "**********"
     return value
 
 
-def _build_from_model(model: Any) -> list[DumpEntry]:
+def _build_from_model(model: BaseModel) -> list[DumpEntry]:
     entries: list[DumpEntry] = []
     _walk_model(model, "", entries)
     return entries
 
 
-def _walk_model(obj: Any, prefix: str, entries: list[DumpEntry]) -> None:
+def _walk_model(obj: BaseModel, prefix: str, entries: list[DumpEntry]) -> None:
     cls = obj.__class__ if not isinstance(obj, type) else obj
     if hasattr(cls, "model_fields"):
         for field_name, field_info in cls.model_fields.items():

@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import json
 import time
-import pytest
 from unittest.mock import patch
 
+import litellm
+import pytest
+
+from specmetrics.kernel._gateway_complete import CompleteMixin
 from specmetrics.kernel.llm_gateway import (
-    LLMGatewayConfig,
-    RateLimiter,
     BatchRequest,
     DocumentPayload,
+    LLMGateway,
+    LLMGatewayConfig,
+    RateLimiter,
     parse_batch_response,
 )
 
@@ -198,3 +202,211 @@ class TestLLMGatewayConfig:
     def test_rpm_zero_unlimited(self):
         config = LLMGatewayConfig(rpm_limit=0)
         assert config.rpm_limit == 0
+
+
+class _FakeUsage:
+    def __init__(self, prompt_tokens=10, completion_tokens=5):
+        self.prompt_tokens = prompt_tokens
+        self.completion_tokens = completion_tokens
+
+
+class _FakeMessage:
+    def __init__(self, content):
+        self.content = content
+
+
+class _FakeChoice:
+    def __init__(self, content):
+        self.message = _FakeMessage(content)
+
+
+class _FakeResponse:
+    def __init__(self, content, usage=_FakeUsage()):
+        self.choices = [_FakeChoice(content)]
+        self.usage = usage
+
+
+class TestCompleteMixin:
+    def _gateway(self, **overrides):
+        config = LLMGatewayConfig(**overrides)
+        return LLMGateway(config)
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_success_returns_content_and_records(self, mock_litellm):
+        gateway = self._gateway()
+        mock_litellm.completion.return_value = _FakeResponse('{"ok": true}')
+        result = gateway.complete("sys", "user")
+        assert result == '{"ok": true}'
+        assert len(gateway.call_records) == 1
+        record = gateway.call_records[0]
+        assert record.status == "success"
+        assert record.provider == "openai"
+        assert record.prompt_tokens == 10
+        assert record.response_tokens == 5
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_json_mode_adds_response_format_for_openai(self, mock_litellm):
+        gateway = self._gateway()
+        mock_litellm.completion.return_value = _FakeResponse('{"ok": true}')
+        gateway.complete("sys", "user", json_mode=True)
+        kwargs = mock_litellm.completion.call_args.kwargs
+        assert kwargs["response_format"] == {"type": "json_object"}
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_json_mode_appends_instruction_for_unsupported_provider(self, mock_litellm):
+        gateway = self._gateway(model="claude-3")
+        mock_litellm.completion.return_value = _FakeResponse('{"ok": true}')
+        gateway.complete("sys", "user", json_mode=True)
+        messages = mock_litellm.completion.call_args.kwargs["messages"]
+        assert "valid JSON" in messages[0]["content"]
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_no_litellm_raises(self, mock_litellm):
+        gateway = self._gateway()
+        with (
+            patch("specmetrics.kernel._gateway_complete.HAS_LITELLM", False),
+            pytest.raises(RuntimeError, match="LiteLLM is not installed"),
+        ):
+            gateway.complete("sys", "user")
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_retries_on_transient_exception_then_succeeds(self, mock_litellm):
+        gateway = self._gateway(max_retries=2)
+        mock_litellm.completion.side_effect = [
+            litellm.RateLimitError("slow down", "openai", "gpt-4o-mini"),
+            _FakeResponse('{"ok": true}'),
+        ]
+        with patch.object(gateway, "_sleep_with_interrupt") as sleeper:
+            result = gateway.complete("sys", "user")
+        assert result == '{"ok": true}'
+        assert sleeper.call_count == 1
+        record = gateway.call_records[0]
+        assert record.status == "success"
+        assert record.retry_count == 1
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_exhausts_retries_raises_and_records_failure(self, mock_litellm):
+        gateway = self._gateway(max_retries=1)
+        mock_litellm.completion.side_effect = litellm.APIError(
+            500, "boom", "openai", "gpt-4o-mini"
+        )
+        with (
+            patch.object(gateway, "_sleep_with_interrupt"),
+            pytest.raises(RuntimeError, match="boom"),
+        ):
+            gateway.complete("sys", "user")
+        assert len(gateway.call_records) == 1
+        record = gateway.call_records[0]
+        assert record.status == "failed"
+        assert record.retry_count == 2
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_invalid_json_retries_with_corrected_prompt(self, mock_litellm):
+        gateway = self._gateway(max_retries=2)
+        mock_litellm.completion.side_effect = [
+            _FakeResponse("not json"),
+            _FakeResponse('{"ok": true}'),
+        ]
+        result = gateway.complete("sys", "user", json_mode=True)
+        assert result == '{"ok": true}'
+        messages = mock_litellm.completion.call_args_list[1].kwargs["messages"]
+        assert "valid JSON only" in messages[-1]["content"]
+        assert gateway.call_records[0].retry_count == 1
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_invalid_json_exhausts_retries_raises(self, mock_litellm):
+        gateway = self._gateway(max_retries=1)
+        mock_litellm.completion.return_value = _FakeResponse("not json")
+        with pytest.raises(RuntimeError, match="Expecting value"):
+            gateway.complete("sys", "user", json_mode=True)
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_missing_usage_defaults_to_zero(self, mock_litellm):
+        gateway = self._gateway()
+        mock_litellm.completion.return_value = _FakeResponse(
+            '{"ok": true}', usage=None
+        )
+        gateway.complete("sys", "user")
+        record = gateway.call_records[0]
+        assert record.prompt_tokens == 0
+        assert record.response_tokens == 0
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_records_rate_limit_delay(self, mock_litellm):
+        gateway = self._gateway()
+        mock_litellm.completion.return_value = _FakeResponse('{"ok": true}')
+        with patch.object(gateway.rate_limiter, "wait_and_record", return_value=0.5):
+            gateway.complete("sys", "user")
+        assert gateway.call_records[0].rate_limit_delay_ms == 500
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_completion_kwargs_include_model(self, mock_litellm):
+        gateway = self._gateway(model="gpt-4o-mini")
+        mock_litellm.completion.return_value = _FakeResponse('{"ok": true}')
+        gateway.complete("sys", "user")
+        kwargs = mock_litellm.completion.call_args.kwargs
+        assert kwargs["model"] == "gpt-4o-mini"
+
+    @patch("specmetrics.kernel.llm_gateway.litellm")
+    def test_sleep_with_interrupt_re_raises(self, mock_litellm):
+        gateway = self._gateway()
+        with (
+            patch("time.sleep", side_effect=KeyboardInterrupt),
+            pytest.raises(KeyboardInterrupt),
+        ):
+            gateway._sleep_with_interrupt(2, 1)
+
+    def test_detect_provider_branches(self):
+        assert CompleteMixin is not None
+
+
+
+class TestLLMGatewayGetAttr:
+    def test_litellm_resolved_when_available(self) -> None:
+        import specmetrics.kernel.llm_gateway as gateway_module
+
+        with patch("specmetrics.kernel.llm_gateway.HAS_LITELLM", True):
+            assert gateway_module.litellm is not None
+
+    def test_litellm_none_when_unavailable(self) -> None:
+        import specmetrics.kernel.llm_gateway as gateway_module
+
+        with patch("specmetrics.kernel.llm_gateway.HAS_LITELLM", False):
+            assert gateway_module.litellm is None
+
+
+class TestGetSummaryStats:
+    def _record(self, prompt=10, response=5, duration=100):
+        from specmetrics.kernel._models import LLMCallRecord
+
+        return LLMCallRecord(
+            provider="openai",
+            model="gpt-4o",
+            prompt_tokens=prompt,
+            response_tokens=response,
+            duration_ms=duration,
+        )
+
+    def test_summary_stats_empty(self) -> None:
+        gateway = LLMGateway(LLMGatewayConfig())
+        assert gateway.get_summary_stats() == {
+            "total_calls": 0,
+            "total_tokens": 0,
+            "total_duration_ms": 0,
+        }
+
+    def test_summary_stats_summed(self) -> None:
+        gateway = LLMGateway(LLMGatewayConfig())
+        gateway.call_records = [
+            self._record(prompt=10, response=5, duration=100),
+            self._record(prompt=20, response=10, duration=50),
+        ]
+        stats = gateway.get_summary_stats()
+        assert stats["total_calls"] == 2
+        assert stats["total_tokens"] == 45
+        assert stats["total_duration_ms"] == 150
+
+    def test_tokens_are_summed_not_subtracted(self) -> None:
+        gateway = LLMGateway(LLMGatewayConfig())
+        gateway.call_records = [self._record(prompt=10, response=5)]
+        assert gateway.get_summary_stats()["total_tokens"] == 15

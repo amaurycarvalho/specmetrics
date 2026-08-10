@@ -1,3 +1,10 @@
+"""Kernel package: evidence graph, canonical model builders, and the pipeline engine."""
+
+from .adapter_interface import Document, DocumentSection, SpecificationAdapter
+from .adapter_registry import AdapterRegistry
+from .cfm.builder import CfmBuilderStage, build
+from .cfm.classifier import classify_node, strip_framework_labels
+from .cfm.metadata import BuildMetadata, ClassificationConflict
 from .cfm.model import (
     Actor,
     ActorType,
@@ -13,26 +20,30 @@ from .cfm.model import (
     RuleType,
     UnclassifiedElement,
 )
-from .cfm.builder import CfmBuilderStage, build
-from .cfm.classifier import classify_node, strip_framework_labels
-from .cfm.metadata import BuildMetadata, ClassificationConflict
-from .adapter_interface import Document, DocumentSection, SpecificationAdapter
-from .adapter_registry import AdapterRegistry
+from .deterministic_engine import DeterministicSemanticEngine
 from .diagnostics import (
     Diagnostics,
-    StageError as StageErrorRecord,
     StageStatus,
     StageTiming,
 )
-from .extraction_provider import (
-    EvidenceReference,
-    ExtractedElement,
-    ExtractionProvider,
-    ExtractionResult,
-    ProcessingStats,
+from .diagnostics import (
+    StageError as StageErrorRecord,
 )
-from .extraction_registry import ProviderRouter
-from .extraction_stage import ExtractionStage
+from .engine_patterns import PatternLibrary
+from .engine_rule import ExtractionRule, RulePackLoader
+from .engine_visitors import (
+    CodeBlockVisitor,
+    EmphasisVisitor,
+    ExtractionState,
+    HeadingVisitor,
+    LinkVisitor,
+    ListVisitor,
+    Observation,
+    ParagraphVisitor,
+    QuoteVisitor,
+    TableVisitor,
+)
+from .events import EventType, PipelineEvent
 from .evidence_graph import (
     EdgeAlreadyExistsError,
     EvidenceGraph,
@@ -48,10 +59,18 @@ from .evidence_graph import (
     fingerprint_node,
 )
 from .evidence_graph_stage import EvidenceGraphStage, NetworkXBackend
-from .events import EventType, PipelineEvent
+from .exceptions import HandlerNotFoundError, PipelineError, PluginError, StageError
+from .extraction_provider import (
+    EvidenceReference,
+    ExtractedElement,
+    ExtractionProvider,
+    ExtractionResult,
+    ProcessingStats,
+)
+from .extraction_registry import ProviderRouter
+from .extraction_stage import ExtractionStage
 from .graph_persistence import GraphStore
 from .graph_query_engine import GraphQueryEngine
-from .exceptions import HandlerNotFoundError, PipelineError, PluginError, StageError
 from .handler_registry import EventHandler, HandlerRegistry
 from .pipeline_context import PipelineContext
 from .pipeline_engine import PipelineEngine
@@ -63,22 +82,6 @@ from .semantic_extraction_engine import (
     SemanticEngineFactory,
     SemanticExtractionEngine,
 )
-from .deterministic_engine import DeterministicSemanticEngine
-from .litellm_engine import ExtractionError, LiteLLMSemanticEngine
-from .engine_rule import ExtractionRule, RulePackLoader
-from .engine_patterns import PatternLibrary
-from .engine_visitors import (
-    CodeBlockVisitor,
-    EmphasisVisitor,
-    ExtractionState,
-    HeadingVisitor,
-    LinkVisitor,
-    ListVisitor,
-    Observation,
-    ParagraphVisitor,
-    QuoteVisitor,
-    TableVisitor,
-)
 
 __all__ = [
     "Actor",
@@ -89,46 +92,50 @@ __all__ = [
     "CanonicalFunctionalModel",
     "CfmBuilderStage",
     "ClassificationConflict",
+    "CodeBlockVisitor",
     "DataGroup",
     "DataType",
-    "EvidenceRef",
-    "FunctionalProcess",
-    "Operation",
-    "Relationship",
-    "RelationshipType",
-    "RuleType",
-    "UnclassifiedElement",
-    "build",
-    "classify_node",
-    "strip_framework_labels",
+    "DeterministicSemanticEngine",
+    "Diagnostics",
+    "Document",
+    "DocumentSection",
     "EdgeAlreadyExistsError",
+    "EmphasisVisitor",
+    "EventHandler",
+    "EventType",
     "EvidenceGraph",
     "EvidenceGraphError",
     "EvidenceGraphStage",
+    "EvidenceRef",
+    "EvidenceReference",
+    "ExtractedElement",
+    "ExtractionError",
+    "ExtractionProvider",
+    "ExtractionResult",
+    "ExtractionRule",
+    "ExtractionStage",
+    "ExtractionState",
+    "FunctionalProcess",
     "GraphBackend",
     "GraphEdge",
     "GraphMetadata",
     "GraphNode",
     "GraphQueryEngine",
     "GraphStore",
+    "HandlerNotFoundError",
+    "HandlerRegistry",
+    "HeadingVisitor",
     "InvalidGraphDataError",
+    "LinkVisitor",
+    "ListVisitor",
+    "LiteLLMSemanticEngine",
     "NetworkXBackend",
     "NodeAlreadyExistsError",
     "NodeNotFoundError",
-    "SelfLoopError",
-    "fingerprint_node",
-    "Diagnostics",
-    "Document",
-    "EvidenceReference",
-    "ExtractedElement",
-    "ExtractionProvider",
-    "ExtractionResult",
-    "ExtractionStage",
-    "DocumentSection",
-    "EventHandler",
-    "EventType",
-    "HandlerNotFoundError",
-    "HandlerRegistry",
+    "Observation",
+    "Operation",
+    "ParagraphVisitor",
+    "PatternLibrary",
     "PipelineContext",
     "PipelineEngine",
     "PipelineError",
@@ -143,29 +150,40 @@ __all__ = [
     "PluginValidator",
     "ProcessingStats",
     "ProviderRouter",
+    "QuoteVisitor",
+    "Relationship",
+    "RelationshipType",
+    "RulePackLoader",
+    "RuleType",
+    "SelfLoopError",
+    "SemanticEngineFactory",
+    "SemanticExtractionEngine",
     "SpecificationAdapter",
     "StageError",
     "StageErrorRecord",
     "StageStatus",
     "StageTiming",
-    "CodeBlockVisitor",
-    "DeterministicSemanticEngine",
-    "EmphasisVisitor",
-    "ExtractionError",
-    "ExtractionRule",
-    "ExtractionState",
-    "HeadingVisitor",
-    "LiteLLMSemanticEngine",
-    "LinkVisitor",
-    "ListVisitor",
-    "Observation",
-    "ParagraphVisitor",
-    "PatternLibrary",
-    "QuoteVisitor",
-    "RulePackLoader",
-    "SemanticEngineFactory",
-    "SemanticExtractionEngine",
     "TableVisitor",
+    "UnclassifiedElement",
     "ValidationResult",
+    "build",
+    "classify_node",
+    "fingerprint_node",
     "load_plugins",
+    "strip_framework_labels",
 ]
+
+_LAZY_LITELLM_NAMES = frozenset({"ExtractionError", "LiteLLMSemanticEngine"})
+
+
+def __getattr__(name: str) -> object:
+    """Resolve the LiteLLM engine symbols lazily.
+
+    Importing ``litellm_engine`` eagerly pulls in litellm (an expensive import),
+    so those names are resolved only when actually accessed.
+    """
+    if name in _LAZY_LITELLM_NAMES:
+        from . import litellm_engine
+
+        return getattr(litellm_engine, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

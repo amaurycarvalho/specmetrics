@@ -1,6 +1,9 @@
+"""MCP tool handler for exporting measurement results."""
+
 from __future__ import annotations
 
 import json
+from importlib.metadata import entry_points
 from pathlib import Path
 
 from mcp.types import TextContent, Tool
@@ -10,9 +13,6 @@ from specmetrics.application.models import PipelineRequest
 from specmetrics.application.orchestrator import PipelineOrchestrator
 from specmetrics.plugins.exporter.base import ExporterPlugin
 from specmetrics.plugins.exporter.orchestrator import ExportOrchestrator
-
-from importlib.metadata import entry_points
-
 
 EXPORT_RESULTS_TOOL = Tool(
     name="export_results",
@@ -40,6 +40,7 @@ EXPORT_RESULTS_TOOL = Tool(
 
 
 def handle_export_results(arguments: dict) -> list[TextContent]:
+    """Export measurement results in the requested format."""
     project_path = Path(arguments["project_path"]).resolve()
     fmt = arguments.get("format", "json")
     output_path_str = arguments.get("output_path")

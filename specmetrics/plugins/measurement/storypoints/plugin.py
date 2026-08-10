@@ -1,7 +1,9 @@
+"""Story Points measurement plugin."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Self
 
 import structlog
 
@@ -42,24 +44,31 @@ logger = structlog.get_logger(__name__)
 
 
 class StoryPointsHandler:
-    def __init__(self, calibration_dir: str | Path | None = None) -> None:
+    """Pipeline handler that estimates Story Points on measurement completion."""
+
+    def __init__(self: Self, calibration_dir: str | Path | None = None) -> None:
+        """Initialize the handler with an optional calibration directory."""
         self._calibration_dir = calibration_dir
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this handler processes."""
         return EventType.MEASUREMENT_COMPLETED
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique identifier of this handler."""
         return "storypoints_measurement"
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the display name of this handler stage."""
         return "Story Points Measurement"
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Estimate Story Points for the given pipeline event."""
         ctx = event.context
-        cfm: Optional[CanonicalFunctionalModel] = ctx.canonical_model
-        csm: Optional[CanonicalSpecificationModel] = ctx.canonical_spec_model
+        cfm: CanonicalFunctionalModel | None = ctx.canonical_model
+        csm: CanonicalSpecificationModel | None = ctx.canonical_spec_model
 
         if not isinstance(cfm, CanonicalFunctionalModel):
             cfm = None
@@ -131,22 +140,28 @@ class StoryPointsHandler:
 
 
 class StoryPointsPlugin:
-    def __init__(self, calibration_dir: str | Path | None = None) -> None:
+    """Plugin facade exposing the Story Points estimation methodology."""
+
+    def __init__(self: Self, calibration_dir: str | Path | None = None) -> None:
+        """Initialize the plugin with an optional calibration directory."""
         self._calibration_dir = calibration_dir
 
-    def plugin_id(self) -> str:
+    def plugin_id(self: Self) -> str:
+        """Return the unique plugin identifier."""
         return "storypoints"
 
-    def supported_methodology(self) -> str:
+    def supported_methodology(self: Self) -> str:
+        """Return the methodology name supported by this plugin."""
         return "Story Points"
 
     def measure(
-        self,
+        self: Self,
         cfm: CanonicalFunctionalModel | None,
         csm: CanonicalSpecificationModel | None = None,
         previous_fingerprints: dict[str, str] | None = None,
         calibration: StoryPointsCalibrationProfile | None = None,
     ) -> StoryPointMeasurementResult:
+        """Estimate Story Points from the given CFM and CSM models."""
         if calibration is None:
             calibration = load_calibration(self._calibration_dir)
         return calculate(
@@ -161,6 +176,7 @@ class StoryPointsPlugin:
 def create_storypoints_measurement_metadata(
     calibration_dir: str | Path | None = None,
 ) -> PluginMetadata:
+    """Create the plugin metadata for the Story Points plugin."""
     return PluginMetadata(
         id="storypoints",
         api_version="0.1.0",

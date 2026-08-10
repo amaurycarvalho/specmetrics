@@ -1,3 +1,5 @@
+"""Entry point based discovery of publisher plugins."""
+
 from __future__ import annotations
 
 from importlib.metadata import entry_points
@@ -10,6 +12,7 @@ logger = structlog.get_logger(__name__)
 
 
 def discover_publishers() -> list[PublisherPlugin]:
+    """Return instantiated publisher plugins registered as entry points."""
     plugins: list[PublisherPlugin] = []
     for ep in entry_points(group="specmetrics.publishers"):
         try:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from specmetrics.kernel.adapter_interface import Document
 from specmetrics.kernel.deterministic_engine import DeterministicSemanticEngine
 from specmetrics.kernel.semantic_extraction_engine import (

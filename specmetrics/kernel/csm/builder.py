@@ -1,17 +1,21 @@
+"""Build a Canonical Specification Model from an evidence graph."""
+
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Self
 
 import structlog
 
+from specmetrics.kernel.csm.activity_classifier import (
+    classify_activity_type_with_context,
+)
 from specmetrics.kernel.csm.classifier import (
     classify_all_categories,
     classify_node,
     strip_framework_labels,
-)
-from specmetrics.kernel.csm.activity_classifier import (
-    classify_activity_type_with_context,
 )
 from specmetrics.kernel.csm.evidence_processing import (
     get_evidence_references,
@@ -30,8 +34,8 @@ from specmetrics.kernel.csm.model import (
     Risk,
     SpecificationActivity,
 )
-from specmetrics.kernel.evidence_graph import EvidenceGraph
 from specmetrics.kernel.events import EventType, PipelineEvent
+from specmetrics.kernel.evidence_graph import EvidenceGraph
 from specmetrics.kernel.pipeline_context import PipelineContext
 
 logger = structlog.get_logger(__name__)
@@ -41,7 +45,79 @@ def _non_empty(text: str, fallback: str) -> str:
     return text if text.strip() else (fallback if fallback.strip() else "(no content)")
 
 
+_ENTITY_BUILDERS: dict[
+    str,
+    Callable[
+        [str, str, list[Reference]],
+        (
+            Decision
+            | Assumption
+            | Constraint
+            | Risk
+            | OpenQuestion
+            | AcceptanceCriterion
+            | GlossaryTerm
+            | SpecificationActivity
+        ),
+    ],
+] = {
+    "decision": lambda node_id, clean_text, evidence_refs: Decision(
+        id=node_id, description=clean_text, evidence_references=evidence_refs
+    ),
+    "assumption": lambda node_id, clean_text, evidence_refs: Assumption(
+        id=node_id, description=clean_text, evidence_references=evidence_refs
+    ),
+    "constraint": lambda node_id, clean_text, evidence_refs: Constraint(
+        id=node_id,
+        description=clean_text,
+        evidence_references=evidence_refs,
+        constraint_type="technical",
+    ),
+    "risk": lambda node_id, clean_text, evidence_refs: Risk(
+        id=node_id, description=clean_text, evidence_references=evidence_refs
+    ),
+    "open_question": lambda node_id, clean_text, evidence_refs: OpenQuestion(
+        id=node_id, description=clean_text, evidence_references=evidence_refs
+    ),
+    "acceptance_criterion": lambda node_id, clean_text, evidence_refs: (
+        AcceptanceCriterion(
+            id=node_id, description=clean_text, evidence_references=evidence_refs
+        )
+    ),
+    "glossary_term": lambda node_id, clean_text, evidence_refs: GlossaryTerm(
+        id=node_id, description=clean_text, evidence_references=evidence_refs
+    ),
+    "specification_activity": lambda node_id, clean_text, evidence_refs: (
+        SpecificationActivity(
+            id=node_id,
+            description=clean_text,
+            evidence_references=evidence_refs,
+            activity_type="clarification",
+        )
+    ),
+}
+
+
+def _record_conflict(
+    node_id: str,
+    all_categories: list[str],
+    conflicts: list[ClassificationConflict],
+) -> None:
+    """Record a classification conflict when multiple categories match."""
+    if len(all_categories) <= 1:
+        return
+    conflicts.append(
+        ClassificationConflict(
+            node_id=node_id,
+            competing_categories=list(all_categories),
+            resolved_category=all_categories[0],
+            reason=f"Multiple patterns matched: {', '.join(all_categories)}",
+        )
+    )
+
+
 def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
+    """Build a canonical specification model from the given evidence graph."""
     specification_activities: dict[str, SpecificationActivity] = {}
     decisions: dict[str, Decision] = {}
     assumptions: dict[str, Assumption] = {}
@@ -54,6 +130,17 @@ def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
     conflicts: list[ClassificationConflict] = []
     category_for_node: dict[str, str] = {}
 
+    containers: dict[str, dict[str, object]] = {
+        "decision": decisions,
+        "assumption": assumptions,
+        "constraint": constraints,
+        "risk": risks,
+        "open_question": open_questions,
+        "acceptance_criterion": acceptance_criteria,
+        "glossary_term": glossary_terms,
+        "specification_activity": specification_activities,
+    }
+
     started_at = time.monotonic()
 
     # First pass: classify all nodes and create entities
@@ -62,15 +149,7 @@ def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
             continue
 
         all_categories = classify_all_categories(node)
-        if len(all_categories) > 1:
-            conflicts.append(
-                ClassificationConflict(
-                    node_id=node_id,
-                    competing_categories=list(all_categories),
-                    resolved_category=all_categories[0],
-                    reason=f"Multiple patterns matched: {', '.join(all_categories)}",
-                )
-            )
+        _record_conflict(node_id, all_categories, conflicts)
 
         category = classify_node(node)
         if category is None:
@@ -86,56 +165,9 @@ def build(graph: EvidenceGraph) -> CanonicalSpecificationModel:
         clean_text = _non_empty(strip_framework_labels(node.text), node.text)
         evidence_refs = get_evidence_references(node_id, graph)
 
-        if category == "decision":
-            decisions[node_id] = Decision(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "assumption":
-            assumptions[node_id] = Assumption(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "constraint":
-            constraints[node_id] = Constraint(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-                constraint_type="technical",
-            )
-        elif category == "risk":
-            risks[node_id] = Risk(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "open_question":
-            open_questions[node_id] = OpenQuestion(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "acceptance_criterion":
-            acceptance_criteria[node_id] = AcceptanceCriterion(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "glossary_term":
-            glossary_terms[node_id] = GlossaryTerm(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-            )
-        elif category == "specification_activity":
-            specification_activities[node_id] = SpecificationActivity(
-                id=node_id,
-                description=clean_text,
-                evidence_references=evidence_refs,
-                activity_type="clarification",
-            )
+        builder = _ENTITY_BUILDERS.get(category)
+        if builder is not None:
+            containers[category][node_id] = builder(node_id, clean_text, evidence_refs)
 
     # Second pass: link specification activities to discovered entities
     all_decisions = decisions
@@ -249,24 +281,31 @@ def _find_linked(
 
 
 class CsmBuilderStage:
-    def __init__(self) -> None:
+    """Pipeline stage that builds a canonical specification model from an evidence graph."""
+
+    def __init__(self: Self) -> None:
+        """Initialize the stage."""
         self._handled_event_type = EventType.CANONICAL_SPECIFICATION_MODEL_BUILT
         self._handler_id = "csm_builder_stage"
         self._stage_name = "canonical_spec_model"
 
     @property
-    def handled_event_type(self) -> EventType:
+    def handled_event_type(self: Self) -> EventType:
+        """Return the event type this stage handles."""
         return self._handled_event_type
 
     @property
-    def handler_id(self) -> str:
+    def handler_id(self: Self) -> str:
+        """Return the unique handler identifier for this stage."""
         return self._handler_id
 
     @property
-    def stage_name(self) -> str:
+    def stage_name(self: Self) -> str:
+        """Return the stage name."""
         return self._stage_name
 
-    def handle(self, event: PipelineEvent) -> PipelineContext:
+    def handle(self: Self, event: PipelineEvent) -> PipelineContext:
+        """Handle a pipeline event and build the canonical specification model."""
         context = event.context
 
         graph_data = context.evidence_graph
@@ -282,8 +321,9 @@ class CsmBuilderStage:
         run_id = graph_data.get("run_id", str(int(event.timestamp.timestamp())))
 
         try:
-            from specmetrics.kernel.graph_persistence import GraphStore
             import os
+
+            from specmetrics.kernel.graph_persistence import GraphStore
 
             graphs_dir = os.path.join(os.getcwd(), ".specmetrics", "evidence_graphs")
             graph_path = os.path.join(graphs_dir, f"{run_id}.jsonl")
@@ -321,7 +361,7 @@ class CsmBuilderStage:
             publisher=self._handler_id,
             payload=payload,
             context=context,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         context = context.with_stage_output(
             field_name="canonical_spec_model", value=csm, event=canonical_event

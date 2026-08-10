@@ -1,3 +1,8 @@
+"""Canonical Specification Model (CSM) package."""
+
+from .builder import CsmBuilderStage, build
+from .classifier import classify_all_categories, classify_node, strip_framework_labels
+from .metadata import BuildMetadata, ClassificationConflict
 from .model import (
     AcceptanceCriterion,
     Assumption,
@@ -13,9 +18,6 @@ from .model import (
     Risk,
     SpecificationActivity,
 )
-from .metadata import BuildMetadata, ClassificationConflict
-from .builder import CsmBuilderStage, build
-from .classifier import classify_all_categories, classify_node, strip_framework_labels
 
 __all__ = [
     "AcceptanceCriterion",

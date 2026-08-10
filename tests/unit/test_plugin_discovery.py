@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-
 from specmetrics.kernel import (
     EventType,
     PluginDiscovery,

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -13,7 +12,7 @@ from specmetrics.kernel.plugin_registry import PluginDescriptor, PluginRegistry
 
 class _MockAdapter:
     def __init__(
-        self, adapter_id: str, supported_paths: Optional[list[str]] = None
+        self, adapter_id: str, supported_paths: list[str] | None = None
     ) -> None:
         self._adapter_id = adapter_id
         self._supported_paths = supported_paths or []
@@ -33,7 +32,7 @@ class _MockAdapter:
 
 
 def _make_descriptor(
-    adapter_id: str, supported_paths: Optional[list[str]] = None
+    adapter_id: str, supported_paths: list[str] | None = None
 ) -> PluginDescriptor:
     adapter = _MockAdapter(adapter_id, supported_paths)
     metadata = PluginMetadata(
@@ -120,3 +119,31 @@ class TestAdapterRegistry:
         results = adapter_reg.scan_all(Path("/repo/combo"))
         assert len(results["adapter-a"]) == 1
         assert len(results["adapter-b"]) == 1
+
+
+class TestIsAdapter:
+    def test_requires_both_scan_and_supports(self) -> None:
+        from specmetrics.kernel.adapter_registry import _is_adapter
+
+        class OnlyScan:
+            def scan(self, path):
+                return []
+
+        class OnlySupports:
+            def supports(self, path):
+                return True
+
+        class Both:
+            def scan(self, path):
+                return []
+
+            def supports(self, path):
+                return True
+
+        class Neither:
+            pass
+
+        assert _is_adapter(OnlyScan()) is False
+        assert _is_adapter(OnlySupports()) is False
+        assert _is_adapter(Both()) is True
+        assert _is_adapter(Neither()) is False

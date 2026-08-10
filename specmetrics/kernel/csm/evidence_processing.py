@@ -1,12 +1,14 @@
+"""Helpers for gathering evidence references and graph neighbors."""
+
 from __future__ import annotations
 
-from typing import Optional
-
 from specmetrics.kernel.evidence_graph import EvidenceGraph, GraphNode
+
 from .model import EvidenceRef
 
 
 def get_evidence_references(node_id: str, graph: EvidenceGraph) -> list[EvidenceRef]:
+    """Gather unique evidence references for a node and its neighbors."""
     refs: list[EvidenceRef] = []
     seen: set[tuple[str, str, str]] = set()
 
@@ -48,8 +50,9 @@ def get_evidence_references(node_id: str, graph: EvidenceGraph) -> list[Evidence
 
 
 def get_neighbors(
-    node_id: str, graph: EvidenceGraph, edge_type: Optional[str] = None
+    node_id: str, graph: EvidenceGraph, edge_type: str | None = None
 ) -> list[GraphNode]:
+    """Return neighboring nodes connected to the given node."""
     neighbors: list[GraphNode] = []
 
     for edge in graph.edges:
@@ -58,14 +61,14 @@ def get_neighbors(
                 target = graph.nodes.get(edge.target)
                 if target is not None:
                     neighbors.append(target)
-        elif edge.target == node_id:
-            if edge_type is None or edge.edge_type == edge_type:
-                source = graph.nodes.get(edge.source)
-                if source is not None:
-                    neighbors.append(source)
+        elif edge.target == node_id and (edge_type is None or edge.edge_type == edge_type):
+            source = graph.nodes.get(edge.source)
+            if source is not None:
+                neighbors.append(source)
 
     return neighbors
 
 
 def get_nodes_by_type(graph: EvidenceGraph, node_type: str) -> list[GraphNode]:
+    """Return all nodes matching the given node type."""
     return [node for node in graph.nodes.values() if node.node_type == node_type]

@@ -1,3 +1,5 @@
+"""Constitutional validation rules for engaged principles and compliance notes."""
+
 from __future__ import annotations
 
 import re
@@ -44,7 +46,21 @@ PRINCIPLE_TITLES = {
 }
 
 
+_PRINCIPLE_RE = re.compile(
+    r"^(I{1,3}|IV|V|VI{0,3}|X{0,3}I{0,3}|XI{1,2}|XII|XIII|XIV)$"
+)
+
+
+def _extract_principles(principles_text: str) -> list[str]:
+    """Extract valid Roman-numeral principle tokens from a declaration."""
+    tokens = [
+        p.strip("() ") for p in re.split(r"[,;\s]+", principles_text) if p.strip("() ")
+    ]
+    return [p for p in tokens if _PRINCIPLE_RE.match(p)]
+
+
 def constitution_engaged(document: SpecificationDocument) -> ValidationResult:
+    """Verify that the document declares engaged constitution principles."""
     content = document.content
 
     pattern = re.compile(
@@ -60,16 +76,7 @@ def constitution_engaged(document: SpecificationDocument) -> ValidationResult:
             evidence=[EvidenceRef(detail="Missing Engaged Principles declaration")],
         )
 
-    principles_text = match.group(1)
-    found_principles = re.findall(r"\b(?:X{0,3}I{0,3}|IV|VI{0,3})\b", principles_text)
-    tokens = [
-        p.strip("() ") for p in re.split(r"[,;\s]+", principles_text) if p.strip("() ")
-    ]
-    found_principles = [
-        p
-        for p in tokens
-        if re.match(r"^(I{1,3}|IV|V|VI{0,3}|X{0,3}I{0,3}|XI{1,2}|XII|XIII|XIV)$", p)
-    ]
+    found_principles = _extract_principles(match.group(1))
 
     if not found_principles:
         return ValidationResult(
@@ -101,6 +108,7 @@ def constitution_engaged(document: SpecificationDocument) -> ValidationResult:
 
 
 def constitution_compliance_notes(document: SpecificationDocument) -> ValidationResult:
+    """Verify compliance notes exist for engaged constitution principles."""
     content = document.content
 
     if "Compliance Note" not in content and "compliance" not in content.lower():

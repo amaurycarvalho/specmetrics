@@ -3,18 +3,26 @@ from __future__ import annotations
 import uuid
 
 from specmetrics.kernel.cfm.model import (
+    BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
     BusinessRule,
     CanonicalFunctionalModel,
-    EvidenceRef as CfmEvidenceRef,
     FunctionalProcess,
-    BuildMetadata as CfmBuildMetadata,
+)
+from specmetrics.kernel.cfm.model import (
+    EvidenceRef as CfmEvidenceRef,
+)
+from specmetrics.kernel.csm.model import (
+    BuildMetadata as CsmBuildMetadata,
 )
 from specmetrics.kernel.csm.model import (
     CanonicalSpecificationModel,
     Decision,
-    EvidenceRef as CsmEvidenceRef,
     Reference,
-    BuildMetadata as CsmBuildMetadata,
+)
+from specmetrics.kernel.csm.model import (
+    EvidenceRef as CsmEvidenceRef,
 )
 from specmetrics.plugins.measurement.cognitive_points.calculator import (
     calculate,
@@ -272,6 +280,7 @@ class TestSubTypeClassification:
 class TestPayloadExtensions:
     def test_payload_contains_new_keys(self):
         from dataclasses import replace
+
         from specmetrics.kernel.events import EventType, PipelineEvent
         from specmetrics.kernel.pipeline_context import PipelineContext
         from specmetrics.plugins.measurement.cognitive_points.plugin import (
@@ -313,6 +322,7 @@ class TestPayloadExtensions:
 
     def test_content_tokens_in_element_counts(self):
         from dataclasses import replace
+
         from specmetrics.kernel.events import EventType, PipelineEvent
         from specmetrics.kernel.pipeline_context import PipelineContext
         from specmetrics.plugins.measurement.cognitive_points.plugin import (

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from specmetrics.kernel.evidence_graph import GraphNode
 from specmetrics.kernel.cfm.classifier import _classify_entity
+from specmetrics.kernel.evidence_graph import GraphNode
 
 
 def _node(text: str, section_id: str | None = None) -> GraphNode:

@@ -153,3 +153,100 @@ class TestGraphStore:
         assert os.path.isfile(path)
         GraphStore.delete(path)
         assert not os.path.exists(path)
+
+
+class TestGraphStoreReadRecords:
+    def _write(self, path: str, lines: list[str]) -> None:
+        with open(path, "w") as f:
+            f.write("\n".join(lines) + "\n")
+
+    def test_empty_file_raises_missing_metadata(self) -> None:
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            path = f.name
+        try:
+            with pytest.raises(InvalidGraphDataError, match="Missing metadata"):
+                GraphStore.load(path)
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_invalid_json_first_line_reports_line_one(self) -> None:
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            path = f.name
+            f.write("not json\n")
+        try:
+            with pytest.raises(InvalidGraphDataError) as excinfo:
+                GraphStore.load(path)
+            assert "Line 1: invalid JSON" in str(excinfo.value)
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_blank_lines_are_skipped(self) -> None:
+        meta = json.dumps(
+            {"type": "metadata", "run_id": "r", "node_count": 1, "edge_count": 0}
+        )
+        node = json.dumps(
+            {
+                "type": "node",
+                "id": "n1",
+                "node_type": "evidence",
+                "document_id": "doc1",
+                "text": "x",
+            }
+        )
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            path = f.name
+            f.write(meta + "\n\n\n" + node + "\n")
+        try:
+            loaded = GraphStore.load(path)
+            assert "n1" in loaded.nodes
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_invalid_node_reports_line_number(self) -> None:
+        lines = [
+            '{"type": "metadata", "run_id": "r"}',
+            '{"type": "node", "id": "n1", "node_type": "bogus"}',
+        ]
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            path = f.name
+            self._write(path, lines)
+        try:
+            with pytest.raises(InvalidGraphDataError) as excinfo:
+                GraphStore.load(path)
+            assert "Line 2: invalid node" in str(excinfo.value)
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+    def test_invalid_edge_reports_line_number(self) -> None:
+        lines = [
+            '{"type": "metadata", "run_id": "r"}',
+            '{"type": "edge", "source": "a", "target": "b", "edge_type": "bogus"}',
+        ]
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w") as f:
+            path = f.name
+            self._write(path, lines)
+        try:
+            with pytest.raises(InvalidGraphDataError) as excinfo:
+                GraphStore.load(path)
+            assert "Line 2: invalid edge" in str(excinfo.value)
+        finally:
+            if os.path.exists(path):
+                os.unlink(path)
+
+
+class TestGraphStoreParseMetadataRecord:
+    def test_strips_node_and_edge_counts(self) -> None:
+        record = {
+            "run_id": "r",
+            "node_count": 5,
+            "edge_count": 2,
+            "created_at": "2026-01-01T00:00:00",
+        }
+        result = GraphStore._parse_metadata_record(dict(record))
+        assert "node_count" not in result
+        assert "edge_count" not in result
+        assert result["run_id"] == "r"

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 from specmetrics.plugins.adapter.speckit.metadata import (
     build_metadata,
 )
@@ -138,3 +137,103 @@ class TestBuildMetadata:
         meta = build_metadata(cl, tmp_path)
         assert meta["artifact_type"] == "checklist"
         assert meta["kind"] == "checklist"
+
+
+class TestInferKindKillers:
+    """Kills survivors in ``speckit/metadata._infer_kind`` (mutmut_2..6)."""
+
+    def test_unknown_artifact_type_returns_unknown(self) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_kind
+
+        assert _infer_kind("not-a-known-artifact") == "unknown"
+
+    def test_known_artifact_type_maps_to_kind(self) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_kind
+
+        assert _infer_kind("specification") == "specification"
+
+
+class TestInferFeatureKillers:
+    """Kills survivors in ``speckit/metadata._infer_feature``."""
+
+    def test_specs_feature_name(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_feature
+
+        spec = tmp_path / "specs" / "feature-a" / "spec.md"
+        spec.parent.mkdir(parents=True)
+        spec.write_text("# Feature A")
+        assert _infer_feature(spec, tmp_path) == "feature-a"
+
+    def test_two_part_specs_path_returns_second_part(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_feature
+
+        spec = tmp_path / "specs" / "x.md"
+        spec.parent.mkdir(parents=True)
+        spec.write_text("# X")
+        assert _infer_feature(spec, tmp_path) == "x.md"
+
+    def test_non_specs_path_returns_none(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_feature
+
+        doc = tmp_path / "docs" / "x.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("# X")
+        assert _infer_feature(doc, tmp_path) is None
+
+    def test_outside_repo_uses_full_path(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_feature
+
+        outside = tmp_path / "outside.md"
+        outside.write_text("# X")
+        assert _infer_feature(outside, tmp_path / "repo") is None
+
+    def test_specify_governance_returns_none(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_feature
+
+        constitution = tmp_path / ".specify" / "memory" / "constitution.md"
+        constitution.parent.mkdir(parents=True)
+        constitution.write_text("# Constitution")
+        assert _infer_feature(constitution, tmp_path) is None
+
+
+class TestInferWorkspaceKillers:
+    """Kills survivors in ``speckit/metadata._infer_workspace``."""
+
+    def test_specify_workspace(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_workspace
+
+        constitution = tmp_path / ".specify" / "memory" / "constitution.md"
+        constitution.parent.mkdir(parents=True)
+        constitution.write_text("# Constitution")
+        assert _infer_workspace(constitution, tmp_path) == ".specify/memory"
+
+    def test_two_part_specify_path_workspace(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_workspace
+
+        gov = tmp_path / ".specify" / "x.md"
+        gov.parent.mkdir(parents=True)
+        gov.write_text("# X")
+        assert _infer_workspace(gov, tmp_path) == ".specify/memory"
+
+    def test_specs_workspace(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_workspace
+
+        spec = tmp_path / "specs" / "feature-a" / "spec.md"
+        spec.parent.mkdir(parents=True)
+        spec.write_text("# Feature A")
+        assert _infer_workspace(spec, tmp_path) == "specs/feature-a"
+
+    def test_non_specs_path_returns_empty(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_workspace
+
+        doc = tmp_path / "docs" / "a" / "b.md"
+        doc.parent.mkdir(parents=True)
+        doc.write_text("# B")
+        assert _infer_workspace(doc, tmp_path) == ""
+
+    def test_outside_repo_returns_empty(self, tmp_path: Path) -> None:
+        from specmetrics.plugins.adapter.speckit.metadata import _infer_workspace
+
+        outside = tmp_path / "outside.md"
+        outside.write_text("# X")
+        assert _infer_workspace(outside, tmp_path / "repo") == ""

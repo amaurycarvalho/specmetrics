@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-
-from specmetrics.kernel.cfm.builder import build
+from specmetrics.kernel.cfm.builder import CfmBuilderStage, build
 from specmetrics.kernel.cfm.model import (
     CanonicalFunctionalModel,
 )
+from specmetrics.kernel.events import EventType
 from specmetrics.kernel.evidence_graph import (
     EvidenceGraph,
     GraphEdge,
     GraphMetadata,
     GraphNode,
 )
+from specmetrics.kernel.plugin_metadata import PluginMetadata, PluginType
+from specmetrics.plugins.stage.cfm_builder import create_cfm_builder_metadata
 
 
 def make_graph(
@@ -167,3 +169,46 @@ class TestBuild:
         assert len(cfm.data_groups) == 0
         assert len(cfm.relationships) == 0
         assert len(cfm.operations) == 0
+
+
+class TestCfmBuilderMetadata:
+    def test_create_cfm_builder_metadata_field_values(self) -> None:
+        meta = create_cfm_builder_metadata()
+        assert isinstance(meta, PluginMetadata)
+        assert meta.id == "cfm_builder_stage"
+        assert meta.api_version == "0.1.0"
+        assert meta.plugin_type == PluginType.MEASUREMENT
+        assert meta.handled_event_types == (EventType.EVIDENCE_GRAPH_BUILT,)
+        assert meta.name == "Canonical Functional Model Builder"
+        assert (
+            meta.description
+            == "Builds a canonical functional model from the evidence graph"
+        )
+        assert meta.version == "0.1.0"
+        assert meta.handler_factory is not None
+        handler = meta.handler_factory()
+        assert isinstance(handler, CfmBuilderStage)
+
+
+class TestCfmBuilderStageInit:
+    def test_semantic_marker_config_stored(self) -> None:
+        marker_map = [
+            ({"business_rule"}, {"User Scenarios"}, "presentation_interface")
+        ]
+        fallback = {"data_group": "data_operation"}
+        stage = CfmBuilderStage(
+            semantic_marker_map=marker_map, semantic_marker_fallback=fallback
+        )
+        assert stage._semantic_marker_map == marker_map
+        assert stage._semantic_marker_fallback == fallback
+
+    def test_defaults_are_none(self) -> None:
+        stage = CfmBuilderStage()
+        assert stage._semantic_marker_map is None
+        assert stage._semantic_marker_fallback is None
+
+    def test_stage_identity(self) -> None:
+        stage = CfmBuilderStage()
+        assert stage.handled_event_type == EventType.EVIDENCE_GRAPH_BUILT
+        assert stage.handler_id == "cfm_builder_stage"
+        assert stage.stage_name == "canonical_model"

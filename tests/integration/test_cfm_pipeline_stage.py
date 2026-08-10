@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import dataclasses
 
 from specmetrics.kernel.cfm.builder import CfmBuilderStage

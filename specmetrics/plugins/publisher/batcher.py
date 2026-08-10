@@ -1,9 +1,12 @@
+"""In-process batching and flushing of metrics for publisher plugins."""
+
 from __future__ import annotations
 
 import time
 from collections import deque
+from collections.abc import Callable
 from threading import Lock, Timer
-from typing import Any, Callable
+from typing import Any, Self
 
 import structlog
 
@@ -13,11 +16,14 @@ logger = structlog.get_logger(__name__)
 
 
 class MetricBatcher:
+    """Collects metrics and flushes them in batches on a timer or threshold."""
+
     def __init__(
-        self,
+        self: Self,
         config: PublisherConfiguration,
         export_fn: Callable[[list[dict[str, Any]]], None],
     ) -> None:
+        """Initialize the batcher with its configuration and export callback."""
         self.config = config
         self.export_fn = export_fn
         self.queue: deque[dict[str, Any]] = deque(maxlen=config.queue_max_size)
@@ -29,19 +35,22 @@ class MetricBatcher:
         self._last_error: str | None = None
         self._started_at: float = 0.0
 
-    def start(self) -> None:
+    def start(self: Self) -> None:
+        """Start the periodic batch flush timer."""
         self._running = True
         self._started_at = time.time()
         self._schedule_flush()
 
-    def stop(self) -> None:
+    def stop(self: Self) -> None:
+        """Stop the timer and flush any remaining queued metrics."""
         if self._timer:
             self._timer.cancel()
         self._flush()
         with self.lock:
             self._running = False
 
-    def enqueue(self, metric: dict[str, Any]) -> int:
+    def enqueue(self: Self, metric: dict[str, Any]) -> int:
+        """Add a metric to the queue, flushing early when the batch is full."""
         with self.lock:
             if len(self.queue) >= self.config.queue_max_size:
                 dropped = self.queue.popleft()
@@ -56,7 +65,8 @@ class MetricBatcher:
                 self._flush()
         return current_size
 
-    def get_status(self) -> dict[str, Any]:
+    def get_status(self: Self) -> dict[str, Any]:
+        """Return a snapshot of the batcher's current state."""
         uptime = time.time() - self._started_at if self._started_at else 0.0
         return {
             "total_exported": self._total_exported,
@@ -67,7 +77,8 @@ class MetricBatcher:
             "running": self._running,
         }
 
-    def _schedule_flush(self) -> None:
+    def _schedule_flush(self: Self) -> None:
+        """Schedule the next periodic flush using the configured interval."""
         with self.lock:
             if not self._running:
                 return
@@ -75,7 +86,8 @@ class MetricBatcher:
         self._timer.daemon = True
         self._timer.start()
 
-    def _flush(self) -> None:
+    def _flush(self: Self) -> None:
+        """Export the queued metrics as a single batch, if any are queued."""
         with self.lock:
             batch = list(self.queue)
             self.queue.clear()

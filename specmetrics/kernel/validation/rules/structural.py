@@ -1,3 +1,5 @@
+"""Structural validation rules for specification document formatting."""
+
 from __future__ import annotations
 
 from specmetrics.kernel.validation.models import (
@@ -17,6 +19,7 @@ MANDATORY_SECTIONS = [
 
 
 def file_readable(document: SpecificationDocument) -> ValidationResult:
+    """Verify that the document file exists and is readable."""
     evidence: list[EvidenceRef] = []
     if not document.path.exists():
         evidence.append(EvidenceRef(detail=f"File not found: {document.path}"))
@@ -43,6 +46,7 @@ def file_readable(document: SpecificationDocument) -> ValidationResult:
 
 
 def file_not_empty(document: SpecificationDocument) -> ValidationResult:
+    """Verify that the document has non-empty content."""
     if not document.content.strip():
         return ValidationResult(
             rule_name="file-not-empty",
@@ -61,6 +65,7 @@ def file_not_empty(document: SpecificationDocument) -> ValidationResult:
 
 
 def parseable_markdown(document: SpecificationDocument) -> ValidationResult:
+    """Verify that the document can be parsed as markdown."""
     try:
         from markdown_it import MarkdownIt
 
@@ -92,6 +97,7 @@ def _find_section_headings(content: str) -> list[str]:
 
 
 def mandatory_sections_exist(document: SpecificationDocument) -> ValidationResult:
+    """Verify that all mandatory sections are present."""
     headings = _find_section_headings(document.content)
     missing = [s for s in MANDATORY_SECTIONS if s not in headings]
     if missing:
@@ -115,6 +121,7 @@ def mandatory_sections_exist(document: SpecificationDocument) -> ValidationResul
 
 
 def no_unknown_sections(document: SpecificationDocument) -> ValidationResult:
+    """Verify that the document has no unrecognized sections."""
     headings = _find_section_headings(document.content)
     unknown = [h for h in headings if h not in MANDATORY_SECTIONS]
     if unknown:

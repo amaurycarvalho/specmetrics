@@ -137,3 +137,36 @@ class TestMeasurementAPIContract:
         sig = inspect.signature(plugin.measure)
         params = list(sig.parameters.keys())
         assert "csm" in params
+
+
+class TestMetadataDetail:
+    def test_version_and_name(self):
+        metadata = create_storypoints_measurement_metadata()
+        assert metadata.id == "storypoints"
+        assert metadata.api_version == "0.1.0"
+        assert metadata.version == "0.1.0"
+        assert metadata.name == "Story Points"
+        assert metadata.plugin_type == PluginType.MEASUREMENT
+
+    def test_description_exact(self):
+        metadata = create_storypoints_measurement_metadata()
+        assert metadata.description == (
+            "Story Points measurement — estimates relative implementation effort from "
+            "CFM using multi-factor weighted sum and Modified Fibonacci normalization. "
+            "Supports configurable calibration profiles, CSM element estimation, and "
+            "relative ranking normalization."
+        )
+
+    def test_handled_event_type(self):
+        metadata = create_storypoints_measurement_metadata()
+        assert metadata.handled_event_types == (EventType.MEASUREMENT_COMPLETED,)
+
+    def test_handler_factory_creates_handler(self):
+        metadata = create_storypoints_measurement_metadata(calibration_dir="custom-dir")
+        handler = metadata.handler_factory()
+        assert isinstance(handler, StoryPointsHandler)
+        assert handler._calibration_dir == "custom-dir"
+
+    def test_handler_preserves_calibration_dir(self):
+        handler = StoryPointsHandler(calibration_dir="some-dir")
+        assert handler._calibration_dir == "some-dir"

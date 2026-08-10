@@ -1,6 +1,9 @@
+"""Discovery and loading of installed plugins via entry points."""
+
 from __future__ import annotations
 
 from importlib.metadata import entry_points
+from typing import Self
 
 import structlog
 
@@ -12,7 +15,10 @@ logger = structlog.get_logger(__name__)
 
 
 class PluginDiscovery:
-    def scan(self, group: str = "specmetrics.plugins") -> list[PluginDescriptor]:
+    """Scans installed entry points for specmetrics plugins."""
+
+    def scan(self: Self, group: str = "specmetrics.plugins") -> list[PluginDescriptor]:
+        """Return descriptors for all discoverable plugins in the given group."""
         eps = entry_points(group=group)
         descriptors: list[PluginDescriptor] = []
         for ep in eps:
@@ -52,6 +58,7 @@ def load_plugins(
     validator: PluginValidator | None = None,
     group: str | None = None,
 ) -> PluginRegistry:
+    """Discover, validate, and register all plugins into the given registry."""
     discovery = PluginDiscovery()
     descriptors: list[PluginDescriptor] = []
 

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-
-from specmetrics.kernel.csm.classifier import classify_node
 from specmetrics.kernel.csm.activity_classifier import (
     classify_activity_type,
     classify_activity_type_with_context,
 )
+from specmetrics.kernel.csm.classifier import classify_node
 from specmetrics.kernel.evidence_graph import (
     EvidenceGraph,
-    GraphNode,
     GraphEdge,
     GraphMetadata,
+    GraphNode,
 )
 
 
@@ -178,3 +177,183 @@ class TestActivityClassifier:
         )
         result = classify_activity_type_with_context(node, graph)
         assert result is None
+
+
+class TestClassifyAllCategories:
+    def test_extracted_element_returns_matches(self) -> None:
+        from specmetrics.kernel.csm.classifier import classify_all_categories
+
+        node = _make_node("n1", "We decided to use microservices")
+        assert classify_all_categories(node) == ["decision"]
+
+    def test_evidence_node_returns_empty(self) -> None:
+        from specmetrics.kernel.csm.classifier import classify_all_categories
+
+        node = _make_node("n2", "We decided to use microservices", node_type="evidence")
+        assert classify_all_categories(node) == []
+
+    def test_glossary_term_matched_by_match(self) -> None:
+        from specmetrics.kernel.csm.classifier import classify_all_categories
+
+        node = _make_node("n3", "Token Points: A metric measuring density")
+        assert classify_all_categories(node) == ["glossary_term"]
+
+    def test_non_glossary_uses_search(self) -> None:
+        from specmetrics.kernel.csm.classifier import classify_all_categories
+
+        node = _make_node("n4", "We decided to use microservices")
+        assert "decision" in classify_all_categories(node)
+
+
+class TestStripFrameworkLabels:
+    def test_removes_framework_prefix(self) -> None:
+        from specmetrics.kernel.csm.classifier import strip_framework_labels
+
+        assert strip_framework_labels("OpenSpec Section: Requirements") == "Requirements"
+        assert strip_framework_labels("Speckit Feature: Login") == "Login"
+        assert strip_framework_labels("SpecMetrics Document: Overview") == "Overview"
+
+    def test_untouched_text(self) -> None:
+        from specmetrics.kernel.csm.classifier import strip_framework_labels
+
+        assert strip_framework_labels("Plain text") == "Plain text"
+
+
+def _graph_with(nodes: dict[str, GraphNode], edges: list[GraphEdge]) -> EvidenceGraph:
+    return EvidenceGraph(
+        run_id="run-1",
+        nodes=nodes,
+        edges=edges,
+        metadata=GraphMetadata(run_id="run-1", node_count=len(nodes), edge_count=len(edges)),
+    )
+
+
+class TestGetEvidenceReferences:
+    def _graph(self) -> EvidenceGraph:
+        sa = _make_node("sa", "Explore requirements")
+        ev = _make_node("ev", "evidence text", node_type="evidence")
+        ev2 = _make_node("ev2", "second evidence", node_type="evidence")
+        ev3 = _make_node("ev3", "composed target", node_type="evidence")
+        return _graph_with(
+            {"sa": sa, "ev": ev, "ev2": ev2, "ev3": ev3},
+            [
+                GraphEdge(source="sa", target="ev", edge_type="derived_from"),
+                GraphEdge(source="sa", target="ev2", edge_type="references"),
+                GraphEdge(source="sa", target="ev3", edge_type="composed_of"),
+            ],
+        )
+
+    def test_includes_derived_from_and_references(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        refs = get_evidence_references("sa", self._graph())
+        texts = {r.text for r in refs}
+        assert "evidence text" in texts
+        assert "second evidence" in texts
+
+    def test_excludes_composed_of(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        refs = get_evidence_references("sa", self._graph())
+        assert "composed target" not in {r.text for r in refs}
+
+    def test_ignores_edges_from_other_sources(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        graph = self._graph()
+        other = _make_node("other", "unrelated evidence", node_type="evidence")
+        graph.nodes["other"] = other
+        graph.edges.append(GraphEdge(source="other", target="other", edge_type="derived_from"))
+        refs = get_evidence_references("sa", graph)
+        assert "unrelated evidence" not in {r.text for r in refs}
+
+    def test_self_reference_included(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        refs = get_evidence_references("sa", self._graph())
+        assert "Explore requirements" in {r.text for r in refs}
+
+    def test_dedupes_duplicate_edges_to_same_target(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        sa = _make_node("sa", "Explore requirements")
+        ev = _make_node("ev", "evidence text", node_type="evidence")
+        graph = _graph_with(
+            {"sa": sa, "ev": ev},
+            [
+                GraphEdge(source="sa", target="ev", edge_type="derived_from"),
+                GraphEdge(source="sa", target="ev", edge_type="references"),
+            ],
+        )
+        refs = get_evidence_references("sa", graph)
+        assert len(refs) == 2
+
+    def test_missing_target_node_skipped(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        sa = _make_node("sa", "Explore requirements")
+        graph = _graph_with(
+            {"sa": sa},
+            [GraphEdge(source="sa", target="missing", edge_type="derived_from")],
+        )
+        refs = get_evidence_references("sa", graph)
+        assert len(refs) == 1
+
+    def test_section_id_preserved_on_refs(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_evidence_references
+
+        sa = _make_node("sa", "Explore requirements")
+        sa.section_id = "sec-1"
+        graph = _graph_with({"sa": sa}, [])
+        refs = get_evidence_references("sa", graph)
+        assert refs[0].section_id == "sec-1"
+
+
+class TestGetNeighbors:
+    def _graph(self) -> EvidenceGraph:
+        n = _make_node("n", "center")
+        a = _make_node("a", "out neighbor")
+        b = _make_node("b", "in neighbor")
+        c = _make_node("c", "unrelated")
+        d = _make_node("d", "unrelated 2")
+        return _graph_with(
+            {"n": n, "a": a, "b": b, "c": c, "d": d},
+            [
+                GraphEdge(source="n", target="a", edge_type="derived_from"),
+                GraphEdge(source="b", target="n", edge_type="derived_from"),
+                GraphEdge(source="c", target="d", edge_type="derived_from"),
+            ],
+        )
+
+    def test_returns_both_directions(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_neighbors
+
+        neighbors = get_neighbors("n", self._graph())
+        assert {nb.id for nb in neighbors} == {"a", "b"}
+
+    def test_edge_type_filter(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_neighbors
+
+        graph = self._graph()
+        e = _make_node("e", "composed target")
+        graph.nodes["e"] = e
+        graph.edges.append(GraphEdge(source="n", target="e", edge_type="composed_of"))
+        neighbors = get_neighbors("n", graph, edge_type="derived_from")
+        assert {nb.id for nb in neighbors} == {"a", "b"}
+
+    def test_all_neighbors_are_nodes(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_neighbors
+
+        neighbors = get_neighbors("n", self._graph())
+        assert all(nb is not None for nb in neighbors)
+
+    def test_missing_neighbor_node_skipped(self) -> None:
+        from specmetrics.kernel.csm.evidence_processing import get_neighbors
+
+        n = _make_node("n", "center")
+        graph = _graph_with(
+            {"n": n},
+            [GraphEdge(source="n", target="ghost", edge_type="derived_from")],
+        )
+        neighbors = get_neighbors("n", graph)
+        assert neighbors == []

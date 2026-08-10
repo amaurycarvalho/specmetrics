@@ -1,3 +1,5 @@
+"""Business Complexity Points (BCP) measurement plugin."""
+
 from .models import (
     BCPMeasurementResult,
     BCPWorkItem,

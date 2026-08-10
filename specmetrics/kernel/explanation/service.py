@@ -1,34 +1,50 @@
+"""Service for building, persisting, and comparing measurement explanations."""
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import structlog
 
 from specmetrics.kernel.cfm.model import CanonicalFunctionalModel
 from specmetrics.kernel.evidence_graph import EvidenceGraph
 
+from ._metrics import (
+    _build_metrics_from_elements,
+    _build_metrics_from_measurement_result,
+    _build_summary,
+    _collect_cfm_elements,
+    _collect_metrics,
+    _filter_metrics,
+    _resolve_spec_path,
+)
 from .comparison import compare_explanations
 from .evidence_tracer import EvidenceTracer
 from .models import (
-    AppliedRule,
-    ElementContribution,
     ExplanationComparison,
-    ExplanationSummary,
     MeasurementExplanation,
-    MetricExplanation,
 )
 
 logger = structlog.get_logger(__name__)
+
+__all__ = [
+    "ExplainService",
+    "ExplanationConfig",
+    "_build_metrics_from_elements",
+    "_build_metrics_from_measurement_result",
+]
 
 _explanation_store: dict[str, MeasurementExplanation] = {}
 
 
 @dataclass
 class ExplanationConfig:
+    """Configuration options for the explanation service."""
+
     max_evidence_depth: int = 3
     include_low_confidence: bool = False
     min_confidence: float = 0.5
@@ -36,7 +52,10 @@ class ExplanationConfig:
     storage_dir: str = ".specmetrics/explanations"
 
     @classmethod
-    def from_yaml(cls, path: str | Path | None = None) -> ExplanationConfig:
+    def from_yaml(
+        cls: type[Self], path: str | Path | None = None
+    ) -> ExplanationConfig:
+        """Load configuration from a YAML file, falling back to defaults."""
         if path is None:
             base = Path(".specmetrics") / "explanations" / "explanation.yml"
             if base.exists():
@@ -62,162 +81,30 @@ class ExplanationConfig:
         )
 
     @property
-    def storage_path(self) -> Path:
+    def storage_path(self: Self) -> Path:
+        """Return the directory where explanations are persisted."""
         return Path(self.storage_dir)
 
 
-def _build_metrics_from_elements(
-    elements: list[dict[str, Any]],
-    applied_rules: list[AppliedRule],
-    cfm: CanonicalFunctionalModel | None,
-) -> list[MetricExplanation]:
-    type_counts: dict[str, int] = {}
-    for el in elements:
-        t = el["element_type"]
-        type_counts[t] = type_counts.get(t, 0) + 1
-
-    metrics: list[MetricExplanation] = [
-        MetricExplanation(
-            metric_name="function_count",
-            metric_value=len(elements),
-            computation_summary=f"Total elements identified: {len(elements)}",
-            elements=[ElementContribution(**el) for el in elements],
-            applied_rules=applied_rules,
-        ),
-    ]
-
-    for elem_type, count in sorted(type_counts.items()):
-        type_elements = [el for el in elements if el["element_type"] == elem_type]
-        metrics.append(
-            MetricExplanation(
-                metric_name=f"{elem_type}_count",
-                metric_value=count,
-                computation_summary=f"Total {elem_type} elements: {count}",
-                elements=[ElementContribution(**el) for el in type_elements],
-                applied_rules=applied_rules,
-            )
-        )
-
-    return metrics
-
-
-def _build_metrics_from_measurement_result(
-    measurement_result: dict[str, Any],
-    elements: list[dict[str, Any]],
-    applied_rules: list[AppliedRule],
-) -> list[MetricExplanation]:
-    metrics: list[MetricExplanation] = []
-
-    total_fp = (
-        measurement_result.get("fpa_total_function_points")
-        or measurement_result.get("total_function_points")
-        or 0
-    )
-    if total_fp is not None:
-        metrics.append(
-            MetricExplanation(
-                metric_name="functional_size",
-                metric_value=total_fp,
-                computation_summary=f"Total function points: {total_fp}",
-                elements=[ElementContribution(**el) for el in elements],
-                applied_rules=applied_rules,
-            )
-        )
-
-    breakdown = measurement_result.get("breakdown", {})
-    for ft, bd in breakdown.items():
-        metrics.append(
-            MetricExplanation(
-                metric_name=f"{ft}_count",
-                metric_value=bd.get("count", 0),
-                computation_summary=f"Total {ft} elements: {bd.get('count', 0)} (UFP: {bd.get('total_ufp', 0)})",
-                elements=[
-                    ElementContribution(**el)
-                    for el in elements
-                    if el["element_type"] == ft
-                ],
-                applied_rules=applied_rules,
-            )
-        )
-
-    complexity_dist = measurement_result.get("complexity_distribution", [])
-    for cd in complexity_dist:
-        fn_type = cd.get("function_type", "unknown")
-        comp = cd.get("complexity", "unknown")
-        metrics.append(
-            MetricExplanation(
-                metric_name=f"{fn_type}_{comp}_count",
-                metric_value=cd.get("count", 0),
-                computation_summary=f"Total {fn_type} ({comp}): {cd.get('count', 0)}",
-                elements=[],
-                applied_rules=applied_rules,
-            )
-        )
-
-    return metrics
-
-
-def _collect_cfm_elements(
-    cfm: CanonicalFunctionalModel | None,
-    tracer: EvidenceTracer,
-) -> tuple[list[dict[str, Any]], list[AppliedRule]]:
-    elements: list[dict[str, Any]] = []
-    applied_rules: list[AppliedRule] = []
-
-    if cfm is None:
-        return elements, applied_rules
-
-    for category_name in (
-        "actors",
-        "functional_processes",
-        "business_rules",
-        "data_groups",
-        "operations",
-    ):
-        category = cfm.get_elements_by_category(category_name)
-        for eid, elem in category.items():
-            evidence_refs = tracer.trace_element(eid, cfm=cfm)
-            elements.append(
-                {
-                    "element_id": eid,
-                    "element_type": category_name,
-                    "element_label": getattr(elem, "name", eid),
-                    "complexity": None,
-                    "weight": None,
-                    "evidence": evidence_refs,
-                    "applied_rules": [],
-                }
-            )
-
-    for rid, rule in cfm.business_rules.items():
-        applied_rules.append(
-            AppliedRule(
-                rule_pack_id=str(getattr(cfm, "run_id", rid)),
-                rule_id=rid,
-                rule_type="business_rule",
-                description=rule.description or rule.name,
-                effect="Identified as business rule in CFM",
-            )
-        )
-
-    return elements, applied_rules
-
-
 class ExplainService:
+    """Service that builds, persists, and compares explanations."""
+
     def __init__(
-        self,
+        self: Self,
         tracer: EvidenceTracer | None = None,
         config: ExplanationConfig | None = None,
-    ):
+    ) -> None:
+        """Initialize the service with an optional tracer and configuration."""
         self._tracer = tracer or EvidenceTracer()
         self._config = config or ExplanationConfig()
 
     @property
-    def tracer(self) -> EvidenceTracer:
+    def tracer(self: Self) -> EvidenceTracer:
+        """Return the evidence tracer used by this service."""
         return self._tracer
 
     def explain(
-        self,
+        self: Self,
         run_id: str,
         metric_name: str | None = None,
         cfm: CanonicalFunctionalModel | None = None,
@@ -225,56 +112,30 @@ class ExplainService:
         measurement_result: dict[str, Any] | None = None,
         spec_path: str | None = None,
     ) -> MeasurementExplanation:
+        """Build and persist a measurement explanation for the given run."""
         if graph is not None:
             self._tracer.graph = graph
 
         elements, applied_rules = _collect_cfm_elements(cfm, self._tracer)
-
-        if measurement_result:
-            metrics = _build_metrics_from_measurement_result(
-                measurement_result, elements, applied_rules
-            )
-        else:
-            metrics = _build_metrics_from_elements(elements, applied_rules, cfm)
-
-        if metric_name is not None:
-            metrics = [m for m in metrics if m.metric_name == metric_name]
-            if not metrics:
-                raise ValueError(f"Metric '{metric_name}' not found in run {run_id}")
-
-        if not cfm:
-            gaps: list[str] = []
-            gaps.append("CFM not available — element-level detail omitted")
-        else:
-            gaps = []
-
-        if graph is None:
-            gaps.append(
-                "Evidence graph not available — evidence references may be incomplete"
-            )
+        metrics = _collect_metrics(measurement_result, elements, applied_rules, cfm)
+        metrics = _filter_metrics(metrics, metric_name, run_id)
 
         explanation = MeasurementExplanation(
             run_id=run_id,
-            spec_path=spec_path
-            or (cfm.metadata.run_id if cfm and cfm.metadata else run_id),
-            measured_at=datetime.now(timezone.utc),
+            spec_path=spec_path or _resolve_spec_path(run_id, cfm),
+            measured_at=datetime.now(UTC),
             metrics=metrics,
             applied_rules=applied_rules,
-            summary=ExplanationSummary(
-                total_metrics=len(metrics),
-                total_elements=len(elements),
-                total_evidence_refs=sum(len(el.evidence) for el in metrics[0].elements)
-                if metrics
-                else 0,
-                total_rules_applied=len(applied_rules),
-            ),
+            summary=_build_summary(metrics, elements, applied_rules),
         )
 
         _explanation_store[run_id] = explanation
         self._save_to_disk(run_id, explanation)
         return explanation
 
-    def _save_to_disk(self, run_id: str, explanation: MeasurementExplanation) -> None:
+    def _save_to_disk(
+        self: Self, run_id: str, explanation: MeasurementExplanation
+    ) -> None:
         storage_dir = self._config.storage_path
         try:
             storage_dir.mkdir(parents=True, exist_ok=True)
@@ -286,8 +147,9 @@ class ExplainService:
             logger.warning("explanation_save_failed", run_id=run_id, error=str(exc))
 
     def load_explanation(
-        self, run_id: str, spec_path_hint: str | None = None
+        self: Self, run_id: str, spec_path_hint: str | None = None
     ) -> MeasurementExplanation | None:
+        """Load a stored explanation by run id, or return None if missing."""
         cached = _explanation_store.get(run_id)
         if cached is not None:
             return cached
@@ -312,10 +174,11 @@ class ExplainService:
         return None
 
     def compare(
-        self,
+        self: Self,
         baseline_run_id: str,
         comparison_run_id: str,
     ) -> ExplanationComparison:
+        """Compare two runs and return an explanation comparison."""
         baseline = self.load_explanation(baseline_run_id)
         comparison = self.load_explanation(comparison_run_id)
 

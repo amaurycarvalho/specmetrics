@@ -1,3 +1,5 @@
+"""Loading of publisher configuration from YAML files."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,6 +16,7 @@ yaml = YAML(typ="safe")
 
 
 def load_publisher_configs(config_path: Path | str) -> list[PublisherConfiguration]:
+    """Load publisher configurations from the given YAML config file."""
     path = Path(config_path)
     if not path.exists():
         logger.warning("publisher_config_not_found", path=str(path))

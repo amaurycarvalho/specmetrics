@@ -1,3 +1,5 @@
+"""MCP tool handlers for explaining measurement runs."""
+
 from __future__ import annotations
 
 import json
@@ -11,7 +13,6 @@ from specmetrics.kernel.explanation.formatters.json import (
 )
 from specmetrics.kernel.explanation.loader import load_cfm, load_evidence_graph
 from specmetrics.kernel.explanation.service import ExplainService
-
 
 EXPLAIN_TOOL = Tool(
     name="explain_measurement",
@@ -66,6 +67,7 @@ EXPLAIN_COMPARE_TOOL = Tool(
 
 
 def handle_explain_measurement(arguments: dict) -> list[TextContent]:
+    """Explain a measurement run and return the result as text content."""
     run_id = arguments["run_id"]
     metric = arguments.get("metric")
     compare = arguments.get("compare")
@@ -105,6 +107,7 @@ def handle_explain_measurement(arguments: dict) -> list[TextContent]:
 
 
 def handle_explain_compare(arguments: dict) -> list[TextContent]:
+    """Compare explanations between two measurement runs."""
     baseline_run_id = arguments["baseline_run_id"]
     comparison_run_id = arguments["comparison_run_id"]
     run_dir_str = arguments.get("run_dir")

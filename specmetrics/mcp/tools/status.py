@@ -1,5 +1,6 @@
-from __future__ import annotations
+"""MCP tool definition for querying server status."""
 
+from __future__ import annotations
 
 from mcp.types import Tool
 
