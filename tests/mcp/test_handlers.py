@@ -6,13 +6,17 @@ import asyncio
 
 import pytest
 from mcp.server import Server
-from mcp.shared.exceptions import McpError
 from mcp.shared.memory import create_connected_server_and_client_session
 from mcp.types import Tool
 
 from specmetrics.mcp._handlers import attach_handlers, refresh_capabilities
 from specmetrics.mcp._support import ToolError
 from specmetrics.mcp.server import MCPServer
+
+try:
+    from mcp.shared.exceptions import MCPError as McpError
+except ImportError:
+    from mcp.shared.exceptions import McpError
 
 
 def _boot_server() -> MCPServer:
